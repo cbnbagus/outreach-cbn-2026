@@ -19,13 +19,13 @@ function getDb() {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Helper: get channel config from Firestore (cached per invocation)
-// Admin sets these from Dashboard → Admin → Integrations
+// Helper: get channel config from organization document (multi-tenant)
 // ────────────────────────────────────────────────────────────────────────────
-async function getChannelConfig(): Promise<Record<string, any>> {
+async function getChannelConfig(orgId: string): Promise<Record<string, any>> {
   try {
-    const doc = await getDb().collection("system_config").doc("channel_settings").get();
-    return doc.exists ? doc.data()! : {};
+    const doc = await getDb().collection("organizations").doc(orgId).get();
+    if (!doc.exists) return {};
+    return doc.data()?.channelConfig ?? {};
   } catch (err) {
     logger.error("[getChannelConfig] Failed:", err);
     return {};
@@ -34,16 +34,8 @@ async function getChannelConfig(): Promise<Record<string, any>> {
 
 // ────────────────────────────────────────────────────────────────────────────
 // OUTBOUND REPLY TRIGGER
-// When an agent sends a message in OMS, auto-send it to the respondent
-// via the original channel (WhatsApp Fonnte, Meta, etc.)
-//
-// Config is read from Firestore: system_config/channel_settings
-// {
-//   fonnte_token: "xxx",
-//   whatsapp_access_token: "xxx",
-//   whatsapp_phone_number_id: "xxx",
-//   active_whatsapp_provider: "fonnte" | "meta",
-// }
+// When an agent sends a message, auto-send it to the respondent
+// via the original channel. Config read from organizations/{orgId}.channelConfig
 // ────────────────────────────────────────────────────────────────────────────
 export const onMessageCreated = onDocumentCreated(
   "tickets/{ticketId}/messages/{messageId}",
@@ -69,6 +61,7 @@ export const onMessageCreated = onDocumentCreated(
       }
       const ticket = ticketDoc.data()!;
       const channel = ticket.channel ?? "";
+      const orgId = ticket.orgId ?? "";
 
       // Get respondent
       const respondentDoc = await db.doc(`respondents/${ticket.respondentId}`).get();
@@ -84,8 +77,8 @@ export const onMessageCreated = onDocumentCreated(
         return;
       }
 
-      // Get channel config from Firestore (admin-managed)
-      const config = await getChannelConfig();
+      // Get channel config from organization document (multi-tenant)
+      const config = await getChannelConfig(orgId);
 
       // ── Send via Fonnte (WhatsApp) ──
       if (channel === "whatsapp_fonnte" || channel === "manual" ||
@@ -239,6 +232,13 @@ export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
 
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
 
+  // Extract org from query param: ?org=orgId
+  const orgId = req.query.org as string;
+  if (!orgId) {
+    res.status(400).json({ error: "Missing org parameter" });
+    return;
+  }
+
   try {
     const body  = req.body;
     const value = body?.entry?.[0]?.changes?.[0]?.value;
@@ -249,6 +249,7 @@ export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
         const contact = (value.contacts as any[])?.find((c: any) => c.wa_id === msg.from);
         const phone   = `+${msg.from}`;
         await processIncomingMessage({
+          orgId,
           channel:     "whatsapp_meta",
           senderId:    msg.from,
           senderName:  contact?.profile?.name ?? phone,
@@ -270,6 +271,9 @@ export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
+
+  const orgId = req.query.org as string;
+  if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
 
   try {
     const body    = req.body;
@@ -293,6 +297,7 @@ export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
     const attachments = await parseFonnteAttachments(body);
 
     await processIncomingMessage({
+      orgId,
       channel:     "whatsapp_fonnte",
       senderId:    String(body.sender ?? ""),
       senderName:  name,
@@ -358,6 +363,9 @@ export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
 
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
 
+  const orgId = req.query.org as string;
+  if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
+
   try {
     const body = req.body;
     const messaging = body?.entry?.[0]?.messaging ?? [];
@@ -366,6 +374,7 @@ export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
       if (!event.message?.text) continue;
       const senderId = String(event.sender?.id ?? "");
       await processIncomingMessage({
+        orgId,
         channel:    "instagram",
         senderId,
         senderName: `Instagram User ${senderId.slice(-4)}`,
@@ -400,6 +409,9 @@ export const webhookFacebook = onRequest({ cors: true }, async (req, res) => {
 
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
 
+  const orgId = req.query.org as string;
+  if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
+
   try {
     const body = req.body;
     const messaging = body?.entry?.[0]?.messaging ?? [];
@@ -408,6 +420,7 @@ export const webhookFacebook = onRequest({ cors: true }, async (req, res) => {
       if (!event.message?.text) continue;
       const senderId = String(event.sender?.id ?? "");
       await processIncomingMessage({
+        orgId,
         channel:    "facebook",
         senderId,
         senderName: `Facebook User ${senderId.slice(-4)}`,

@@ -19,9 +19,10 @@ import { useTicketsByRespondent, useMessages } from "@/hooks/use-firestore-ticke
 import { useLeadSources } from "@/hooks/use-firestore-config";
 import { updateRespondent } from "@/lib/firestore-services";
 import { useAuthStore } from "@/store/auth-store";
+import { useOrgStore } from "@/store/org-store";
 import { cn } from "@/lib/utils";
 import type { Respondent, RespondentProgress } from "@/types";
-import { PROGRESS_STEPS, DEFAULT_PROGRAM_SOURCES } from "@/types";
+import { DEFAULT_PROGRESS_STEPS, DEFAULT_PROGRAM_SOURCES } from "@/types";
 
 // Progress step config
 const PROGRESS_CONFIG: Record<RespondentProgress, { color: string; bg: string; border: string; desc: string }> = {
@@ -212,7 +213,7 @@ export default function RespondentProfilePage() {
     setEditCategories((prev) => prev.filter((c) => c !== cat));
 
   const currentProgressIdx = respondent.progress
-    ? PROGRESS_STEPS.indexOf(respondent.progress)
+    ? DEFAULT_PROGRESS_STEPS.indexOf(respondent.progress)
     : -1;
 
   return (
@@ -362,7 +363,7 @@ export default function RespondentProfilePage() {
                     <Select value={editProgress} onValueChange={(v) => setEditProgress(v as RespondentProgress)}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pilih progress..." /></SelectTrigger>
                       <SelectContent>
-                        {PROGRESS_STEPS.map((s) => (
+                        {DEFAULT_PROGRESS_STEPS.map((s) => (
                           <SelectItem key={s} value={s}>
                             <span className={cn("font-medium", PROGRESS_CONFIG[s].color)}>{s}</span>
                             <span className="ml-2 text-muted-foreground text-[10px]">— {PROGRESS_CONFIG[s].desc}</span>
@@ -575,7 +576,7 @@ export default function RespondentProfilePage() {
               </CardHeader>
               <CardContent className="px-4 pb-4">
                 <div className="flex flex-col gap-2">
-                  {PROGRESS_STEPS.map((step, idx) => {
+                  {DEFAULT_PROGRESS_STEPS.map((step, idx) => {
                     const isActive  = respondent.progress === step;
                     const isDone    = currentProgressIdx > idx;
                     const cfg       = PROGRESS_CONFIG[step];

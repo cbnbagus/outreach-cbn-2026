@@ -13,6 +13,8 @@ import { PresenceDot } from "@/components/presence/PresenceDot";
 import { usePresenceStore } from "@/store/presence-store";
 import { useCallStore } from "@/store/call-store";
 
+import { useOrgStore } from "@/store/org-store";
+
 interface NavItem {
   label: string;
   href: string;
@@ -60,6 +62,7 @@ export function Sidebar({ role, userName, onLogout, mobileOpen, onMobileClose }:
   const { getOnlineCount, initialized } = usePresenceStore();
   const onlineCount  = initialized ? getOnlineCount() : 0;
   const { missedCount } = useCallStore();
+  const activeOrg = useOrgStore((s) => s.activeOrg);
 
   // Close mobile drawer on route change
   useEffect(() => { onMobileClose(); }, [pathname]);
@@ -89,8 +92,8 @@ export function Sidebar({ role, userName, onLogout, mobileOpen, onMobileClose }:
           <MessageSquare size={16} className="text-white" />
         </div>
         <div className="flex-1">
-          <p className="text-xs font-bold text-white leading-tight">Outreach Management System</p>
-          <p className="text-[10px] text-sidebar-foreground/50 leading-tight">CBN Indonesia</p>
+          <p className="text-xs font-bold text-white leading-tight">{activeOrg?.name ?? "ReachTheSoul"}</p>
+          <p className="text-[10px] text-sidebar-foreground/50 leading-tight">reachthesoul.org</p>
         </div>
         <button
           className="lg:hidden p-1 rounded text-sidebar-foreground/60 hover:text-white transition-colors"

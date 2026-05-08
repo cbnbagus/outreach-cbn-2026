@@ -50,6 +50,9 @@ export interface Organization {
   billingEmail: string;
   timezone: string;
   language: string;
+  // Customizable per-org config
+  progressSteps: string[];      // e.g. ["Data", "Doa", "Konseling", "Salvation"]
+  programSources: string[];     // e.g. ["Website", "Instagram", "Event"]
   createdAt: string;
   updatedAt: string;
   createdBy: string;
@@ -125,21 +128,16 @@ export interface User {
   isPlatformAdmin?: boolean;
 }
 
-export type RespondentProgress =
-  | "Data"
-  | "Doa"
-  | "Konseling"
-  | "Rekomitmen"
-  | "Salvation"
-  | "POP";
+// Progress steps — now configurable per org (stored in organizations/{orgId}.progressSteps)
+// These are defaults for new organizations
+export type RespondentProgress = string; // dynamic — defined per org
 
-export const PROGRESS_STEPS: RespondentProgress[] = [
+export const DEFAULT_PROGRESS_STEPS: string[] = [
   "Data", "Doa", "Konseling", "Rekomitmen", "Salvation", "POP",
 ];
 
 export const DEFAULT_PROGRAM_SOURCES: string[] = [
-  "Solusi", "Superbook", "Superyouth", "Jawaban.com", "Sentuhan Kasih",
-  "Buletin", "Podcast CBN", "Radio Heartline", "Televisi",
+  "Website", "WhatsApp", "Instagram", "Facebook", "YouTube", "Referral", "Event",
 ];
 
 export interface Respondent {

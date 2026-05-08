@@ -116,8 +116,8 @@ export default function LoginPage() {
             <MessageSquare size={16} className="text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white leading-tight">Outreach Management System</p>
-            <p className="text-[10px] text-sidebar-foreground/40 uppercase tracking-widest leading-tight">CBN Indonesia</p>
+            <p className="text-sm font-bold text-white leading-tight">ReachTheSoul</p>
+            <p className="text-[10px] text-sidebar-foreground/40 uppercase tracking-widest leading-tight">reachthesoul.org</p>
           </div>
         </div>
 
@@ -152,7 +152,7 @@ export default function LoginPage() {
 
         {/* Bottom tagline */}
         <p className="mt-auto pt-8 text-[10px] text-sidebar-foreground/25 border-t border-sidebar-border">
-          Outreach Management System CBN Indonesia &copy; {new Date().getFullYear()}
+          ReachTheSoul &copy; {new Date().getFullYear()}
         </p>
       </div>
 
@@ -165,12 +165,12 @@ export default function LoginPage() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <MessageSquare size={14} className="text-white" />
             </div>
-            <span className="font-bold text-foreground text-xs leading-tight">Outreach Management System<br /><span className="text-[10px] font-normal text-muted-foreground">CBN Indonesia</span></span>
+            <span className="font-bold text-foreground text-xs leading-tight">ReachTheSoul<br /><span className="text-[10px] font-normal text-muted-foreground">reachthesoul.org</span></span>
           </div>
 
           {/* Heading */}
           <div className="mb-7">
-            <h2 className="text-2xl font-bold text-foreground text-balance">Sign in to Outreach Management System</h2>
+            <h2 className="text-2xl font-bold text-foreground text-balance">Sign in to ReachTheSoul</h2>
             <p className="text-sm text-muted-foreground mt-1.5">Enter your credentials to continue.</p>
           </div>
 

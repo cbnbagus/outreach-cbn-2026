@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'OMS — Outreach Management System',
+  title: 'ReachTheSoul — Ministry Growth Platform',
   description: 'Ministry outreach CRM for managing respondents, tickets, and conversations.',
   icons: {
     icon: [

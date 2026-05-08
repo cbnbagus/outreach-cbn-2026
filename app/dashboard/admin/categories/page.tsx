@@ -3,12 +3,13 @@ import { useCategories } from "@/hooks/use-firestore-config";
 import { addCategory, updateCategory, deleteCategory } from "@/lib/firestore-services";
 import { AdminConfigTable } from "@/components/admin/AdminConfigTable";
 import { useAuthStore } from "@/store/auth-store";
+import { useOrgStore } from "@/store/org-store";
 
 export default function CategoriesPage() {
   const { items, loading } = useCategories();
   const currentUser = useAuthStore((s) => s.currentUser);
+  const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
 
-  // Map to the shape AdminConfigTable expects
   const tableItems = items.map((c: any) => ({
     id: c.id,
     name: c.name,
@@ -34,8 +35,7 @@ export default function CategoriesPage() {
       subtitle="Manage ticket categories. Agents select from this list when handling tickets."
       items={tableItems}
       onAdd={async (data) => {
-        await addCategory(data, currentUser?.uid ?? "unknown");
-        // No need to refetch — onSnapshot in useCategories() auto-updates
+        await addCategory(orgId, data, currentUser?.uid ?? "unknown");
       }}
       onUpdate={async (id, patch) => {
         await updateCategory(id, patch);

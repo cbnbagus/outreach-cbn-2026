@@ -3,10 +3,12 @@ import { useOutcomes } from "@/hooks/use-firestore-config";
 import { addOutcome, updateOutcome, deleteOutcome } from "@/lib/firestore-services";
 import { AdminConfigTable } from "@/components/admin/AdminConfigTable";
 import { useAuthStore } from "@/store/auth-store";
+import { useOrgStore } from "@/store/org-store";
 
 export default function OutcomesPage() {
   const { items, loading } = useOutcomes();
   const currentUser = useAuthStore((s) => s.currentUser);
+  const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
 
   const tableItems = items.map((o: any) => ({
     id: o.id,
@@ -33,7 +35,7 @@ export default function OutcomesPage() {
       subtitle="Manage how tickets are resolved. Agents select an outcome when closing tickets."
       items={tableItems}
       onAdd={async (data) => {
-        await addOutcome(data, currentUser?.uid ?? "unknown");
+        await addOutcome(orgId, data, currentUser?.uid ?? "unknown");
       }}
       onUpdate={async (id, patch) => {
         await updateOutcome(id, patch);

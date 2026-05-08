@@ -13,12 +13,14 @@ import { useRespondents } from "@/hooks/use-firestore-respondents";
 import { useTickets } from "@/hooks/use-firestore-tickets";
 import { addRespondent } from "@/lib/firestore-services";
 import { useAuthStore } from "@/store/auth-store";
+import { useOrgStore } from "@/store/org-store";
 import { TicketStatusBadge } from "@/components/tickets/TicketStatusBadge";
 import { cn } from "@/lib/utils";
 
 export default function NewRespondentPage() {
   const router = useRouter();
   const currentUser = useAuthStore((s) => s.currentUser);
+  const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
   const { items: leadSources, loading: lsLoading } = useLeadSources();
   const { respondents, loading: respLoading } = useRespondents();
   const { tickets, loading: ticketsLoading } = useTickets();
@@ -45,7 +47,7 @@ export default function NewRespondentPage() {
     if (!fullName.trim() || !leadSourceId) return;
     setSaving(true);
     try {
-      await addRespondent({
+      await addRespondent(orgId, {
         fullName: fullName.trim(),
         phone: phone.trim() || undefined,
         email: email.trim() || undefined,

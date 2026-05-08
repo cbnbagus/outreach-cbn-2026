@@ -31,7 +31,7 @@ interface AISettings {
   channelToggles: Record<string, boolean>;
 }
 
-const DEFAULT_SYSTEM_PROMPT = `You are a compassionate Christian ministry counselor for CBN Indonesia's Outreach Management System.
+const DEFAULT_SYSTEM_PROMPT = `You are a compassionate Christian ministry counselor for ReachTheSoul ministry platform.
 
 Your role:
 - Respond with empathy, grace, and biblical wisdom

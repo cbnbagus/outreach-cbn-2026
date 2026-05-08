@@ -20,6 +20,7 @@ import { useCategories, useLeadSources, useUsers } from "@/hooks/use-firestore-c
 import { useTicketsByRespondent } from "@/hooks/use-firestore-tickets";
 import { addTicket } from "@/lib/firestore-services";
 import { useAuthStore } from "@/store/auth-store";
+import { useOrgStore } from "@/store/org-store";
 import { cn } from "@/lib/utils";
 import type { OutboundChannel, TicketDirection } from "@/types";
 
@@ -121,6 +122,7 @@ function NewTicketInner() {
   const { startOutbound, setView, setDialInput } = useCallStore();
   const { presence, initialized } = usePresenceStore();
   const currentUser = useAuthStore((s) => s.currentUser);
+  const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
 
   // Firestore hooks
   const { respondents, loading: respLoading } = useRespondents();
@@ -193,11 +195,11 @@ function NewTicketInner() {
       setLaunched(true);
     } else if (outboundChannel === "whatsapp" && respondent.phone) {
       const num = respondent.phone.replace(/[^0-9]/g, "");
-      const msg = encodeURIComponent(`Halo ${respondent.fullName}, saya dari tim OMS CBN Indonesia. ${notes}`);
+      const msg = encodeURIComponent(`Halo ${respondent.fullName}, saya dari tim pelayanan kami. ${notes}`);
       window.open(`https://wa.me/${num}?text=${msg}`, "_blank");
       setLaunched(true);
     } else if (outboundChannel === "email" && respondent.email) {
-      const body = encodeURIComponent(notes || `Halo ${respondent.fullName},\n\nSaya dari tim OMS CBN Indonesia.`);
+      const body = encodeURIComponent(notes || `Halo ${respondent.fullName},\n\nSaya dari tim pelayanan kami.`);
       window.open(`mailto:${respondent.email}?subject=${encodeURIComponent(subject)}&body=${body}`, "_blank");
       setLaunched(true);
     } else if (outboundChannel === "instagram_dm") {
@@ -216,7 +218,7 @@ function NewTicketInner() {
     if (!respondentId || !subject.trim()) return;
     setSaving(true);
     try {
-      await addTicket({
+      await addTicket(orgId, {
         respondentId,
         subject: subject.trim(),
         priority: priority as any,
