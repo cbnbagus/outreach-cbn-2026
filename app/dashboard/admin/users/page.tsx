@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Check, Shield, UserCheck, User, Loader2, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Check, Shield, UserCheck, User, Loader2, Eye, EyeOff, Users, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useUsers } from "@/hooks/use-firestore-config";
 import { useAuthStore } from "@/store/auth-store";
+import { useOrgStore } from "@/store/org-store";
 import type { UserRole } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -19,8 +20,13 @@ const roleConfig: Record<UserRole, { label: string; color: string; icon: React.E
 export default function UsersPage() {
   const { items: firestoreUsers, loading } = useUsers();
   const currentUser = useAuthStore((s) => s.currentUser);
+  const activeOrg = useOrgStore((s) => s.activeOrg);
+  const orgId = activeOrg?.orgId ?? "";
 
   const [showAdd, setShowAdd] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteRole, setInviteRole] = useState<UserRole>("agent");
+  const [inviteCopied, setInviteCopied] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editRole, setEditRole] = useState<UserRole>("agent");
   const [editActive, setEditActive] = useState(true);
@@ -107,7 +113,7 @@ export default function UsersPage() {
       const credential = await createUserWithEmailAndPassword(auth, newEmail.trim(), newPassword);
       const newUid = credential.user.uid;
 
-      // Create Firestore profile
+      // Create Firestore profile with org membership
       await setDoc(doc(db, "users", newUid), {
         uid: newUid,
         displayName: newName.trim(),
@@ -115,6 +121,15 @@ export default function UsersPage() {
         role: newRole,
         isActive: true,
         avatarInitials: newName.trim().split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2),
+        primaryOrgId: orgId,
+        orgMemberships: [{
+          orgId,
+          orgName: activeOrg?.name ?? "",
+          role: newRole,
+          joinedAt: new Date().toISOString(),
+        }],
+        orgRoles: { [orgId]: newRole },
+        isPlatformAdmin: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         createdBy: currentUser?.uid ?? "admin",
@@ -167,10 +182,54 @@ export default function UsersPage() {
             Manage system users and their roles. {users.filter((u: any) => u.isActive).length} active users.
           </p>
         </div>
-        <Button size="sm" onClick={() => setShowAdd(true)}>
-          <Plus size={14} className="mr-1.5" />Add User
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={() => setShowInvite(!showInvite)}>
+            <Users size={14} className="mr-1.5" />Invite Link
+          </Button>
+          <Button size="sm" onClick={() => setShowAdd(true)}>
+            <Plus size={14} className="mr-1.5" />Add User
+          </Button>
+        </div>
       </div>
+
+      {/* Invite Link Panel */}
+      {showInvite && (
+        <Card className="border border-blue-200 shadow-none bg-blue-50/50">
+          <CardContent className="p-4">
+            <p className="text-xs font-semibold text-foreground mb-1">Invite Team Members</p>
+            <p className="text-[11px] text-muted-foreground mb-3">
+              Share this link with people you want to invite. They&apos;ll create their own account and automatically join your organization.
+            </p>
+            <div className="flex items-center gap-2 mb-3">
+              <label className="text-xs font-medium text-foreground">Role:</label>
+              <Select value={inviteRole} onValueChange={(v) => { setInviteRole(v as UserRole); setInviteCopied(false); }}>
+                <SelectTrigger className="w-36 h-8 text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="agent">Agent</SelectItem>
+                  <SelectItem value="supervisor">Supervisor</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={`${typeof window !== "undefined" ? window.location.origin : ""}/invite?org=${encodeURIComponent(orgId)}&name=${encodeURIComponent(activeOrg?.name ?? "")}&role=${inviteRole}`}
+                className="text-xs h-8 bg-white"
+              />
+              <Button size="sm" variant={inviteCopied ? "default" : "outline"} className="h-8 shrink-0"
+                onClick={() => {
+                  const link = `${window.location.origin}/invite?org=${encodeURIComponent(orgId)}&name=${encodeURIComponent(activeOrg?.name ?? "")}&role=${inviteRole}`;
+                  navigator.clipboard.writeText(link);
+                  setInviteCopied(true);
+                  setTimeout(() => setInviteCopied(false), 3000);
+                }}>
+                {inviteCopied ? <><Check size={14} className="mr-1" />Copied!</> : "Copy"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Add Form */}
       {showAdd && (

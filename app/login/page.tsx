@@ -217,7 +217,10 @@ export default function LoginPage() {
 
           {/* Help text */}
           <p className="text-[11px] text-muted-foreground text-center mt-6 leading-relaxed">
-            Contact your administrator if you need an account or forgot your password.
+            Don&apos;t have an account?{" "}
+            <a href="/register" className="text-primary font-medium hover:underline">
+              Sign up for free
+            </a>
           </p>
 
         </div>
