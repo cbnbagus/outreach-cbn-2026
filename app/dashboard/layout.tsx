@@ -9,6 +9,7 @@ import { SoftPhone } from "@/components/calls/SoftPhone";
 import { useAuthStore } from "@/store/auth-store";
 import { usePresenceStore } from "@/store/presence-store";
 import AuthProvider from "@/components/auth/AuthProvider";
+import { UsageBanner } from "@/components/feature-gate/UsageBanner";
 import type { UserRole } from "@/types";
 
 const pageTitles: Record<string, string> = {
@@ -26,6 +27,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard/admin/integrations": "Integrations",
   "/dashboard/admin/ai-settings":   "AI Integration Settings",
   "/dashboard/admin/call-settings": "Call Settings",
+  "/dashboard/billing":              "Plan & Billing",
   "/dashboard/calls":                 "Call Log",
   "/dashboard/respondents/new":       "New Respondent",
 };
@@ -101,6 +103,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           onRoleSwitch={handleRoleSwitch}
           onMenuOpen={() => setMobileSidebarOpen(true)}
         />
+        <UsageBanner />
         <main className="flex-1 overflow-auto p-4 md:p-6">
           {children}
         </main>

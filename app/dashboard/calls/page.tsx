@@ -8,6 +8,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FeatureGate } from "@/components/feature-gate/FeatureGate";
 import { useCallStore } from "@/store/call-store";
 import { cn } from "@/lib/utils";
 import type { CallDirection, CallStatus } from "@/types";
@@ -44,7 +45,7 @@ const STATUS_CONFIG: Record<CallStatus, { label: string; color: string; bg: stri
 type FilterDir    = "all" | CallDirection;
 type FilterStatus = "all" | "completed" | "missed";
 
-export default function CallLogPage() {
+function CallLogContent() {
   const { callLog, setView, setDialInput } = useCallStore();
 
   const [search,    setSearch]    = useState("");
@@ -258,5 +259,13 @@ export default function CallLogPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+export default function CallLogPage() {
+  return (
+    <FeatureGate feature="callFeature">
+      <CallLogContent />
+    </FeatureGate>
   );
 }

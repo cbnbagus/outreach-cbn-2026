@@ -233,7 +233,9 @@ function DetailPanel({
 }
 
 // ─── Page ────────────────────────────────────────────────────────────────────
-export default function SocialInboxPage() {
+import { FeatureGate } from "@/components/feature-gate/FeatureGate";
+
+function SocialInboxContent() {
   const [channelFilter, setChannelFilter] = useState<SocialChannel | "all">("all");
   const [statusFilter, setStatusFilter]   = useState<CommentStatus | "all">("all");
   const [search, setSearch]               = useState("");
@@ -414,5 +416,13 @@ export default function SocialInboxPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SocialInboxPage() {
+  return (
+    <FeatureGate feature="socialInbox">
+      <SocialInboxContent />
+    </FeatureGate>
   );
 }

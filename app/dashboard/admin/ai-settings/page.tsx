@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth-store";
+import { FeatureGate } from "@/components/feature-gate/FeatureGate";
 import { cn } from "@/lib/utils";
 import type { EscalationReason } from "@/types";
 
@@ -89,7 +90,7 @@ const TRIGGER_ICONS: Record<string, React.ReactNode> = {
   manual_escalation: <UserCog size={14} />,
 };
 
-export default function AISettingsPage() {
+function AISettingsContent() {
   const currentUser = useAuthStore((s) => s.currentUser);
   const [settings, setSettings] = useState<AISettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
@@ -573,5 +574,13 @@ export default function AISettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AISettingsPage() {
+  return (
+    <FeatureGate feature="aiAutoReply">
+      <AISettingsContent />
+    </FeatureGate>
   );
 }
