@@ -1,30 +1,18 @@
-"use client";
-import { useEffect } from "react";
-
-export default function LandingPage() {
-  useEffect(() => {
-    const nav = document.getElementById("nav");
-    const handleScroll = () => {
-      if (nav) nav.classList.toggle("scrolled", window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); });
-    }, { threshold: 0.1 });
-    document.querySelectorAll(".fade-up").forEach(el => observer.observe(el));
-    return () => { window.removeEventListener("scroll", handleScroll); observer.disconnect(); };
-  }, []);
-
-  return (
-    <>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      <style dangerouslySetInnerHTML={{__html: STYLES}} />
-      <div dangerouslySetInnerHTML={{__html: BODY}} />
-    </>
-  );
-}
-
-const STYLES = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReachTheSoul — Prayer & Counseling Platform for Churches</title>
+  <meta name="description" content="AI-powered prayer and counseling platform. Help your church respond to every prayer request, counsel every soul, and never let anyone fall through the cracks." />
+  <meta property="og:title" content="ReachTheSoul — Every Prayer Heard. Every Soul Cared For." />
+  <meta property="og:description" content="AI-powered prayer & counseling platform for churches and ministries." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://reachthesoul.org" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
@@ -230,9 +218,9 @@ const STYLES = `
     .fade-up:nth-child(4) { transition-delay: 0.3s; }
     .fade-up:nth-child(5) { transition-delay: 0.35s; }
     .fade-up:nth-child(6) { transition-delay: 0.4s; }
-  `;
-
-const BODY = `
+  </style>
+</head>
+<body>
 
 <!-- NAV -->
 <nav id="nav">
@@ -248,8 +236,8 @@ const BODY = `
       <a href="#contact">Contact</a>
     </div>
     <div class="nav-cta">
-      <a href="/login" class="btn btn-outline">Sign In</a>
-      <a href="/register" class="btn btn-primary">Start Free</a>
+      <a href="https://app.reachthesoul.org/login" class="btn btn-outline">Sign In</a>
+      <a href="https://app.reachthesoul.org/register" class="btn btn-primary">Start Free</a>
     </div>
   </div>
 </nav>
@@ -261,7 +249,7 @@ const BODY = `
     <h1>Every prayer <em>heard</em>.<br />Every soul <em>cared for</em>.</h1>
     <p class="sub">Someone just messaged your church at 2 AM: <em>"I can't do this anymore."</em> Who responds? ReachTheSoul ensures no message goes unanswered — with AI that provides immediate care and empathy, and seamless escalation to human counselors for prayer, deeper counseling, or urgent visits.</p>
     <div class="hero-buttons">
-      <a href="/register" class="btn btn-primary">Start Free — No Credit Card →</a>
+      <a href="https://app.reachthesoul.org/register" class="btn btn-primary">Start Free — No Credit Card →</a>
       <a href="#how" class="btn btn-outline">See How It Works</a>
     </div>
     <div class="hero-stats">
@@ -421,7 +409,7 @@ const BODY = `
           <li>Basic reporting</li>
           <li>All data stored securely</li>
         </ul>
-        <a href="/register" class="btn btn-dark">Get Started Free</a>
+        <a href="https://app.reachthesoul.org/register" class="btn btn-dark">Get Started Free</a>
       </div>
       <div class="price-card">
         <h3>Starter</h3>
@@ -438,7 +426,7 @@ const BODY = `
           <li>Team management</li>
           <li>CSV export</li>
         </ul>
-        <a href="/register" class="btn btn-dark">Start with Starter</a>
+        <a href="https://app.reachthesoul.org/register" class="btn btn-dark">Start with Starter</a>
       </div>
       <div class="price-card popular">
         <h3>Growth</h3>
@@ -456,7 +444,7 @@ const BODY = `
           <li>Custom branding</li>
           <li>Priority support</li>
         </ul>
-        <a href="/register" class="btn btn-primary">Start with Growth</a>
+        <a href="https://app.reachthesoul.org/register" class="btn btn-primary">Start with Growth</a>
       </div>
       <div class="price-card">
         <h3>Enterprise</h3>
@@ -485,7 +473,7 @@ const BODY = `
   <div class="container">
     <h2>Someone is reaching out<br />right now.</h2>
     <p>Will they find an empty inbox — or a ministry that cares? Start responding to every soul today.</p>
-    <a href="/register" class="btn btn-primary" style="font-size:17px;padding:16px 36px;">Start Free — Takes 2 Minutes →</a>
+    <a href="https://app.reachthesoul.org/register" class="btn btn-primary" style="font-size:17px;padding:16px 36px;">Start Free — Takes 2 Minutes →</a>
   </div>
 </section>
 
@@ -568,8 +556,8 @@ const BODY = `
           <h4>Product</h4>
           <a href="#features">Features</a>
           <a href="#pricing">Pricing</a>
-          <a href="/login">Sign In</a>
-          <a href="/register">Sign Up Free</a>
+          <a href="https://app.reachthesoul.org/login">Sign In</a>
+          <a href="https://app.reachthesoul.org/register">Sign Up Free</a>
         </div>
         <div>
           <h4>Resources</h4>
@@ -600,4 +588,5 @@ const observer = new IntersectionObserver((entries) => {
 document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 </script>
 
-`;
+</body>
+</html>
