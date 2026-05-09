@@ -4,14 +4,14 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, LogIn, AlertCircle, MessageSquare, Users, BarChart2, CheckCircle } from "lucide-react";
+import { Eye, EyeOff, LogIn, AlertCircle, MessageSquare, Heart, Users, BarChart2, CheckCircle, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const FEATURES = [
-  { icon: MessageSquare, label: "Omnichannel Inbox",   desc: "WhatsApp, Instagram, Facebook, YouTube — all in one place"    },
-  { icon: Users,         label: "Respondent Profiles", desc: "Full history across every conversation and ticket"            },
-  { icon: BarChart2,     label: "Prayer & Care Tracking", desc: "Track every prayer request, counseling session, and follow-up — nothing falls through the cracks"  },
-  { icon: CheckCircle,   label: "Outcome Tracking",    desc: "Every ticket closed with a recorded result"                   },
+  { icon: Heart,          label: "24/7 Prayer & Counseling", desc: "AI listens with empathy first, human counselors join when needed" },
+  { icon: MessageSquare,  label: "Omnichannel Inbox",        desc: "Receive prayer requests from WhatsApp, Instagram, Facebook — one place" },
+  { icon: BarChart2,      label: "Care Tracking",            desc: "Track every prayer request, counseling session, and follow-up" },
+  { icon: Shield,         label: "Confidential & Secure",    desc: "Every conversation is stored securely. Nothing falls through the cracks" },
 ];
 
 export default function LoginPage() {
@@ -55,8 +55,6 @@ export default function LoginPage() {
         return;
       }
 
-      // AuthProvider will hydrate the store via onAuthStateChanged,
-      // but we also set it here for immediate welcome screen display.
       setUser({
         uid: credential.user.uid,
         displayName: data.displayName ?? "User",
@@ -83,7 +81,6 @@ export default function LoginPage() {
     }
   };
 
-  // Welcome screen after login
   if (step === "welcome") {
     return (
       <div className="min-h-screen bg-sidebar flex items-center justify-center p-6">
@@ -105,15 +102,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-sidebar flex">
+    <div className="min-h-screen bg-sidebar flex flex-col lg:flex-row">
 
-      {/* Left branding panel — hidden on mobile */}
-      <div className="hidden lg:flex flex-col w-[460px] shrink-0 p-10 border-r border-sidebar-border relative overflow-hidden">
+      {/* Left branding panel — DESKTOP: full sidebar, MOBILE: compact header */}
+      <div className="flex flex-col lg:w-[460px] shrink-0 p-6 lg:p-10 lg:border-r border-sidebar-border relative overflow-hidden">
 
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-auto">
+        <div className="flex items-center gap-3 lg:mb-auto">
           <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <MessageSquare size={16} className="text-white" />
+            <Heart size={16} className="text-white" />
           </div>
           <div>
             <p className="text-sm font-bold text-white leading-tight">ReachTheSoul</p>
@@ -121,56 +118,49 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Hero copy */}
-        <div className="my-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sidebar-primary/20 border border-sidebar-primary/30 mb-6">
+        {/* Hero copy — mobile: compact, desktop: full */}
+        <div className="my-6 lg:my-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sidebar-primary/20 border border-sidebar-primary/30 mb-4 lg:mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
             <span className="text-xs text-sidebar-primary font-medium">Prayer & Counseling Platform</span>
           </div>
-          <h1 className="text-4xl font-bold text-white leading-tight text-balance mb-4">
-            Every conversation.<br />Every soul.<br />All in one place.
+          <h1 className="text-2xl lg:text-4xl font-bold text-white leading-tight text-balance mb-3 lg:mb-4">
+            Every prayer heard.<br className="hidden lg:block" />
+            Every soul cared for.
           </h1>
-          <p className="text-sm text-sidebar-foreground/50 leading-relaxed max-w-xs">
+          <p className="text-xs lg:text-sm text-sidebar-foreground/50 leading-relaxed max-w-xs">
             Built for churches and ministries who provide prayer support, counseling, and pastoral care across digital channels.
           </p>
         </div>
 
-        {/* Feature list */}
-        <div className="flex flex-col gap-4">
+        {/* Feature list — mobile: 2-col grid, desktop: vertical list */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-4">
           {FEATURES.map(({ icon: Icon, label, desc }) => (
-            <div key={label} className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-sidebar-accent/50 flex items-center justify-center shrink-0 mt-0.5">
-                <Icon size={14} className="text-sidebar-foreground/60" />
+            <div key={label} className="flex items-start gap-2 lg:gap-3">
+              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-sidebar-accent/50 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon size={13} className="text-sidebar-foreground/60" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-white leading-tight">{label}</p>
-                <p className="text-[11px] text-sidebar-foreground/40 leading-relaxed mt-0.5">{desc}</p>
+                <p className="text-[11px] lg:text-xs font-semibold text-white leading-tight">{label}</p>
+                <p className="text-[10px] lg:text-[11px] text-sidebar-foreground/40 leading-relaxed mt-0.5 hidden lg:block">{desc}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Bottom tagline */}
-        <p className="mt-auto pt-8 text-[10px] text-sidebar-foreground/25 border-t border-sidebar-border">
-          ReachTheSoul &copy; {new Date().getFullYear()}
+        {/* Bottom tagline — desktop only */}
+        <p className="hidden lg:block mt-auto pt-8 text-[10px] text-sidebar-foreground/25 border-t border-sidebar-border">
+          ReachTheSoul &copy; {new Date().getFullYear()} &middot; Where every soul finds care
         </p>
       </div>
 
       {/* Right — login form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-background">
+      <div className="flex-1 flex items-start lg:items-center justify-center p-6 bg-background rounded-t-2xl lg:rounded-none -mt-2 lg:mt-0">
         <div className="w-full max-w-[380px]">
-
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MessageSquare size={14} className="text-white" />
-            </div>
-            <span className="font-bold text-foreground text-xs leading-tight">ReachTheSoul<br /><span className="text-[10px] font-normal text-muted-foreground">reachthesoul.org</span></span>
-          </div>
 
           {/* Heading */}
           <div className="mb-7">
-            <h2 className="text-2xl font-bold text-foreground text-balance">Sign in to ReachTheSoul</h2>
+            <h2 className="text-xl lg:text-2xl font-bold text-foreground text-balance">Sign in to ReachTheSoul</h2>
             <p className="text-sm text-muted-foreground mt-1.5">Enter your credentials to continue.</p>
           </div>
 
@@ -179,15 +169,13 @@ export default function LoginPage() {
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1.5">Email address</label>
               <Input
-                type="email" placeholder="you@ministry.org"
+                type="email" placeholder="you@church.org"
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 required autoComplete="email" className="h-10 text-sm"
               />
             </div>
             <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-semibold text-foreground">Password</label>
-              </div>
+              <label className="block text-xs font-semibold text-foreground mb-1.5">Password</label>
               <div className="relative">
                 <Input
                   type={showPass ? "text" : "password"} placeholder="Enter your password"
@@ -215,7 +203,6 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          {/* Help text */}
           <p className="text-[11px] text-muted-foreground text-center mt-6 leading-relaxed">
             Don&apos;t have an account?{" "}
             <a href="/register" className="text-primary font-medium hover:underline">

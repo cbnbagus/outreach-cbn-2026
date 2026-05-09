@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Eye, EyeOff, ArrowRight, AlertCircle, MessageSquare,
+  Eye, EyeOff, ArrowRight, AlertCircle, MessageSquare, Heart, Shield,
   Users, BarChart2, CheckCircle, Building2, Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -204,13 +204,13 @@ export default function RegisterPage() {
 
   // ─── Main form ─────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-sidebar flex">
+    <div className="min-h-screen bg-sidebar flex flex-col lg:flex-row">
 
-      {/* Left branding panel */}
-      <div className="hidden lg:flex flex-col w-[460px] shrink-0 p-10 border-r border-sidebar-border relative overflow-hidden">
-        <div className="flex items-center gap-3 mb-auto">
+      {/* Left branding panel — DESKTOP: full sidebar, MOBILE: compact header */}
+      <div className="flex flex-col lg:w-[460px] shrink-0 p-6 lg:p-10 lg:border-r border-sidebar-border relative overflow-hidden">
+        <div className="flex items-center gap-3 lg:mb-auto">
           <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <MessageSquare size={16} className="text-white" />
+            <Heart size={16} className="text-white" />
           </div>
           <div>
             <p className="text-sm font-bold text-white leading-tight">ReachTheSoul</p>
@@ -218,44 +218,43 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="my-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sidebar-primary/20 border border-sidebar-primary/30 mb-6">
+        <div className="my-6 lg:my-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sidebar-primary/20 border border-sidebar-primary/30 mb-4 lg:mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
             <span className="text-xs text-sidebar-primary font-medium">Prayer & Counseling Platform</span>
           </div>
-          <h1 className="text-4xl font-bold text-white leading-tight text-balance mb-4">
-            Every prayer<br />heard.<br />Every soul cared for.
+          <h1 className="text-2xl lg:text-4xl font-bold text-white leading-tight text-balance mb-3 lg:mb-4">
+            Every prayer heard.<br className="hidden lg:block" />
+            Every soul cared for.
           </h1>
-          <p className="text-sm text-sidebar-foreground/50 leading-relaxed max-w-xs">
+          <p className="text-xs lg:text-sm text-sidebar-foreground/50 leading-relaxed max-w-xs">
             Free to start. No credit card required. Set up your prayer & counseling platform in under 2 minutes.
           </p>
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-4">
           {FEATURES.map(({ icon: Icon, label, desc }) => (
-            <div key={label} className="flex items-start gap-3">
-              <div className="w-8 h-8 rounded-lg bg-sidebar-accent/50 flex items-center justify-center shrink-0 mt-0.5">
-                <Icon size={14} className="text-sidebar-foreground/60" />
+            <div key={label} className="flex items-start gap-2 lg:gap-3">
+              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-sidebar-accent/50 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon size={13} className="text-sidebar-foreground/60" />
               </div>
               <div>
-                <p className="text-xs font-semibold text-white leading-tight">{label}</p>
-                <p className="text-[11px] text-sidebar-foreground/40 leading-relaxed mt-0.5">{desc}</p>
+                <p className="text-[11px] lg:text-xs font-semibold text-white leading-tight">{label}</p>
+                <p className="text-[10px] lg:text-[11px] text-sidebar-foreground/40 leading-relaxed mt-0.5 hidden lg:block">{desc}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <p className="mt-auto pt-8 text-[10px] text-sidebar-foreground/25 border-t border-sidebar-border">
-          ReachTheSoul &copy; {new Date().getFullYear()}
+        <p className="hidden lg:block mt-auto pt-8 text-[10px] text-sidebar-foreground/25 border-t border-sidebar-border">
+          ReachTheSoul &copy; {new Date().getFullYear()} &middot; Where every soul finds care
         </p>
       </div>
 
       {/* Right — registration form */}
-      <div className="flex-1 flex items-center justify-center p-6 bg-background">
+      <div className="flex-1 flex items-start lg:items-center justify-center p-6 bg-background rounded-t-2xl lg:rounded-none -mt-2 lg:mt-0">
         <div className="w-full max-w-[420px]">
 
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <MessageSquare size={14} className="text-white" />
             </div>
