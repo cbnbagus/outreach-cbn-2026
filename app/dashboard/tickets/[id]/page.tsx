@@ -837,28 +837,35 @@ export default function TicketDetailPage() {
           </Card>
 
           {/* Agent Notes */}
-          <Card className="border border-border shadow-none">
-            <CardHeader className="py-2.5 px-4 border-b border-border">
-              <CardTitle className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                <StickyNote size={10} />Notes
+          <Card className="border-2 border-amber-300 shadow-none bg-amber-50/30">
+            <CardHeader className="py-3 px-4 border-b border-amber-200 bg-amber-50">
+              <CardTitle className="text-xs font-semibold text-amber-800 flex items-center gap-2">
+                <StickyNote size={14} className="text-amber-600" />
+                Counseling Notes
                 {agentNotes.length > 0 && (
-                  <span className="ml-auto bg-amber-100 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                  <span className="ml-auto bg-amber-200 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
                     {agentNotes.length}
                   </span>
                 )}
               </CardTitle>
+              <p className="text-[10px] text-amber-600 mt-0.5">
+                Record counseling observations, prayer points, and follow-up actions for this ticket.
+              </p>
             </CardHeader>
-            <CardContent className="p-3 flex flex-col gap-2">
+            <CardContent className="p-4 flex flex-col gap-2.5">
               {agentNotes.length === 0 && (
-                <p className="text-[10px] text-muted-foreground/60 italic text-center py-2">No agent notes yet.</p>
+                <div className="text-center py-4">
+                  <StickyNote size={20} className="mx-auto text-amber-300 mb-2" />
+                  <p className="text-xs text-amber-600/70 italic">No counseling notes yet. Add your first note below.</p>
+                </div>
               )}
               {agentNotes.map((n) => (
-                <div key={n.id} className="group relative flex flex-col gap-0.5 p-2.5 rounded-md bg-amber-50 border border-amber-200">
-                  <p className="text-xs text-amber-900 leading-relaxed whitespace-pre-wrap">{n.text}</p>
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-[9px] text-amber-600 font-medium">{n.author}</span>
-                    <span className="text-[9px] text-amber-500">
-                      {new Date(n.createdAt).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                <div key={n.id} className="group relative flex flex-col gap-0.5 p-3 rounded-lg bg-white border border-amber-200">
+                  <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">{n.text}</p>
+                  <div className="flex items-center justify-between mt-1.5 pt-1.5 border-t border-amber-100">
+                    <span className="text-[10px] text-amber-700 font-medium">{n.author}</span>
+                    <span className="text-[10px] text-amber-500">
+                      {new Date(n.createdAt).toLocaleString("en-US", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                     </span>
                   </div>
                   <button
@@ -870,31 +877,31 @@ export default function TicketDetailPage() {
                 </div>
               ))}
               {/* Add note input */}
-              <div className="flex gap-1.5 mt-1">
+              <div className="flex flex-col gap-2 mt-1 p-3 rounded-lg border border-dashed border-amber-300 bg-white">
                 <textarea
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) addNote(); }}
-                  placeholder="Add agent note... (Ctrl+Enter)"
-                  rows={2}
-                  className="flex-1 text-xs border border-border rounded-md px-2.5 py-2 resize-none bg-background focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                  placeholder="Write counseling notes, prayer points, follow-up actions... (Ctrl+Enter to save)"
+                  rows={4}
+                  className="w-full text-xs border border-amber-200 rounded-md px-3 py-2.5 resize-none bg-background focus:outline-none focus:ring-2 focus:ring-amber-300/50 placeholder:text-muted-foreground/50"
                 />
                 <button
                   onClick={addNote}
                   disabled={!newNote.trim()}
-                  className="self-end p-2 rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-40 transition-colors"
+                  className="self-end flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-white text-xs font-medium hover:bg-amber-600 disabled:opacity-40 transition-colors"
                 >
-                  <Plus size={12} />
+                  <Plus size={12} /> Add Note
                 </button>
               </div>
             </CardContent>
           </Card>
 
-          {/* Kategori Masalah — editable by agent */}
+          {/* Issue Categories — editable by agent */}
           <Card className="border border-border shadow-none">
             <CardHeader className="py-2.5 px-4 border-b border-border">
               <CardTitle className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
-                <Tag size={10} />Kategori Masalah
+                <Tag size={10} />Issue Categories
               </CardTitle>
             </CardHeader>
             <CardContent className="p-3 flex flex-col gap-2.5">
@@ -922,7 +929,7 @@ export default function TicketDetailPage() {
 
               {/* Preset suggestions */}
               <div className="flex flex-wrap gap-1">
-                {["KDRT", "Ekonomi", "Hutang", "Kecemasan", "Depresi", "Pernikahan", "Sakit", "Keselamatan", "Iman"].map((preset) => (
+                {["Anxiety", "Depression", "Marriage", "Grief", "Addiction", "Financial", "Faith", "Family", "Health"].map((preset) => (
                   !problemCategories.includes(preset) && (
                     <button
                       key={preset}
