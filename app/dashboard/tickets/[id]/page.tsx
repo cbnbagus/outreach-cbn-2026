@@ -143,8 +143,33 @@ export default function TicketDetailPage() {
   const [aiError, setAiError]           = useState<string | null>(null);
 
   // Agent notes (pinned, visible to all agents, separate from reply thread)
-  const [agentNotes, setAgentNotes]     = useState<{ id: string; text: string; author: string; createdAt: string }[]>([]);
+  const [agentNotes, setAgentNotes]     = useState<{ id: string; text: string; author: string; authorId: string; createdAt: string }[]>([]);
   const [newNote, setNewNote]           = useState("");
+  const [notesLoaded, setNotesLoaded]   = useState(false);
+
+  // Load notes from Firestore on mount
+  useEffect(() => {
+    if (!ticket || notesLoaded) return;
+    const loadNotes = async () => {
+      try {
+        const [{ doc, getDoc }, { db }] = await Promise.all([
+          import("firebase/firestore"), import("@/lib/firebase"),
+        ]);
+        const snap = await getDoc(doc(db, "tickets", ticket.ticketId));
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data.counselingNotes && Array.isArray(data.counselingNotes)) {
+            setAgentNotes(data.counselingNotes);
+          }
+        }
+        setNotesLoaded(true);
+      } catch (err) {
+        console.error("Failed to load notes:", err);
+        setNotesLoaded(true);
+      }
+    };
+    loadNotes();
+  }, [ticket, notesLoaded]);
 
   // Presence — current agent status
   const { presence, initialized } = usePresenceStore();
@@ -166,14 +191,48 @@ export default function TicketDetailPage() {
     setProblemCategories((prev) => prev.filter((c) => c !== cat));
   };
 
-  const addNote = () => {
+  const addNote = async () => {
     const text = newNote.trim();
-    if (!text) return;
-    setAgentNotes((prev) => [
-      ...prev,
-      { id: `note_${Date.now()}`, text, author: currentUser?.displayName ?? "Agent", createdAt: new Date().toISOString() },
-    ]);
+    if (!text || !ticket) return;
+    const noteEntry = {
+      id: `note_${Date.now()}`,
+      text,
+      author: currentUser?.displayName ?? "Agent",
+      authorId: currentUser?.uid ?? "",
+      createdAt: new Date().toISOString(),
+    };
+    // Update local state immediately
+    setAgentNotes((prev) => [...prev, noteEntry]);
     setNewNote("");
+    // Persist to Firestore
+    try {
+      const [{ doc, updateDoc, arrayUnion, serverTimestamp }, { db }] = await Promise.all([
+        import("firebase/firestore"), import("@/lib/firebase"),
+      ]);
+      await updateDoc(doc(db, "tickets", ticket.ticketId), {
+        counselingNotes: arrayUnion(noteEntry),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error("Failed to save note:", err);
+    }
+  };
+
+  const removeNote = async (noteId: string) => {
+    const noteToRemove = agentNotes.find((n) => n.id === noteId);
+    if (!noteToRemove || !ticket) return;
+    setAgentNotes((prev) => prev.filter((x) => x.id !== noteId));
+    try {
+      const [{ doc, updateDoc, arrayRemove, serverTimestamp }, { db }] = await Promise.all([
+        import("firebase/firestore"), import("@/lib/firebase"),
+      ]);
+      await updateDoc(doc(db, "tickets", ticket.ticketId), {
+        counselingNotes: arrayRemove(noteToRemove),
+        updatedAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error("Failed to remove note:", err);
+    }
   };
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -869,7 +928,7 @@ export default function TicketDetailPage() {
                     </span>
                   </div>
                   <button
-                    onClick={() => setAgentNotes((prev) => prev.filter((x) => x.id !== n.id))}
+                    onClick={() => removeNote(n.id)}
                     className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-amber-400 hover:text-red-500"
                   >
                     <Trash2 size={10} />

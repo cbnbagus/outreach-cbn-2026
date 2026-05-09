@@ -26,11 +26,11 @@ import { DEFAULT_PROGRESS_STEPS, DEFAULT_PROGRAM_SOURCES } from "@/types";
 
 // Progress step config
 const PROGRESS_CONFIG: Record<RespondentProgress, { color: string; bg: string; border: string; desc: string }> = {
-  Data:       { color: "text-slate-600",   bg: "bg-slate-100",   border: "border-slate-300",  desc: "Identitas sudah dicatat" },
-  Doa:        { color: "text-blue-600",    bg: "bg-blue-50",     border: "border-blue-200",   desc: "Sudah didoakan" },
-  Konseling:  { color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200",  desc: "Dalam proses konseling" },
-  Rekomitmen: { color: "text-purple-600",  bg: "bg-purple-50",   border: "border-purple-200", desc: "Komitmen diperbarui" },
-  Salvation:  { color: "text-emerald-600", bg: "bg-emerald-50",  border: "border-emerald-200",desc: "Menerima keselamatan" },
+  Data:       { color: "text-slate-600",   bg: "bg-slate-100",   border: "border-slate-300",  desc: "Identity recorded" },
+  Doa:        { color: "text-blue-600",    bg: "bg-blue-50",     border: "border-blue-200",   desc: "Prayed for" },
+  Konseling:  { color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200",  desc: "In counseling process" },
+  Rekomitmen: { color: "text-purple-600",  bg: "bg-purple-50",   border: "border-purple-200", desc: "Recommitment made" },
+  Salvation:  { color: "text-emerald-600", bg: "bg-emerald-50",  border: "border-emerald-200",desc: "Accepted salvation" },
   POP:        { color: "text-orange-600",  bg: "bg-orange-50",   border: "border-orange-200", desc: "Part of the Parish" },
 };
 
@@ -721,23 +721,29 @@ export default function RespondentProfilePage() {
                 </div>
               )}
 
-              {/* Journal entries — from respondent.journal + ticket agent notes */}
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+              {/* Journal entries — from respondent.journal + ticket counseling notes */}
+              <div className="space-y-2 max-h-80 overflow-y-auto">
                 {(() => {
                   const journalEntries = (respondent.journal ?? [])
                     .map((e: any) => ({ ...e, source: "manual" }));
 
-                  // Merge ticket agent notes into journal
-                  const ticketNotes = tickets
-                    .filter((t: any) => t.agentNotes)
-                    .map((t: any) => ({
-                      text: t.agentNotes,
-                      author: t.assignedAgentName ?? "Agent",
-                      authorId: t.assignedAgentId ?? "",
-                      ticketRef: t.ticketNumber,
-                      createdAt: t.updatedAt ?? t.createdAt,
-                      source: "ticket",
-                    }));
+                  // Merge counseling notes from ALL tickets into journal
+                  const ticketNotes: any[] = [];
+                  for (const t of tickets) {
+                    const notes = (t as any).counselingNotes;
+                    if (notes && Array.isArray(notes)) {
+                      for (const note of notes) {
+                        ticketNotes.push({
+                          text: note.text,
+                          author: note.author ?? "Agent",
+                          authorId: note.authorId ?? "",
+                          ticketRef: t.ticketNumber,
+                          createdAt: note.createdAt ?? t.createdAt,
+                          source: "ticket",
+                        });
+                      }
+                    }
+                  }
 
                   const allEntries = [...journalEntries, ...ticketNotes]
                     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
