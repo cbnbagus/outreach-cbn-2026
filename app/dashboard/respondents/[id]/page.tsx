@@ -6,7 +6,7 @@ import {
   ChevronLeft, Phone, Mail, Globe, StickyNote, Plus, Pencil,
   Ticket, Check, X, ChevronDown, ChevronUp, Lock, MessageSquare,
   MapPin, CalendarDays, Tag, TrendingUp, Bot, ShieldAlert, ShieldOff, ShieldCheck, AlertTriangle, Tv2,
-  ArrowUpRight, MessageCircle, Instagram, Facebook,
+  ArrowUpRight, MessageCircle, Instagram, Facebook, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +86,8 @@ export default function RespondentProfilePage() {
   const [editCategories,   setEditCategories]    = useState<string[]>([]);
   const [newCategory,      setNewCategory]       = useState("");
   const [editProgramSource, setEditProgramSource] = useState("");
+  const [showJournalInput, setShowJournalInput] = useState(false);
+  const [newJournalEntry, setNewJournalEntry] = useState("");
   const [customProgramSources, setCustomProgramSources] = useState<string[]>([]);
   const [newProgramSource, setNewProgramSource]  = useState("");
 
@@ -233,11 +235,11 @@ export default function RespondentProfilePage() {
         <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-red-200 bg-red-50">
           <ShieldOff size={15} className="text-red-600 mt-0.5 flex-shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-red-700">Respondent Diblokir</p>
+            <p className="text-xs font-semibold text-red-700">Respondent Blocked</p>
             <p className="text-[11px] text-red-600 mt-0.5">
-              Nomor <span className="font-mono font-semibold">{respondent.phone ?? "—"}</span> tidak dapat menghubungi OMS.
-              {respondent.blockedReason && <span> Alasan: {respondent.blockedReason}.</span>}
-              {respondent.blockedAt && <span> Diblokir pada {new Date(respondent.blockedAt).toLocaleDateString("en-US", { day: "2-digit", month: "long", year: "numeric" })}.</span>}
+              This number has been blocked from contacting the system.
+              {respondent.blockedReason && <span> Reason: {respondent.blockedReason}.</span>}
+              {respondent.blockedAt && <span> Blocked on {new Date(respondent.blockedAt).toLocaleDateString("en-US", { day: "2-digit", month: "long", year: "numeric" })}.</span>}
             </p>
           </div>
           <button
@@ -251,7 +253,7 @@ export default function RespondentProfilePage() {
 
       <div className="flex gap-5 items-start">
         {/* ── LEFT PANEL ── */}
-        <div className="flex flex-col gap-4 w-72 flex-shrink-0">
+        <div className="flex flex-col gap-4 w-80 flex-shrink-0">
           <Card className="border border-border shadow-none">
             <CardContent className="p-5">
 
@@ -326,17 +328,17 @@ export default function RespondentProfilePage() {
                 /* ── EDIT FORM ── */
                 <div className="flex flex-col gap-3 pt-4">
                   <div>
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Nama Lengkap</label>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Full Name</label>
                     <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-8 text-xs" />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Usia</label>
-                      <Input value={editAge} onChange={(e) => setEditAge(e.target.value)} className="h-8 text-xs" type="number" min="1" max="120" placeholder="thn" />
+                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Age</label>
+                      <Input value={editAge} onChange={(e) => setEditAge(e.target.value)} className="h-8 text-xs" type="number" min="1" max="120" placeholder="yrs" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Kota Asal</label>
-                      <Input value={editCity} onChange={(e) => setEditCity(e.target.value)} className="h-8 text-xs" placeholder="Jakarta..." />
+                      <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">City</label>
+                      <Input value={editCity} onChange={(e) => setEditCity(e.target.value)} className="h-8 text-xs" placeholder="City..." />
                     </div>
                   </div>
                   <div>
@@ -373,7 +375,7 @@ export default function RespondentProfilePage() {
                     </Select>
                   </div>
                   <div>
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Kategori Masalah</label>
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Issue Categories</label>
                     <div className="flex flex-wrap gap-1 mb-1.5">
                       {editCategories.map((cat) => (
                         <span key={cat} className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-muted border border-border text-foreground">
@@ -396,7 +398,7 @@ export default function RespondentProfilePage() {
                         <Plus size={11} />
                       </Button>
                     </div>
-                    <p className="text-[9px] text-muted-foreground mt-1">Contoh: KDRT, Ekonomi, Hutang, dll.</p>
+                    <p className="text-[9px] text-muted-foreground mt-1">e.g. Marriage, Anxiety, Financial, Grief</p>
                   </div>
 
                   {/* Program Source */}
@@ -451,12 +453,12 @@ export default function RespondentProfilePage() {
                         <Plus size={11} />
                       </Button>
                     </div>
-                    <p className="text-[9px] text-muted-foreground mt-1">Contoh: Solusi, Superbook, Jawaban.com, dll.</p>
+                    <p className="text-[9px] text-muted-foreground mt-1">e.g. Website, Instagram, Crusade Event</p>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Catatan</label>
-                    <Textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} className="text-xs resize-none min-h-[60px]" />
+                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Counselor Notes</label>
+                    <Textarea value={editNotes} onChange={(e) => setEditNotes(e.target.value)} className="text-xs resize-none min-h-[120px]" placeholder="Summary of respondent's situation, key observations, follow-up actions..." />
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" className="flex-1" onClick={saveEdit}>
@@ -485,7 +487,7 @@ export default function RespondentProfilePage() {
                     <div className="flex items-center gap-2.5 text-muted-foreground">
                       <MapPin size={13} className="text-primary/60 flex-shrink-0" />
                       <span className="text-xs">
-                        {[respondent.age && `${respondent.age} thn`, respondent.city].filter(Boolean).join(" · ")}
+                        {[respondent.age && `${respondent.age} yrs`, respondent.city].filter(Boolean).join(" · ")}
                       </span>
                     </div>
                   )}
@@ -536,7 +538,7 @@ export default function RespondentProfilePage() {
                     <div className="pt-1">
                       <div className="flex items-center gap-1.5 mb-1.5">
                         <Tag size={11} className="text-primary/60" />
-                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">Kategori Masalah</p>
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">Issue Categories</p>
                       </div>
                       <div className="flex flex-wrap gap-1">
                         {respondent.problemCategories.map((cat) => (
@@ -662,8 +664,122 @@ export default function RespondentProfilePage() {
           )}
         </div>
 
-        {/* ── RIGHT PANEL — Ticket History ── */}
+        {/* ── RIGHT PANEL — Counseling Journal + Ticket History ── */}
         <div className="flex-1 min-w-0 flex flex-col gap-4">
+
+          {/* ── COUNSELING JOURNAL ── */}
+          <Card className="border border-border shadow-none">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <FileText size={14} className="text-primary" />
+                  <h3 className="text-sm font-semibold text-foreground">Counseling Journal</h3>
+                </div>
+                <button
+                  onClick={() => setShowJournalInput(!showJournalInput)}
+                  className="text-[10px] text-primary hover:underline flex items-center gap-1"
+                >
+                  <Plus size={11} /> Add entry
+                </button>
+              </div>
+
+              {/* New journal entry input */}
+              {showJournalInput && (
+                <div className="mb-3 p-3 rounded-lg border border-primary/20 bg-primary/5">
+                  <Textarea
+                    value={newJournalEntry}
+                    onChange={(e) => setNewJournalEntry(e.target.value)}
+                    placeholder="Record counseling observations, progress notes, follow-up actions, prayer points..."
+                    className="text-xs resize-none min-h-[80px] mb-2 bg-background"
+                  />
+                  <div className="flex gap-2">
+                    <Button size="sm" className="text-xs h-7" onClick={async () => {
+                      if (!newJournalEntry.trim()) return;
+                      const [{ doc, updateDoc, arrayUnion, serverTimestamp }, { db }] = await Promise.all([
+                        import("firebase/firestore"), import("@/lib/firebase"),
+                      ]);
+                      const entry = {
+                        text: newJournalEntry.trim(),
+                        author: currentUser?.displayName ?? "Unknown",
+                        authorId: currentUser?.uid ?? "",
+                        ticketRef: null,
+                        createdAt: new Date().toISOString(),
+                      };
+                      await updateDoc(doc(db, "respondents", respondent.respondentId), {
+                        journal: arrayUnion(entry),
+                        updatedAt: serverTimestamp(),
+                      });
+                      setNewJournalEntry("");
+                      setShowJournalInput(false);
+                    }}>
+                      <Check size={11} className="mr-1" /> Save entry
+                    </Button>
+                    <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => { setShowJournalInput(false); setNewJournalEntry(""); }}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {/* Journal entries — from respondent.journal + ticket agent notes */}
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {(() => {
+                  const journalEntries = (respondent.journal ?? [])
+                    .map((e: any) => ({ ...e, source: "manual" }));
+
+                  // Merge ticket agent notes into journal
+                  const ticketNotes = tickets
+                    .filter((t: any) => t.agentNotes)
+                    .map((t: any) => ({
+                      text: t.agentNotes,
+                      author: t.assignedAgentName ?? "Agent",
+                      authorId: t.assignedAgentId ?? "",
+                      ticketRef: t.ticketNumber,
+                      createdAt: t.updatedAt ?? t.createdAt,
+                      source: "ticket",
+                    }));
+
+                  const allEntries = [...journalEntries, ...ticketNotes]
+                    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+                  if (allEntries.length === 0) {
+                    return (
+                      <div className="text-center py-6">
+                        <FileText size={20} className="mx-auto text-muted-foreground/30 mb-2" />
+                        <p className="text-[11px] text-muted-foreground">
+                          No journal entries yet. Add notes to track counseling progress.
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return allEntries.map((entry: any, idx: number) => (
+                    <div key={idx} className={cn(
+                      "p-3 rounded-lg border text-xs",
+                      entry.source === "ticket" ? "bg-amber-50/50 border-amber-200" : "bg-background border-border"
+                    )}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-foreground">{entry.author}</span>
+                        <div className="flex items-center gap-2">
+                          {entry.ticketRef && (
+                            <span className="text-[9px] font-mono text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+                              {entry.ticketRef}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(entry.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </span>
+                        </div>
+                      </div>
+                      <p className="text-foreground/80 whitespace-pre-wrap leading-relaxed">{entry.text}</p>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ── TICKET HISTORY ── */}
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-sm font-semibold text-foreground">Ticket History</h3>
@@ -685,7 +801,7 @@ export default function RespondentProfilePage() {
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   <Ticket size={16} className="text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground">Belum ada tickets untuk respondent ini.</p>
+                <p className="text-sm text-muted-foreground">No tickets for this respondent yet.</p>
               </CardContent>
             </Card>
           ) : (
@@ -755,7 +871,7 @@ export default function RespondentProfilePage() {
                       <div className="border-t border-border bg-muted/20">
                         {(t.categoryName || t.outcomeName) && (
                           <div className="flex items-center gap-4 px-5 py-2 border-b border-border bg-background text-[10px] text-muted-foreground">
-                            {t.categoryName && <span>Kategori: <strong className="text-foreground">{t.categoryName}</strong></span>}
+                            {t.categoryName && <span>Category: <strong className="text-foreground">{t.categoryName}</strong></span>}
                             {t.outcomeName  && <span>Outcome: <strong className="text-foreground">{t.outcomeName}</strong></span>}
                           </div>
                         )}
@@ -782,7 +898,7 @@ export default function RespondentProfilePage() {
               <ShieldOff size={16} className="text-red-600" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Blokir Respondent</h3>
+              <h3 className="text-sm font-semibold text-foreground">Block Respondent</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Nomor <span className="font-mono font-semibold text-foreground">{respondent.phone ?? "—"}</span> tidak akan bisa menghubungi OMS di semua channel.
               </p>
@@ -827,7 +943,7 @@ export default function RespondentProfilePage() {
               disabled={!blockReason.trim()}
               onClick={handleBlock}
             >
-              <ShieldOff size={11} className="mr-1" /> Blokir Sekarang
+              <ShieldOff size={11} className="mr-1" /> Block Now
             </Button>
           </div>
         </div>
