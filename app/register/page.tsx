@@ -255,15 +255,6 @@ export default function RegisterPage() {
       <div className="flex-1 flex items-start lg:items-center justify-center p-6 bg-background rounded-t-2xl lg:rounded-none -mt-2 lg:mt-0">
         <div className="w-full max-w-[420px]">
 
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <MessageSquare size={14} className="text-white" />
-            </div>
-            <span className="font-bold text-foreground text-xs leading-tight">
-              ReachTheSoul<br />
-              <span className="text-[10px] font-normal text-muted-foreground">reachthesoul.org</span>
-            </span>
-          </div>
-
           {/* Step indicator */}
           <div className="flex items-center gap-3 mb-7">
             <div className={cn(
