@@ -72,7 +72,8 @@ async function callAnthropic(apiKey: string, model: string, messages: any[]) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { messages, orgId } = await req.json();
+    const body = await req.json();
+    const { messages, orgId } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json(
@@ -81,20 +82,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Load org-specific AI config
-    let config: any = null;
-    if (orgId) {
+    // Priority: direct params from body > org config from Firestore > env vars
+    let provider = body.provider ?? "";
+    let apiKey = body.apiKey ?? "";
+    let model = body.model ?? "";
+
+    // If not provided directly, try loading from org config
+    if (!apiKey && orgId) {
       try {
-        config = await getAIConfig(orgId);
+        const config = await getAIConfig(orgId);
+        if (config) {
+          provider = provider || config.provider || "";
+          apiKey = apiKey || config.apiKey || "";
+          model = model || config.model || "";
+        }
       } catch {
         // Fall back to env vars
       }
     }
 
-    const provider = config?.provider ?? process.env.AI_PROVIDER ?? "";
-    // Org BYOK (Bring Your Own Key) or platform key
-    const apiKey = config?.apiKey ?? process.env.AI_API_KEY ?? "";
-    const model = config?.model ?? process.env.AI_MODEL ?? "";
+    // Final fallback to env vars
+    provider = provider || process.env.AI_PROVIDER || "";
+    apiKey = apiKey || process.env.AI_API_KEY || "";
+    model = model || process.env.AI_MODEL || "";
 
     if (!provider || !apiKey) {
       return NextResponse.json(

@@ -125,8 +125,11 @@ function AISettingsContent() {
             setSettings({
               ...DEFAULT_SETTINGS,
               ...data,
-              escalationTriggers: data.escalationTriggers ?? DEFAULT_SETTINGS.escalationTriggers,
-              channelToggles: data.channelToggles ?? DEFAULT_SETTINGS.channelToggles,
+              escalationTriggers: data.escalationTriggers?.length ? data.escalationTriggers : DEFAULT_SETTINGS.escalationTriggers,
+              channelToggles: {
+                ...DEFAULT_SETTINGS.channelToggles,
+                ...(data.channelToggles ?? {}),
+              },
             });
           }
         }
@@ -174,6 +177,10 @@ function AISettingsContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          orgId,
+          apiKey: settings.apiKey,
+          provider: settings.provider,
+          model: settings.model,
           messages: [
             { role: "system", content: settings.systemPrompt },
             { role: "user", content: testInput },
@@ -437,7 +444,7 @@ function AISettingsContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 flex flex-col gap-2">
-              <p className="text-[10px] text-muted-foreground mb-1">Channel mana yang AI handle secara otomatis.</p>
+              <p className="text-[10px] text-muted-foreground mb-1">Select which channels AI auto-replies on.</p>
               {Object.entries(settings.channelToggles).map(([channel, active]) => (
                 <div key={channel} className="flex items-center justify-between py-1.5 border-b border-border/60 last:border-0">
                   <span className="text-sm text-foreground">{channel}</span>
@@ -540,7 +547,7 @@ function AISettingsContent() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 flex flex-col gap-3">
-              <p className="text-[10px] text-muted-foreground">Kirim pesan test untuk melihat bagaimana AI merespons.</p>
+              <p className="text-[10px] text-muted-foreground">Send a test message to see how AI responds.</p>
               <Textarea
                 value={testInput}
                 onChange={(e) => setTestInput(e.target.value)}
