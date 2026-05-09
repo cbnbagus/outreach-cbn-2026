@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Ticket, MessageSquare,
   BarChart2, Settings, Tag, Globe, CheckCircle2,
-  ChevronDown, UserCog, LogOut, Plug, Inbox, CircleUser, X, CalendarDays, Bot, PhoneCall, CreditCard,
+  ChevronDown, UserCog, LogOut, Plug, Inbox, CircleUser, X, CalendarDays, Bot, PhoneCall, CreditCard, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types";
@@ -14,6 +14,7 @@ import { usePresenceStore } from "@/store/presence-store";
 import { useCallStore } from "@/store/call-store";
 
 import { useOrgStore } from "@/store/org-store";
+import { useAuthStore } from "@/store/auth-store";
 
 interface NavItem {
   label: string;
@@ -64,6 +65,7 @@ export function Sidebar({ role, userName, onLogout, mobileOpen, onMobileClose }:
   const onlineCount  = initialized ? getOnlineCount() : 0;
   const { missedCount } = useCallStore();
   const activeOrg = useOrgStore((s) => s.activeOrg);
+  const isPlatformAdmin = useAuthStore((s) => s.currentUser?.isPlatformAdmin ?? false);
 
   // Close mobile drawer on route change
   useEffect(() => { onMobileClose(); }, [pathname]);
@@ -186,6 +188,24 @@ export function Sidebar({ role, userName, onLogout, mobileOpen, onMobileClose }:
           );
         })}
       </nav>
+
+      {/* Platform Admin — only visible for platform admins */}
+      {isPlatformAdmin && (
+        <div className="px-3 pb-1">
+          <Link
+            href="/dashboard/platform"
+            className={cn(
+              "flex items-center gap-2.5 px-3 py-2 rounded-md text-xs transition-colors border",
+              pathname === "/dashboard/platform"
+                ? "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                : "text-amber-400/60 hover:bg-amber-500/10 hover:text-amber-300 border-transparent"
+            )}
+          >
+            <Shield size={14} />
+            <span className="font-medium">Platform Admin</span>
+          </Link>
+        </div>
+      )}
 
       {/* User Footer */}
       <div className="border-t border-sidebar-border px-3 py-3">
