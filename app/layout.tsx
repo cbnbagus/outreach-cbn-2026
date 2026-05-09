@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'ReachTheSoul — Ministry Growth Platform',
-  description: 'Ministry outreach CRM for managing respondents, tickets, and conversations.',
+  title: 'ReachTheSoul — Prayer & Counseling Platform',
+  description: 'AI-powered prayer and counseling platform. Manage every conversation with care — 24/7.',
   icons: {
     icon: [
       {

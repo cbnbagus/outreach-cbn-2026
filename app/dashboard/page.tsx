@@ -47,7 +47,7 @@ export default function OverviewPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-foreground text-balance">Welcome back, {firstName}</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Here is your outreach summary for today.</p>
+          <p className="text-sm text-muted-foreground mt-0.5">Here is your prayer & counseling summary for today.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button asChild variant="outline" size="sm">

@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const FEATURES = [
   { icon: MessageSquare, label: "Omnichannel Inbox",   desc: "WhatsApp, Instagram, Facebook, YouTube — all in one place"    },
   { icon: Users,         label: "Respondent Profiles", desc: "Full history across every conversation and ticket"            },
-  { icon: BarChart2,     label: "Impact Analytics",    desc: "Measure outreach outcomes and team performance in real time"  },
+  { icon: BarChart2,     label: "Prayer & Care Tracking", desc: "Track every prayer request, counseling session, and follow-up — nothing falls through the cracks"  },
   { icon: CheckCircle,   label: "Outcome Tracking",    desc: "Every ticket closed with a recorded result"                   },
 ];
 
@@ -125,13 +125,13 @@ export default function LoginPage() {
         <div className="my-12">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sidebar-primary/20 border border-sidebar-primary/30 mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
-            <span className="text-xs text-sidebar-primary font-medium">Ministry CRM Platform</span>
+            <span className="text-xs text-sidebar-primary font-medium">Prayer & Counseling Platform</span>
           </div>
           <h1 className="text-4xl font-bold text-white leading-tight text-balance mb-4">
             Every conversation.<br />Every soul.<br />All in one place.
           </h1>
           <p className="text-sm text-sidebar-foreground/50 leading-relaxed max-w-xs">
-            Built for outreach teams who need to track respondents, manage conversations, and measure real Kingdom impact.
+            Built for churches and ministries who provide prayer support, counseling, and pastoral care across digital channels.
           </p>
         </div>
 

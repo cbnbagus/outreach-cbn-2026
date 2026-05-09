@@ -11,10 +11,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const FEATURES = [
-  { icon: MessageSquare, label: "Omnichannel Inbox",   desc: "WhatsApp, Instagram, Facebook, YouTube — all in one place" },
-  { icon: Users,         label: "24/7 AI Counselor",   desc: "AI responds first, humans step in when it matters most" },
-  { icon: BarChart2,     label: "Impact Analytics",    desc: "Measure outreach outcomes and team performance in real time" },
-  { icon: CheckCircle,   label: "Soul Journey Tracking", desc: "Track every soul from first contact to faithful" },
+  { icon: MessageSquare, label: "Omnichannel Inbox",   desc: "Receive prayer requests from WhatsApp, Instagram, Facebook — one place" },
+  { icon: Users,         label: "24/7 AI Counselor",   desc: "AI listens with empathy first, human counselors join when needed" },
+  { icon: BarChart2,     label: "Prayer & Care Tracking", desc: "Track every prayer request, counseling session, and follow-up" },
+  { icon: CheckCircle,   label: "Counseling Outcomes",  desc: "Record outcomes — from first prayer to ongoing pastoral care" },
 ];
 
 export default function RegisterPage() {
@@ -102,7 +102,7 @@ export default function RegisterPage() {
           provider: "openai",
           apiKey: "",
           model: "gpt-4o-mini",
-          systemPrompt: "You are a compassionate ministry counselor. Respond with empathy, wisdom, and care.",
+          systemPrompt: "You are a compassionate prayer and counseling companion. Listen with empathy, offer comfort through scripture and prayer, and know when to connect the person with a human counselor.",
           escalationTriggers: [
             { reason: "prayer_request", label: "Prayer Request", keywords: ["pray", "prayer", "doa", "doakan", "berdoa"], enabled: true },
             { reason: "crisis", label: "Crisis / Urgent", keywords: ["bunuh diri", "suicide", "putus asa", "mau mati"], enabled: true },
@@ -221,13 +221,13 @@ export default function RegisterPage() {
         <div className="my-12">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sidebar-primary/20 border border-sidebar-primary/30 mb-6">
             <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
-            <span className="text-xs text-sidebar-primary font-medium">Ministry Growth Platform</span>
+            <span className="text-xs text-sidebar-primary font-medium">Prayer & Counseling Platform</span>
           </div>
           <h1 className="text-4xl font-bold text-white leading-tight text-balance mb-4">
-            Start reaching<br />more souls<br />today.
+            Every prayer<br />heard.<br />Every soul cared for.
           </h1>
           <p className="text-sm text-sidebar-foreground/50 leading-relaxed max-w-xs">
-            Free to start. No credit card required. Set up your ministry platform in under 2 minutes.
+            Free to start. No credit card required. Set up your prayer & counseling platform in under 2 minutes.
           </p>
         </div>
 
