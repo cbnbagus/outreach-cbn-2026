@@ -47,7 +47,7 @@ export function RespondentSearchBox({
   value,
   onChange,
   excludeBlocked = false,
-  placeholder = "Cari nama, nomor, email, kota...",
+  placeholder = "Search name, phone, email, city...",
   className,
 }: RespondentSearchBoxProps) {
   const [open, setOpen]     = useState(false);
@@ -117,7 +117,7 @@ export function RespondentSearchBox({
           </div>
           {prevTicketCount > 0 && (
             <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/10 text-primary flex-shrink-0">
-              {prevTicketCount} tiket
+              {prevTicketCount} tickets
             </span>
           )}
           <button
@@ -164,7 +164,7 @@ export function RespondentSearchBox({
                 type="text"
                 autoFocus
                 value={query}
-                placeholder="Cari nama, nomor, email, kota..."
+                placeholder="Search name, phone, email, city..."
                 className="w-full h-9 pl-8 pr-3 text-xs bg-background focus:outline-none placeholder:text-muted-foreground/60"
                 onChange={(e) => { setQuery(e.target.value); setActiveIdx(0); }}
                 onKeyDown={handleKeyDown}
@@ -176,7 +176,7 @@ export function RespondentSearchBox({
           <div className="max-h-72 overflow-y-auto">
             {candidates.length === 0 ? (
               <div className="py-6 text-center">
-                <p className="text-xs text-muted-foreground">Tidak ada respondent ditemukan.</p>
+                <p className="text-xs text-muted-foreground">No respondents found.</p>
                 <Link
                   href="/dashboard/respondents/new"
                   className="inline-flex items-center gap-1 mt-2 text-xs text-primary hover:underline"
@@ -188,7 +188,7 @@ export function RespondentSearchBox({
               <>
                 {query && (
                   <p className="px-3 pt-2.5 pb-1 text-[9px] font-semibold text-muted-foreground uppercase tracking-widest">
-                    {candidates.length} hasil untuk &ldquo;{query}&rdquo;
+                    {candidates.length} results for &ldquo;{query}&rdquo;
                   </p>
                 )}
                 {candidates.map((r, idx) => {
@@ -257,7 +257,7 @@ export function RespondentSearchBox({
                       <div className="flex flex-col items-end gap-1 flex-shrink-0">
                         {prevTkts > 0 && (
                           <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/8 text-primary">
-                            {prevTkts} tiket
+                            {prevTkts} tickets
                           </span>
                         )}
                         {isSelected && (
@@ -274,7 +274,7 @@ export function RespondentSearchBox({
           {/* Footer */}
           <div className="border-t border-border px-3 py-2 flex items-center justify-between">
             <p className="text-[9px] text-muted-foreground">
-              {candidates.length} respondent &bull; ketik untuk filter
+              {candidates.length} respondents &bull; type to filter
             </p>
             <Link
               href="/dashboard/respondents/new"

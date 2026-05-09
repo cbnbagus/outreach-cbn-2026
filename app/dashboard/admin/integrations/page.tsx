@@ -103,7 +103,7 @@ function ChannelCard({
             <CopyButton text={url} id={`${functionName}-url`} />
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            Ganti <code className="bg-muted px-1 rounded">YOUR_PROJECT_ID</code> dengan Firebase project ID Anda jika berbeda.
+            Replace <code className="bg-muted px-1 rounded">YOUR_PROJECT_ID</code> with your Firebase project ID if different.
           </p>
         </div>
 
@@ -124,7 +124,7 @@ function ChannelCard({
         )}
 
         <ExpandSection title="Cara setup">{setupSteps}</ExpandSection>
-        <ExpandSection title="Test dengan curl">
+        <ExpandSection title="Test with curl">
           <CodeBlock id={`${functionName}-curl`}>{testCurl(url)}</CodeBlock>
         </ExpandSection>
       </CardContent>
@@ -143,7 +143,7 @@ export default function IntegrationsPage() {
       <div>
         <h1 className="text-base font-semibold">Integrations</h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Webhook berjalan sebagai <strong>Firebase Cloud Functions</strong>. Setiap pesan/call masuk otomatis membuat respondent dan ticket baru di Firestore.
+          Webhooks run as <strong>Firebase Cloud Functions</strong>. Every incoming message/call automatically creates a respondent and new ticket in Firestore.
         </p>
       </div>
 
@@ -163,7 +163,7 @@ export default function IntegrationsPage() {
             />
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Ubah project ID di atas untuk menghasilkan URL yang benar. Lihat di <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-primary underline inline-flex items-center gap-0.5">Firebase Console <ExternalLink size={9} /></a>.
+            Change the project ID above to generate correct URLs. See <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-primary underline inline-flex items-center gap-0.5">Firebase Console <ExternalLink size={9} /></a>.
           </p>
         </CardContent>
       </Card>
@@ -175,12 +175,12 @@ export default function IntegrationsPage() {
           <ol className="flex flex-col gap-1.5 text-xs text-amber-800 list-decimal list-inside leading-relaxed">
             <li>Install Firebase CLI: <code className="bg-amber-100 px-1 rounded font-mono">npm install -g firebase-tools</code></li>
             <li>Login: <code className="bg-amber-100 px-1 rounded font-mono">firebase login</code></li>
-            <li>Masuk ke folder functions: <code className="bg-amber-100 px-1 rounded font-mono">cd functions && npm install</code></li>
-            <li>Set verify tokens: <code className="bg-amber-100 px-1 rounded font-mono">firebase functions:secrets:set WHATSAPP_VERIFY_TOKEN</code> (ulangi untuk IG, FB, dll)</li>
+            <li>Go to functions folder: <code className="bg-amber-100 px-1 rounded font-mono">cd functions && npm install</code></li>
+            <li>Set verify tokens: <code className="bg-amber-100 px-1 rounded font-mono">firebase functions:secrets:set WHATSAPP_VERIFY_TOKEN</code> (repeat for IG, FB, etc)</li>
             <li>Deploy: <code className="bg-amber-100 px-1 rounded font-mono">firebase deploy --only functions</code></li>
           </ol>
           <p className="text-[10px] text-amber-700 mt-1">
-            Functions akan ter-deploy ke region <strong>asia-southeast1 (Singapore)</strong> untuk latensi rendah dari Indonesia.
+            Functions will deploy to region <strong>asia-southeast1 (Singapore)</strong> for low latency.
           </p>
         </CardContent>
       </Card>
@@ -209,10 +209,10 @@ export default function IntegrationsPage() {
 }'`}
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
-            <li>Buka <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="text-primary underline">developers.facebook.com</a> dan pilih app Anda.</li>
-            <li>Buka <strong>WhatsApp → Configuration → Webhooks</strong>.</li>
-            <li>Masukkan <em>Callback URL</em> di atas dan <em>Verify Token</em> yang sama dengan nilai secret <code className="bg-muted px-1 rounded">WHATSAPP_VERIFY_TOKEN</code>.</li>
-            <li>Subscribe ke field: <code className="bg-muted px-1 rounded">messages</code>.</li>
+            <li>Go to <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="text-primary underline">developers.facebook.com</a> and select your app.</li>
+            <li>Go to <strong>WhatsApp → Configuration → Webhooks</strong>.</li>
+            <li>Enter the <em>Callback URL</em> above and the <em>Verify Token</em> matching the secret value <code className="bg-muted px-1 rounded">WHATSAPP_VERIFY_TOKEN</code>.</li>
+            <li>Subscribe to field: <code className="bg-muted px-1 rounded">messages</code>.</li>
           </ol>
         }
       />
@@ -230,10 +230,10 @@ export default function IntegrationsPage() {
   -d '{"sender":"628123456789","name":"Budi Santoso","message":"Halo, ingin bertanya"}'`}
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
-            <li>Login ke <a href="https://fonnte.com" target="_blank" rel="noreferrer" className="text-primary underline">fonnte.com</a> atau dashboard Wablas.</li>
-            <li>Pilih device → <strong>Settings → Webhook URL</strong>.</li>
+            <li>Go to <a href="https://fonnte.com" target="_blank" rel="noreferrer" className="text-primary underline">fonnte.com</a> or Wablas dashboard.</li>
+            <li>Select device → <strong>Settings → Webhook URL</strong>.</li>
             <li>Paste URL Function di atas, klik Save.</li>
-            <li>Opsional: set token di Fonnte dan jalankan <code className="bg-muted px-1 rounded font-mono">firebase functions:secrets:set FONNTE_WEBHOOK_TOKEN</code>.</li>
+            <li>Optional: set token in Fonnte and run <code className="bg-muted px-1 rounded font-mono">firebase functions:secrets:set FONNTE_WEBHOOK_TOKEN</code>.</li>
           </ol>
         }
       />
@@ -260,9 +260,9 @@ export default function IntegrationsPage() {
 }'`}
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
-            <li>Buka Meta Developer Console → pilih app → <strong>Instagram → Webhooks</strong>.</li>
+            <li>Go to Meta Developer Console → pilih app → <strong>Instagram → Webhooks</strong>.</li>
             <li>Masukkan <em>Callback URL</em> dan <em>Verify Token</em> (sama dengan secret <code className="bg-muted px-1 rounded">INSTAGRAM_VERIFY_TOKEN</code>).</li>
-            <li>Subscribe ke field: <code className="bg-muted px-1 rounded">messages</code>.</li>
+            <li>Subscribe to field: <code className="bg-muted px-1 rounded">messages</code>.</li>
             <li>Pastikan Instagram account terhubung ke Facebook Page dan Page terhubung ke app.</li>
           </ol>
         }
@@ -290,9 +290,9 @@ export default function IntegrationsPage() {
 }'`}
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
-            <li>Buka Meta Developer Console → pilih app → <strong>Messenger → Configuration → Webhooks</strong>.</li>
+            <li>Go to Meta Developer Console → pilih app → <strong>Messenger → Configuration → Webhooks</strong>.</li>
             <li>Masukkan <em>Callback URL</em> dan <em>Verify Token</em> (sama dengan secret <code className="bg-muted px-1 rounded">FACEBOOK_VERIFY_TOKEN</code>).</li>
-            <li>Subscribe ke field: <code className="bg-muted px-1 rounded">messages</code>.</li>
+            <li>Subscribe to field: <code className="bg-muted px-1 rounded">messages</code>.</li>
             <li>Pastikan Facebook Page sudah disubscribe ke app.</li>
           </ol>
         }
@@ -311,10 +311,10 @@ export default function IntegrationsPage() {
   -d '{"phone":"+628123456789","name":"Budi Santoso","subject":"Inbound call — minta callback"}'`}
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
-            <li>Konfigurasikan PBX/VOIP Anda untuk POST ke URL di atas setiap ada panggilan masuk.</li>
+            <li>Configure your PBX/VoIP to POST to the URL above for every incoming call.</li>
             <li>Body minimal: <code className="bg-muted px-1 rounded font-mono">{"{ phone: '+62...', name: '...' }"}</code>.</li>
             <li>Opsional: tambahkan Authorization header dan set secret <code className="bg-muted px-1 rounded font-mono">CALL_WEBHOOK_TOKEN</code>.</li>
-            <li>Untuk input manual, gunakan endpoint yang sama dari form internal atau script.</li>
+            <li>For manual input, use the same endpoint from internal forms or scripts.</li>
           </ol>
         }
       />

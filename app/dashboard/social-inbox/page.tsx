@@ -193,7 +193,7 @@ function DetailPanel({
         {comment.status === "converted" && (
           <div className="p-3 rounded-lg bg-violet-50 border border-violet-200 text-xs text-violet-700 flex items-center gap-2">
             <Ticket size={13} />
-            Komentar ini sudah dikonversi menjadi tiket.
+            This comment has been converted to a ticket.
           </div>
         )}
 
@@ -219,7 +219,7 @@ function DetailPanel({
           />
           <div className="flex items-center justify-between">
             <p className="text-[10px] text-muted-foreground">
-              Balasan akan tercatat di sistem. Kirim manual melalui platform aslinya.
+              Reply will be recorded in the system. Send manually through the original platform.
             </p>
             <Button size="sm" className="h-7 text-xs gap-1.5" onClick={handleSend} disabled={!reply.trim()}>
               <Send size={11} />
@@ -284,7 +284,7 @@ function SocialInboxContent() {
         <div>
           <h1 className="text-sm font-semibold">Social Inbox</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Komentar masuk dari YouTube, Facebook, dan Instagram.
+            Incoming comments from YouTube, Facebook, and Instagram.
             {counts.new > 0 && (
               <span className="ml-1 font-medium text-sky-600">{counts.new} komentar baru</span>
             )}
@@ -302,7 +302,7 @@ function SocialInboxContent() {
             disabled={refreshing}
           >
             <RefreshCw size={11} className={cn(refreshing && "animate-spin")} />
-            {refreshing ? "Memuat..." : "Refresh"}
+            {refreshing ? "Loading..." : "Refresh"}
           </Button>
         </div>
       </div>
@@ -353,7 +353,7 @@ function SocialInboxContent() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari komentar..."
+                  placeholder="Search comments..."
                   className="h-7 pl-7 text-xs"
                 />
               </div>

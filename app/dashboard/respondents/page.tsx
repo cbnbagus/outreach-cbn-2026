@@ -168,7 +168,7 @@ export default function RespondentsPage() {
             )}
           >
             <CalendarDays size={12} />
-            {showPeriod ? periodLabel : "Semua Periode"}
+            {showPeriod ? periodLabel : "All Time"}
           </button>
 
           {/* Blocked toggle */}
@@ -249,7 +249,7 @@ export default function RespondentsPage() {
         <div className="relative w-full max-w-sm">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Cari nama, telepon, email, kota..."
+            placeholder="Search by name, phone, email, city..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-8 text-xs"
@@ -368,12 +368,12 @@ export default function RespondentsPage() {
         </Card>
       ) : (
         <div className="flex flex-col items-center justify-center py-16 gap-2">
-          <p className="text-sm text-muted-foreground">Tidak ada respondent yang cocok dengan filter.</p>
+          <p className="text-sm text-muted-foreground">No respondents match the current filter.</p>
           <button
             onClick={() => { setSearch(""); setLeadSourceFilter("all"); setShowPeriod(false); }}
             className="text-xs text-primary underline"
           >
-            Reset semua filter
+            Reset all filters
           </button>
         </div>
       )}

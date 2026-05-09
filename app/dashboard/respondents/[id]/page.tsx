@@ -49,7 +49,7 @@ function TicketMessages({ ticketId }: { ticketId: string }) {
             </span>
             {msg.isInternal && <Lock size={9} className="text-amber-600" />}
             <span className="text-muted-foreground/50 text-[10px]">
-              {new Date(msg.createdAt).toLocaleString("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+              {new Date(msg.createdAt).toLocaleString("en-US", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
             </span>
           </div>
           <p className="text-muted-foreground leading-relaxed">{msg.content}</p>
@@ -237,14 +237,14 @@ export default function RespondentProfilePage() {
             <p className="text-[11px] text-red-600 mt-0.5">
               Nomor <span className="font-mono font-semibold">{respondent.phone ?? "—"}</span> tidak dapat menghubungi OMS.
               {respondent.blockedReason && <span> Alasan: {respondent.blockedReason}.</span>}
-              {respondent.blockedAt && <span> Diblokir pada {new Date(respondent.blockedAt).toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" })}.</span>}
+              {respondent.blockedAt && <span> Diblokir pada {new Date(respondent.blockedAt).toLocaleDateString("en-US", { day: "2-digit", month: "long", year: "numeric" })}.</span>}
             </p>
           </div>
           <button
             onClick={() => setShowUnblockDialog(true)}
             className="flex items-center gap-1 text-[11px] font-semibold text-red-700 hover:text-red-900 transition-colors whitespace-nowrap"
           >
-            <ShieldCheck size={12} /> Buka Blokir
+            <ShieldCheck size={12} /> Unblock
           </button>
         </div>
       )}
@@ -361,7 +361,7 @@ export default function RespondentProfilePage() {
                   <div>
                     <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1 block">Progress</label>
                     <Select value={editProgress} onValueChange={(v) => setEditProgress(v as RespondentProgress)}>
-                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pilih progress..." /></SelectTrigger>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Select progress..." /></SelectTrigger>
                       <SelectContent>
                         {DEFAULT_PROGRESS_STEPS.map((s) => (
                           <SelectItem key={s} value={s}>
@@ -389,7 +389,7 @@ export default function RespondentProfilePage() {
                         value={newCategory}
                         onChange={(e) => setNewCategory(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addCategory())}
-                        placeholder="Tambah kategori..."
+                        placeholder="Add category..."
                         className="h-7 text-xs flex-1"
                       />
                       <Button size="sm" variant="outline" className="h-7 px-2" onClick={addCategory}>
@@ -410,7 +410,7 @@ export default function RespondentProfilePage() {
                       }}
                     >
                       <SelectTrigger className="h-8 text-xs">
-                        <SelectValue placeholder="Pilih program..." />
+                        <SelectValue placeholder="Select program..." />
                       </SelectTrigger>
                       <SelectContent>
                         {[...DEFAULT_PROGRAM_SOURCES, ...customProgramSources].map((p) => (
@@ -434,7 +434,7 @@ export default function RespondentProfilePage() {
                             setNewProgramSource("");
                           }
                         }}
-                        placeholder="Tambah program baru..."
+                        placeholder="Add new program..."
                         className="h-7 text-xs flex-1"
                       />
                       <Button
@@ -460,7 +460,7 @@ export default function RespondentProfilePage() {
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" className="flex-1" onClick={saveEdit}>
-                      <Check size={12} className="mr-1" />Simpan
+                      <Check size={12} className="mr-1" />Save
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => setEditing(false)}>
                       <X size={12} />
@@ -495,7 +495,7 @@ export default function RespondentProfilePage() {
                     <div className="flex items-center gap-2.5 text-muted-foreground">
                       <CalendarDays size={13} className="text-primary/60 flex-shrink-0" />
                       <span className="text-xs">
-                        First contact: {firstContact.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                        First contact: {firstContact.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
                       </span>
                     </div>
                   )}
@@ -571,7 +571,7 @@ export default function RespondentProfilePage() {
             <Card className="border border-border shadow-none">
               <CardHeader className="pb-2 pt-4 px-4">
                 <CardTitle className="text-xs font-semibold flex items-center gap-1.5">
-                  <TrendingUp size={13} className="text-primary" />Progress Pelayanan
+                  <TrendingUp size={13} className="text-primary" />Ministry Progress
                 </CardTitle>
               </CardHeader>
               <CardContent className="px-4 pb-4">
@@ -631,7 +631,7 @@ export default function RespondentProfilePage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-foreground">{respondent.programSource}</span>
                     <Button variant="ghost" size="sm" className="h-6 text-[10px] text-muted-foreground px-2" onClick={startEdit}>
-                      <Pencil size={9} className="mr-1" />Ubah
+                      <Pencil size={9} className="mr-1" />Edit
                     </Button>
                   </div>
                 ) : (
@@ -639,7 +639,7 @@ export default function RespondentProfilePage() {
                     onClick={startEdit}
                     className="w-full flex items-center justify-center gap-1.5 text-xs text-muted-foreground border border-dashed border-border rounded-md py-2.5 hover:border-primary/40 hover:text-primary transition-colors"
                   >
-                    <Plus size={12} />Tambah program source
+                    <Plus size={12} />Add program source
                   </button>
                 )}
                 <div className="flex flex-wrap gap-1 mt-3">
@@ -668,8 +668,8 @@ export default function RespondentProfilePage() {
             <div>
               <h3 className="text-sm font-semibold text-foreground">Ticket History</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {tickets.length} tiket
-                {firstContact && ` · Sejak ${firstContact.toLocaleDateString("id-ID", { month: "short", year: "numeric" })}`}
+                {tickets.length} tickets
+                {firstContact && ` · Since ${firstContact.toLocaleDateString("en-US", { month: "short", year: "numeric" })}`}
               </p>
             </div>
             <Button asChild size="sm">
@@ -685,7 +685,7 @@ export default function RespondentProfilePage() {
                 <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                   <Ticket size={16} className="text-muted-foreground" />
                 </div>
-                <p className="text-sm text-muted-foreground">Belum ada tiket untuk respondent ini.</p>
+                <p className="text-sm text-muted-foreground">Belum ada tickets untuk respondent ini.</p>
               </CardContent>
             </Card>
           ) : (
@@ -725,9 +725,9 @@ export default function RespondentProfilePage() {
                           <p className="text-sm font-medium text-foreground truncate">{t.subject}</p>
                           <div className="flex items-center gap-3 mt-0.5">
                             <span className="text-[10px] text-muted-foreground">
-                              {new Date(t.createdAt).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                              {new Date(t.createdAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })}
                               {" "}
-                              {new Date(t.createdAt).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                              {new Date(t.createdAt).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                             </span>
                             {t.assignedAgentName && (
                               <span className="text-[10px] text-muted-foreground">Agent: {t.assignedAgentName}</span>
@@ -843,7 +843,7 @@ export default function RespondentProfilePage() {
               <ShieldCheck size={16} className="text-emerald-600" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-foreground">Buka Blokir Respondent</h3>
+              <h3 className="text-sm font-semibold text-foreground">Unblock Respondent</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Nomor <span className="font-mono font-semibold text-foreground">{respondent.phone ?? "—"}</span> akan kembali bisa menghubungi OMS.
               </p>
@@ -851,14 +851,14 @@ export default function RespondentProfilePage() {
           </div>
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
             <AlertTriangle size={12} className="text-amber-600 flex-shrink-0" />
-            <p className="text-[11px] text-amber-700">Pastikan alasan pemblokiran sudah terselesaikan sebelum membuka blokir.</p>
+            <p className="text-[11px] text-amber-700">Make sure the reason for blocking has been resolved before unblocking.</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => setShowUnblockDialog(false)}>
               Batal
             </Button>
             <Button size="sm" className="flex-1 h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white" onClick={handleUnblock}>
-              <ShieldCheck size={11} className="mr-1" /> Buka Blokir
+              <ShieldCheck size={11} className="mr-1" /> Unblock
             </Button>
           </div>
         </div>

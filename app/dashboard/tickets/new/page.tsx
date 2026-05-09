@@ -67,7 +67,7 @@ const OUTBOUND_CHANNELS: {
     color: "text-green-700",
     bg: "bg-green-50",
     border: "border-green-300",
-    description: "Buka percakapan WhatsApp",
+    description: "Open WhatsApp conversation",
     requiresPhone: true,
   },
   {
@@ -77,7 +77,7 @@ const OUTBOUND_CHANNELS: {
     color: "text-blue-700",
     bg: "bg-blue-50",
     border: "border-blue-300",
-    description: "Kirim email ke respondent",
+    description: "Send email to respondent",
     requiresPhone: false,
   },
   {
@@ -339,7 +339,7 @@ function NewTicketInner() {
                     {/* Previous tickets */}
                     {prevTickets.length > 0 && (
                       <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                        <span className="text-[10px] text-muted-foreground">{prevTickets.length} ticket sebelumnya:</span>
+                        <span className="text-[10px] text-muted-foreground">{prevTickets.length} previous tickets:</span>
                         {prevChannels.map((lsId) => {
                           const ls = leadSources.find((l: any) => l.id === lsId || l.leadSourceId === lsId);
                           return (
@@ -352,7 +352,7 @@ function NewTicketInner() {
                           href={`/dashboard/respondents/${respondentId}`}
                           className="text-[10px] text-primary hover:underline flex items-center gap-0.5 ml-auto"
                         >
-                          Lihat profil <ExternalLink size={8} />
+                          View profile <ExternalLink size={8} />
                         </Link>
                       </div>
                     )}
@@ -362,12 +362,12 @@ function NewTicketInner() {
             </CardContent>
           </Card>
 
-          {/* Step 2 — Pilih Channel */}
+          {/* Step 2 — Select Channel */}
           <Card className="border border-border shadow-none">
             <CardHeader className="px-5 pt-5 pb-3 border-b border-border">
               <CardTitle className="text-sm font-semibold flex items-center gap-2">
                 <span className="w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">2</span>
-                Pilih Channel Kontak
+                Select Contact Channel
               </CardTitle>
             </CardHeader>
             <CardContent className="p-5">
@@ -395,7 +395,7 @@ function NewTicketInner() {
                       <span className="text-[10px] text-muted-foreground leading-tight">{ch.description}</span>
                       {unavailable && (
                         <span className="text-[9px] text-red-500 font-medium">
-                          {ch.id === "email" ? "Tidak ada email" : "Tidak ada nomor"}
+                          {ch.id === "email" ? "No email" : "No number"}
                         </span>
                       )}
                     </button>
@@ -424,7 +424,7 @@ function NewTicketInner() {
                         className="h-7 text-xs border-emerald-300 text-emerald-700 hover:bg-emerald-100"
                         onClick={handleLaunchChannel}
                       >
-                        Buka lagi
+                        Reopen
                       </Button>
                     </>
                   ) : (
@@ -438,9 +438,9 @@ function NewTicketInner() {
                           {outboundChannel === "call"         && respondent.phone && `Dial ${respondent.phone}`}
                           {outboundChannel === "whatsapp"     && respondent.phone && `wa.me/${respondent.phone.replace(/[^0-9]/g, "")}`}
                           {outboundChannel === "email"        && respondent.email && respondent.email}
-                          {outboundChannel === "instagram_dm" && "Buka Instagram DM di browser baru"}
-                          {outboundChannel === "facebook_dm"  && "Buka Facebook Messenger di browser baru"}
-                          {outboundChannel === "tiktok_dm"    && "Buka TikTok DM di browser baru"}
+                          {outboundChannel === "instagram_dm" && "Open Instagram DM in new tab"}
+                          {outboundChannel === "facebook_dm"  && "Open Facebook Messenger in new tab"}
+                          {outboundChannel === "tiktok_dm"    && "Open TikTok DM in new tab"}
                         </p>
                       </div>
                       <Button
@@ -458,12 +458,12 @@ function NewTicketInner() {
                       >
                         <Zap size={11} className="mr-1" />
                         {outboundChannel === "call"         ? "Dial Sekarang"  :
-                         outboundChannel === "whatsapp"     ? "Buka WhatsApp"  :
-                         outboundChannel === "email"        ? "Buka Email"     :
-                         outboundChannel === "instagram_dm" ? "Buka Instagram" :
-                         outboundChannel === "facebook_dm"  ? "Buka Facebook"  :
-                         outboundChannel === "tiktok_dm"    ? "Buka TikTok"    :
-                                                              "Buka DM"}
+                         outboundChannel === "whatsapp"     ? "Open WhatsApp"  :
+                         outboundChannel === "email"        ? "Open Email"     :
+                         outboundChannel === "instagram_dm" ? "Open Instagram" :
+                         outboundChannel === "facebook_dm"  ? "Open Facebook"  :
+                         outboundChannel === "tiktok_dm"    ? "Open TikTok"    :
+                                                              "Open DM"}
                       </Button>
                     </>
                   )}
@@ -543,12 +543,12 @@ function NewTicketInner() {
                 <Textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Tambahkan konteks, hasil percakapan, atau pesan awal yang akan dikirim..."
+                  placeholder="Add context, conversation notes, or initial message to send..."
                   className="text-sm resize-none min-h-[80px]"
                 />
                 {outboundChannel === "whatsapp" && notes && (
                   <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                    <Info size={9} />Pesan ini akan otomatis masuk ke link WhatsApp saat kamu klik "Buka WhatsApp".
+                    <Info size={9} />This message will be included in the WhatsApp link when you click "Open WhatsApp".
                   </p>
                 )}
               </div>
@@ -566,7 +566,7 @@ function NewTicketInner() {
                     <span className="font-semibold">Auto-assign: </span>
                     <span>{assignedAgent.displayName}</span>
                     <span className="ml-2 text-[10px] opacity-70">
-                      ({presence[assignedAgent.uid]?.activeTickets ?? 0} tiket aktif)
+                      ({presence[assignedAgent.uid]?.activeTickets ?? 0} active tickets)
                     </span>
                   </div>
                 ) : (
@@ -703,7 +703,7 @@ function NewTicketInner() {
                   <span className="font-semibold">Auto-assign: </span>
                   <span>{assignedAgent.displayName}</span>
                     <span className="ml-2 text-[10px] opacity-70">
-                      ({presence[assignedAgent.uid]?.activeTickets ?? 0} tiket aktif)
+                      ({presence[assignedAgent.uid]?.activeTickets ?? 0} active tickets)
                     </span>
                 </div>
               ) : (

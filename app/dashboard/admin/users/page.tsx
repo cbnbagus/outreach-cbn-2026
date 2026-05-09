@@ -285,7 +285,7 @@ export default function UsersPage() {
 
             <div className="flex items-center justify-between">
               <p className="text-[10px] text-muted-foreground">
-                User akan bisa login dengan email & password ini.
+                User will be able to login with this email & password.
               </p>
               <div className="flex gap-2">
                 <Button variant="ghost" size="sm" onClick={() => { setShowAdd(false); setSaveError(""); }}>Cancel</Button>

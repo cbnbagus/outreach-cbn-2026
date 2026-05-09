@@ -58,7 +58,7 @@ const DEFAULT_SETTINGS: AISettings = {
     { reason: "salvation_inquiry", label: "Wants to Know Jesus", keywords: ["jesus", "yesus", "salvation", "keselamatan", "percaya", "believe", "kristen", "christian", "baptis"], enabled: true },
     { reason: "grief_or_crisis", label: "Grief / Crisis", keywords: ["meninggal", "died", "death", "bunuh diri", "suicide", "crisis", "darurat", "emergency", "kecelakaan", "sakit parah"], enabled: true },
     { reason: "baptism_request", label: "Baptism Request", keywords: ["baptis", "baptism", "dibaptis", "pembaptisan"], enabled: true },
-    { reason: "manual_escalation", label: "Manual Escalation", keywords: ["bicara dengan manusia", "talk to human", "agent", "konselor", "counselor"], enabled: true },
+    { reason: "manual_escalation", label: "Manual Escalation", keywords: ["talk to human", "talk to human", "agent", "counselor", "counselor"], enabled: true },
   ],
   channelToggles: {
     WhatsApp: true,
@@ -303,7 +303,7 @@ function AISettingsContent() {
                 </button>
               </div>
               <p className="text-[10px] text-muted-foreground mt-1">
-                API key disimpan terenkripsi di Firestore. Hanya admin yang bisa melihat dan mengubah.
+                API key is stored encrypted in Firestore. Only admins can view and modify.
               </p>
             </div>
           )}
@@ -339,7 +339,7 @@ function AISettingsContent() {
           {!settings.provider && (
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
               <AlertTriangle size={14} className="text-amber-600" />
-              <p className="text-xs text-amber-700">Pilih provider dan masukkan API key untuk mengaktifkan AI.</p>
+              <p className="text-xs text-amber-700">Select a provider and enter your API key to enable AI.</p>
             </div>
           )}
         </CardContent>
@@ -403,7 +403,7 @@ function AISettingsContent() {
             </CardHeader>
             <CardContent className="p-4">
               <p className="text-[10px] text-muted-foreground mb-2 leading-relaxed">
-                Instruksi utama AI. Menentukan bagaimana AI merespons semua pesan masuk.
+                Main AI instructions. Determines how AI responds to all incoming messages.
               </p>
               <Textarea
                 value={settings.systemPrompt}
@@ -535,7 +535,7 @@ function AISettingsContent() {
               <Textarea
                 value={testInput}
                 onChange={(e) => setTestInput(e.target.value)}
-                placeholder="Contoh: Saya sedang menghadapi masalah keluarga, bisa didoakan?"
+                placeholder="Example: I am going through a family crisis, can you pray for me?"
                 className="text-xs min-h-[60px] resize-none"
                 disabled={!settings.provider || !settings.apiKey}
               />
@@ -567,7 +567,7 @@ function AISettingsContent() {
               )}
 
               {(!settings.provider || !settings.apiKey) && (
-                <p className="text-[10px] text-muted-foreground italic">Pilih provider dan masukkan API key terlebih dahulu untuk test.</p>
+                <p className="text-[10px] text-muted-foreground italic">Select a provider and enter your API key first to test.</p>
               )}
             </CardContent>
           </Card>

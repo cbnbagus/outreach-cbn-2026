@@ -81,19 +81,19 @@ const PROVIDERS: { id: Provider; label: string; badge?: string; color: string; b
   {
     id: "vonage", label: "Vonage (Nexmo)",
     color: "text-blue-700", bg: "bg-blue-50", border: "border-blue-200",
-    description: "Programmable voice via Vonage Voice API. Mendukung WebRTC dan SIP trunk.",
+    description: "Programmable voice via Vonage Voice API. Supports WebRTC and SIP trunk.",
     docsUrl: "https://developer.vonage.com/en/voice",
   },
   {
     id: "wa_calling", label: "WhatsApp Business Calling", badge: "Beta",
     color: "text-emerald-700", bg: "bg-emerald-50", border: "border-emerald-200",
-    description: "WhatsApp Voice Call via Meta Cloud API. Saat ini dalam beta terbatas, butuh approval Meta.",
+    description: "WhatsApp Voice Call via Meta Cloud API. Currently in limited beta, requires Meta approval.",
     docsUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api/phone-calls",
   },
   {
     id: "sip", label: "Custom SIP / VOIP PBX",
     color: "text-amber-700", bg: "bg-amber-50", border: "border-amber-200",
-    description: "Hubungkan PBX on-premise (Asterisk, FreePBX, 3CX) atau VoIP provider lain via SIP trunk.",
+    description: "Connect on-premise PBX (Asterisk, FreePBX, 3CX) or other VoIP providers via SIP trunk.",
     docsUrl: "https://en.wikipedia.org/wiki/Session_Initiation_Protocol",
   },
 ];
@@ -162,17 +162,17 @@ export default function CallSettingsPage() {
         <div>
           <h1 className="text-base font-semibold">Call Settings</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Pilih provider, masukkan credentials, dan konfigurasikan perilaku inbound/outbound call.
+            Select a provider, enter credentials, and configure inbound/outbound call behavior.
           </p>
         </div>
         <Button size="sm" onClick={handleSave} className="text-xs h-8 gap-1.5">
-          {saved ? <><CheckCircle2 size={12} className="text-white" /> Tersimpan</> : <><Settings2 size={12} />Simpan Konfigurasi</>}
+          {saved ? <><CheckCircle2 size={12} className="text-white" /> Saved</> : <><Settings2 size={12} />Save Configuration</>}
         </Button>
       </div>
 
       {/* Provider selector */}
       <div>
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Pilih Provider</p>
+        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">Select Provider</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {PROVIDERS.map((p) => (
             <button
@@ -219,7 +219,7 @@ export default function CallSettingsPage() {
               target="_blank" rel="noreferrer"
               className="text-[10px] text-primary hover:underline flex items-center gap-1 mt-0.5"
             >
-              Lihat dokumentasi <ExternalLink size={9} />
+              View docs <ExternalLink size={9} />
             </a>
           </div>
           <Button
@@ -233,7 +233,7 @@ export default function CallSettingsPage() {
             {testState === "success" && <CheckCircle2 size={12} className="text-emerald-600" />}
             {testState === "error"   && <AlertCircle  size={12} className="text-red-500" />}
             {testState === "idle"    && <Zap size={12} />}
-            {testState === "testing" ? "Testing..." : testState === "success" ? "Berhasil!" : testState === "error" ? "Gagal" : "Test Koneksi"}
+            {testState === "testing" ? "Testing..." : testState === "success" ? "Success!" : testState === "error" ? "Failed" : "Test Connection"}
           </Button>
         </CardHeader>
         <CardContent className="p-5 flex flex-col gap-4">
@@ -245,12 +245,12 @@ export default function CallSettingsPage() {
                 <Input value={twilioSid} onChange={(e) => setTwilioSid(e.target.value)} placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" className="h-8 text-xs font-mono" />
               </Field>
               <Field label="Auth Token">
-                <SecretInput value={twilioToken} onChange={setTwilioToken} placeholder="Auth token dari Twilio Console" />
+                <SecretInput value={twilioToken} onChange={setTwilioToken} placeholder="Auth token from Twilio Console" />
               </Field>
               <Field label="Twilio Phone Number" hint="Format E.164: +62811xxxxxxx">
                 <Input value={twilioNumber} onChange={(e) => setTwilioNumber(e.target.value)} placeholder="+16505551234" className="h-8 text-xs font-mono" />
               </Field>
-              <Field label="Inbound Webhook URL" hint="Paste URL ini di Twilio Console → Phone Number → Voice → Webhook">
+              <Field label="Inbound Webhook URL" hint="Paste this URL in Twilio Console → Phone Number → Voice → Webhook">
                 <div className="flex items-center gap-2">
                   <Input value={twilioWebhook} onChange={(e) => setTwilioWebhook(e.target.value)} className="h-8 text-xs font-mono" />
                   <CopyButton text={twilioWebhook} />
@@ -258,8 +258,8 @@ export default function CallSettingsPage() {
               </Field>
               <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
                 <div>
-                  <p className="text-xs font-medium">Rekam semua panggilan</p>
-                  <p className="text-[10px] text-muted-foreground">Recording disimpan di Twilio dan URL-nya disimpan di call log</p>
+                  <p className="text-xs font-medium">Record all calls</p>
+                  <p className="text-[10px] text-muted-foreground">Recording stored in Twilio and URL saved in call log</p>
                 </div>
                 <button
                   onClick={() => setTwilioRecord((r) => !r)}
@@ -268,13 +268,13 @@ export default function CallSettingsPage() {
                   <span className={cn("absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform", twilioRecord ? "translate-x-4" : "translate-x-0.5")} />
                 </button>
               </div>
-              <ExpandSection title="Cara setup di Twilio Console">
+              <ExpandSection title="How to set up in Twilio Console">
                 <ol className="flex flex-col gap-2 list-decimal list-inside">
-                  <li>Login ke <a href="https://console.twilio.com" target="_blank" rel="noreferrer" className="text-primary underline">console.twilio.com</a> dan copy <strong>Account SID</strong> & <strong>Auth Token</strong> dari dashboard.</li>
+                  <li>Go to <a href="https://console.twilio.com" target="_blank" rel="noreferrer" className="text-primary underline">console.twilio.com</a> and copy <strong>Account SID</strong> & <strong>Auth Token</strong> from dashboard.</li>
                   <li>Beli nomor telepon: <strong>Phone Numbers → Buy a number</strong>.</li>
-                  <li>Klik nomor yang dibeli → <strong>Voice & Fax → Webhook</strong>: paste URL di atas.</li>
+                  <li>Click the purchased number → <strong>Voice & Fax → Webhook</strong>: paste the URL above.</li>
                   <li>Untuk outbound, pastikan <strong>Geographic Permissions</strong> mengizinkan kode negara tujuan.</li>
-                  <li>Test dengan klik "Test Koneksi" di atas — jika gagal, periksa SID dan token.</li>
+                  <li>Click "Test Connection" above — if it fails, check SID and token.</li>
                 </ol>
               </ExpandSection>
             </>
@@ -287,7 +287,7 @@ export default function CallSettingsPage() {
                 <Input value={vonageKey} onChange={(e) => setVonageKey(e.target.value)} placeholder="xxxxxxxx" className="h-8 text-xs font-mono" />
               </Field>
               <Field label="API Secret">
-                <SecretInput value={vonageSecret} onChange={setVonageSecret} placeholder="API Secret dari Vonage Dashboard" />
+                <SecretInput value={vonageSecret} onChange={setVonageSecret} placeholder="API Secret from Vonage Dashboard" />
               </Field>
               <Field label="Application ID (Voice App)">
                 <Input value={vonageAppId} onChange={(e) => setVonageAppId(e.target.value)} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="h-8 text-xs font-mono" />
@@ -297,10 +297,10 @@ export default function CallSettingsPage() {
               </Field>
               <ExpandSection title="Cara setup di Vonage Dashboard">
                 <ol className="flex flex-col gap-2 list-decimal list-inside">
-                  <li>Login ke <a href="https://dashboard.nexmo.com" target="_blank" rel="noreferrer" className="text-primary underline">dashboard.nexmo.com</a>, copy API Key dan Secret.</li>
+                  <li>Go to <a href="https://dashboard.nexmo.com" target="_blank" rel="noreferrer" className="text-primary underline">dashboard.nexmo.com</a>, copy API Key dan Secret.</li>
                   <li>Buat Voice Application: <strong>Applications → Create a new application</strong>, aktifkan Voice capability.</li>
                   <li>Set Answer URL ke <code className="bg-muted px-1 rounded">{webhookBaseUrl}/vonage/answer</code> dan Event URL ke <code className="bg-muted px-1 rounded">{webhookBaseUrl}/vonage/event</code>.</li>
-                  <li>Link nomor virtual ke application.</li>
+                  <li>Link virtual number to application.</li>
                 </ol>
               </ExpandSection>
             </>
@@ -312,7 +312,7 @@ export default function CallSettingsPage() {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-50 border border-amber-200">
                 <AlertCircle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
                 <p className="text-[10px] text-amber-800 leading-relaxed">
-                  WhatsApp Business Calling API saat ini dalam <strong>beta terbatas</strong>. Anda perlu mengajukan akses ke Meta dan mendapat persetujuan sebelum fitur ini aktif.
+                  WhatsApp Business Calling API is currently in <strong>limited beta</strong>. You need to apply for access from Meta and get approval before this feature is active.
                   <a href="https://developers.facebook.com/docs/whatsapp/cloud-api/phone-calls" target="_blank" rel="noreferrer" className="underline ml-1">Info lebih lanjut</a>.
                 </p>
               </div>
@@ -325,9 +325,9 @@ export default function CallSettingsPage() {
               <ExpandSection title="Cara mendapatkan akses WhatsApp Calling">
                 <ol className="flex flex-col gap-2 list-decimal list-inside">
                   <li>Pastikan bisnis Anda sudah terverifikasi di Meta Business Manager.</li>
-                  <li>Daftar ke program beta melalui Meta Partner Portal.</li>
+                  <li>Register for the beta program via Meta Partner Portal.</li>
                   <li>Setelah disetujui, aktifkan "Calls" di <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer" className="text-primary underline">App Dashboard</a> → WhatsApp → Configuration.</li>
-                  <li>Gunakan token Permanent Page Access Token dengan scope <code className="bg-muted px-1 rounded">whatsapp_business_messaging</code>.</li>
+                  <li>Use a Permanent Page Access Token with scope <code className="bg-muted px-1 rounded">whatsapp_business_messaging</code>.</li>
                 </ol>
               </ExpandSection>
             </>
@@ -337,7 +337,7 @@ export default function CallSettingsPage() {
           {activeProvider === "sip" && (
             <>
               <Field label="SIP Server / PBX Host">
-                <Input value={sipServer} onChange={(e) => setSipServer(e.target.value)} placeholder="pbx.yourdomain.com atau 192.168.1.10" className="h-8 text-xs font-mono" />
+                <Input value={sipServer} onChange={(e) => setSipServer(e.target.value)} placeholder="pbx.yourdomain.com or 192.168.1.10" className="h-8 text-xs font-mono" />
               </Field>
               <Field label="SIP Username / Extension">
                 <Input value={sipUser} onChange={(e) => setSipUser(e.target.value)} placeholder="1001 atau sip_user" className="h-8 text-xs font-mono" />
@@ -348,7 +348,7 @@ export default function CallSettingsPage() {
               <Field label="Port" hint="Default: 5060 (UDP/TCP), 5061 (TLS)">
                 <Input value={sipPort} onChange={(e) => setSipPort(e.target.value)} placeholder="5060" className="h-8 text-xs font-mono w-32" />
               </Field>
-              <ExpandSection title="PBX/VOIP yang didukung">
+              <ExpandSection title="Supported PBX/VoIP providers">
                 <div className="flex flex-wrap gap-2">
                   {["Asterisk", "FreePBX", "3CX", "Kamailio", "Zoiper", "Twilio Elastic SIP", "Vonage SIP", "Zadarma", "DIDWW"].map((p) => (
                     <span key={p} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-background border border-border">{p}</span>
@@ -364,7 +364,7 @@ export default function CallSettingsPage() {
       {/* General call behavior */}
       <Card className="border border-border shadow-none">
         <CardHeader className="px-5 pt-4 pb-3 border-b border-border">
-          <CardTitle className="text-sm font-semibold">Perilaku Call</CardTitle>
+          <CardTitle className="text-sm font-semibold">Call Behavior</CardTitle>
         </CardHeader>
         <CardContent className="p-5 flex flex-col gap-4">
 
@@ -372,9 +372,9 @@ export default function CallSettingsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               { label: "Inbound Call",  icon: PhoneIncoming,  val: inboundEnabled,  set: setInboundEnabled,
-                desc: "Terima panggilan masuk dari respondent" },
+                desc: "Accept incoming calls from respondents" },
               { label: "Outbound Call", icon: PhoneOutgoing, val: outboundEnabled, set: setOutboundEnabled,
-                desc: "Agent bisa memulai panggilan keluar" },
+                desc: "Agents can initiate outbound calls" },
             ].map(({ label, icon: Icon, val, set, desc }) => (
               <div key={label} className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/20">
                 <div className="flex items-center gap-2.5">
@@ -398,7 +398,7 @@ export default function CallSettingsPage() {
             <Field label="Max Concurrent Calls" hint="Per-instance limit">
               <Input value={maxConcurrent} onChange={(e) => setMaxConcurrent(e.target.value)} className="h-8 text-xs" type="number" min="1" max="50" />
             </Field>
-            <Field label="Ring Timeout (detik)" hint="Berapa detik sebelum missed">
+            <Field label="Ring Timeout (seconds)" hint="Seconds before missed">
               <Input value={callTimeout} onChange={(e) => setCallTimeout(e.target.value)} className="h-8 text-xs" type="number" min="10" max="120" />
             </Field>
           </div>
@@ -428,8 +428,8 @@ export default function CallSettingsPage() {
           <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-muted/20">
             <Volume2 size={14} className="text-muted-foreground flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium">Ringtone Inbound</p>
-              <p className="text-[10px] text-muted-foreground">Suara yang dimainkan saat ada panggilan masuk di SoftPhone</p>
+              <p className="text-xs font-medium">Inbound Ringtone</p>
+              <p className="text-[10px] text-muted-foreground">Sound played when there is an incoming call in SoftPhone</p>
             </div>
             <select className="h-7 text-xs border border-border rounded-md bg-background px-2">
               <option>Classic Ring</option>
@@ -444,9 +444,9 @@ export default function CallSettingsPage() {
 
       {/* Save footer */}
       <div className="flex items-center justify-end gap-2 pb-4">
-        <Button variant="outline" size="sm" className="text-xs h-8">Reset ke Default</Button>
+        <Button variant="outline" size="sm" className="text-xs h-8">Reset to Default</Button>
         <Button size="sm" onClick={handleSave} className="text-xs h-8 gap-1.5">
-          {saved ? <><CheckCircle2 size={12} />Tersimpan</> : "Simpan Konfigurasi"}
+          {saved ? <><CheckCircle2 size={12} />Saved</> : "Save Configuration"}
         </Button>
       </div>
 

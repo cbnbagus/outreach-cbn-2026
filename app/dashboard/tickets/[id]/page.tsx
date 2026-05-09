@@ -676,7 +676,7 @@ export default function TicketDetailPage() {
                 <div className="flex items-center gap-2 mb-2 p-2 bg-amber-50 border border-amber-200 rounded-md">
                   <AlertTriangle size={11} className="text-amber-600 flex-shrink-0" />
                   <p className="text-[10px] text-amber-700 flex-1">
-                    Status kamu <strong>Away</strong> — tidak bisa mengirim balasan publik. Ubah status ke <strong>Online</strong> atau kirim <strong>Internal Note</strong>.
+                    Your status is <strong>Away</strong> — cannot send public replies. Change to <strong>Online</strong> or send an <strong>Internal Note</strong>.
                   </p>
                 </div>
               )}
@@ -850,7 +850,7 @@ export default function TicketDetailPage() {
             </CardHeader>
             <CardContent className="p-3 flex flex-col gap-2">
               {agentNotes.length === 0 && (
-                <p className="text-[10px] text-muted-foreground/60 italic text-center py-2">Belum ada catatan agent.</p>
+                <p className="text-[10px] text-muted-foreground/60 italic text-center py-2">No agent notes yet.</p>
               )}
               {agentNotes.map((n) => (
                 <div key={n.id} className="group relative flex flex-col gap-0.5 p-2.5 rounded-md bg-amber-50 border border-amber-200">
@@ -875,7 +875,7 @@ export default function TicketDetailPage() {
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) addNote(); }}
-                  placeholder="Tambah catatan agent... (Ctrl+Enter)"
+                  placeholder="Add agent note... (Ctrl+Enter)"
                   rows={2}
                   className="flex-1 text-xs border border-border rounded-md px-2.5 py-2 resize-none bg-background focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/50"
                 />
@@ -917,7 +917,7 @@ export default function TicketDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-[10px] text-muted-foreground/60 italic">Belum ada kategori masalah.</p>
+                <p className="text-[10px] text-muted-foreground/60 italic">No issue categories yet.</p>
               )}
 
               {/* Preset suggestions */}
@@ -942,7 +942,7 @@ export default function TicketDetailPage() {
                   value={newCategoryInput}
                   onChange={(e) => setNewCategoryInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addProblemCategory(); } }}
-                  placeholder="Tambah kategori lain..."
+                  placeholder="Add another category..."
                   className="flex-1 h-7 text-xs border border-border rounded-md px-2.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/50"
                 />
                 <button
