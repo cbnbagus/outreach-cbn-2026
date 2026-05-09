@@ -1,9 +1,8 @@
 "use client";
 import { useOrgStore } from "@/store/org-store";
-import { PLAN_CONFIGS, getPlanConfig, FEATURE_LABELS, getUsagePercentage } from "@/lib/plans";
+import { PLAN_CONFIGS, getPlanConfig, FEATURE_LABELS, FEATURE_GROUPS, ADD_ONS, formatLimit } from "@/lib/plans";
 import type { PlanTier } from "@/types";
-import type { FeatureKey } from "@/lib/plans";
-import { Check, X, Crown, Sparkles, ArrowRight, Mail } from "lucide-react";
+import { Check, X, Crown, Sparkles, ArrowRight, Mail, Database, Infinity, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -20,55 +19,33 @@ export default function BillingPage() {
     { label: "Team Members", current: usage?.currentUsers ?? 0, max: currentConfig.maxUsers },
     { label: "Respondents", current: usage?.currentRespondents ?? 0, max: currentConfig.maxRespondents },
     { label: "AI Conversations / month", current: usage?.aiConversationsThisMonth ?? 0, max: currentConfig.maxAIConversations },
-    { label: "WhatsApp Conversations / month", current: usage?.waConversationsThisMonth ?? 0, max: currentConfig.maxWhatsAppConversations },
-  ];
-
-  const featureGroups: { title: string; features: FeatureKey[] }[] = [
-    {
-      title: "Channels",
-      features: ["websiteChat", "whatsapp", "instagram", "facebook", "youtube"],
-    },
-    {
-      title: "AI & Automation",
-      features: ["aiAutoReply", "aiCounseling24_7", "advancedAIModel", "escalationTriggers"],
-    },
-    {
-      title: "Management",
-      features: ["teamManagement", "customProgressSteps", "customProgramSources", "socialInbox", "callFeature", "schedule"],
-    },
-    {
-      title: "Analytics & Export",
-      features: ["reporting", "advancedReporting", "exportCSV"],
-    },
-    {
-      title: "Premium",
-      features: ["customBranding", "apiAccess", "prioritySupport", "dedicatedSupport", "sla"],
-    },
+    { label: "WA Initiative Conv. / month", current: usage?.waConversationsThisMonth ?? 0, max: currentConfig.maxWhatsAppInitiative },
   ];
 
   const handleUpgrade = (tier: PlanTier) => {
     if (tier === "enterprise") {
-      window.open("mailto:hello@reachthesoul.org?subject=Enterprise Plan Inquiry&body=Hi, I'd like to learn more about the Enterprise plan for my organization.", "_blank");
+      window.open("mailto:hello@reachthesoul.org?subject=Enterprise Plan Inquiry&body=Hi, I would like to learn more about the Enterprise plan for our organization.", "_blank");
     } else {
-      // TODO: integrate payment gateway (Midtrans/Stripe)
-      alert(`Payment integration coming soon! To upgrade to ${getPlanConfig(tier).name}, please contact hello@reachthesoul.org`);
+      alert("Payment integration coming soon!\n\nTo upgrade to " + getPlanConfig(tier).name + ", please contact:\nhello@reachthesoul.org");
     }
+  };
+
+  const handleAddOn = (addOnId: string) => {
+    const addOn = ADD_ONS.find(a => a.id === addOnId);
+    window.open("mailto:hello@reachthesoul.org?subject=Add-on: " + encodeURIComponent(addOn?.name ?? "") + "&body=Hi, I would like to set up the " + encodeURIComponent(addOn?.name ?? "") + " add-on for our organization.", "_blank");
   };
 
   return (
     <div className="flex flex-col gap-6 max-w-6xl">
-      {/* Current Plan */}
       <div>
         <h2 className="text-base font-semibold text-foreground">Plan & Billing</h2>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Manage your subscription and monitor usage.
-        </p>
+        <p className="text-xs text-muted-foreground mt-0.5">Manage your subscription and monitor usage.</p>
       </div>
 
-      {/* Current plan card */}
-      <Card className="border-2" style={{ borderColor: currentConfig.color + "40" }}>
+      {/* Current plan */}
+      <Card className="border-2 shadow-none" style={{ borderColor: currentConfig.color + "40" }}>
         <CardContent className="p-5">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: currentConfig.color + "15" }}>
                 <Crown size={20} style={{ color: currentConfig.color }} />
@@ -76,23 +53,17 @@ export default function BillingPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-lg font-bold text-foreground">{currentConfig.name} Plan</h3>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium text-white" style={{ backgroundColor: currentConfig.color }}>
-                    CURRENT
-                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-medium text-white" style={{ backgroundColor: currentConfig.color }}>CURRENT</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{currentConfig.description}</p>
               </div>
             </div>
             <div className="text-right">
-              {currentConfig.price.idr > 0 ? (
+              {currentConfig.price > 0 ? (
                 <>
-                  <p className="text-2xl font-bold text-foreground">
-                    Rp {(currentConfig.price.idr / 1000).toFixed(0)}K
-                  </p>
+                  <p className="text-2xl font-bold text-foreground">${currentConfig.price}</p>
                   <p className="text-[11px] text-muted-foreground">per month</p>
                 </>
-              ) : currentPlan === "enterprise" ? (
-                <p className="text-sm font-medium text-muted-foreground">Custom pricing</p>
               ) : (
                 <p className="text-2xl font-bold text-green-600">Free</p>
               )}
@@ -101,9 +72,21 @@ export default function BillingPage() {
         </CardContent>
       </Card>
 
+      {/* Data notice */}
+      <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
+        <Database size={18} className="text-blue-600 shrink-0 mt-0.5" />
+        <div>
+          <p className="text-xs font-semibold text-blue-900">All your data is stored securely</p>
+          <p className="text-[11px] text-blue-700 mt-0.5">
+            Every conversation, respondent profile, ticket, and interaction is stored in our secure database.
+            Access historical data, generate reports, and export anytime — nothing is ever deleted.
+          </p>
+        </div>
+      </div>
+
       {/* Usage meters */}
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-3">Current Usage</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-3">Current usage</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {usageMetrics.map(({ label, current, max }) => {
             const pct = max > 0 ? Math.min(100, Math.round((current / max) * 100)) : 0;
@@ -115,22 +98,13 @@ export default function BillingPage() {
                   <p className="text-[11px] text-muted-foreground mb-1">{label}</p>
                   <div className="flex items-end justify-between mb-2">
                     <p className="text-xl font-bold text-foreground">{current}</p>
-                    <p className="text-xs text-muted-foreground">
-                      / {max === 0 ? "—" : max.toLocaleString()}
-                    </p>
+                    <p className="text-xs text-muted-foreground">/ {max === 0 ? "N/A" : formatLimit(max)}</p>
                   </div>
-                  {max > 0 && (
+                  {max > 0 ? (
                     <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className={cn(
-                          "h-full rounded-full transition-all",
-                          isExceeded ? "bg-red-500" : isWarning ? "bg-amber-500" : "bg-green-500"
-                        )}
-                        style={{ width: `${pct}%` }}
-                      />
+                      <div className={cn("h-full rounded-full transition-all", isExceeded ? "bg-red-500" : isWarning ? "bg-amber-500" : "bg-green-500")} style={{ width: pct + "%" }} />
                     </div>
-                  )}
-                  {max === 0 && (
+                  ) : (
                     <p className="text-[10px] text-muted-foreground italic">Not available on this plan</p>
                   )}
                 </CardContent>
@@ -138,77 +112,58 @@ export default function BillingPage() {
             );
           })}
         </div>
+        {currentConfig.unlimitedWAInbound && (
+          <div className="mt-2 flex items-center gap-2 text-[11px] text-green-700">
+            <Infinity size={14} /> Unlimited incoming WhatsApp messages from respondents included.
+          </div>
+        )}
       </div>
 
       {/* Plan comparison */}
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-3">Compare Plans</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-3">Compare plans</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
           {tierOrder.map((tier) => {
             const config = PLAN_CONFIGS[tier];
             const isCurrent = tier === currentPlan;
             const isUpgrade = tierOrder.indexOf(tier) > tierOrder.indexOf(currentPlan);
-            
             return (
-              <Card
-                key={tier}
-                className={cn(
-                  "shadow-none relative overflow-hidden",
-                  isCurrent && "border-2 ring-1 ring-offset-1",
+              <Card key={tier} className={cn("shadow-none relative overflow-hidden flex flex-col", isCurrent && "border-2 ring-1 ring-offset-1")} style={isCurrent ? { borderColor: config.color } : {}}>
+                {config.badge && (
+                  <div className="absolute top-0 right-0 px-2.5 py-1 text-white text-[10px] font-bold rounded-bl-lg" style={{ backgroundColor: config.color }}>{config.badge}</div>
                 )}
-                style={isCurrent ? { borderColor: config.color } : {}}
-              >
-                {tier === "growth" && (
-                  <div className="absolute top-0 right-0 px-2 py-0.5 bg-purple-600 text-white text-[10px] font-bold rounded-bl-lg">
-                    POPULAR
-                  </div>
-                )}
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-1">
+                <CardContent className="p-4 flex flex-col flex-1">
+                  <div className="flex items-center gap-2 mb-2">
                     <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: config.color }} />
                     <h4 className="text-sm font-bold text-foreground">{config.name}</h4>
                   </div>
-                  
                   <div className="mb-3">
-                    {config.price.idr > 0 ? (
-                      <p className="text-xl font-bold text-foreground">
-                        Rp {(config.price.idr / 1000).toFixed(0)}K
-                        <span className="text-xs font-normal text-muted-foreground">/mo</span>
-                      </p>
-                    ) : tier === "enterprise" ? (
-                      <p className="text-sm font-medium text-muted-foreground">Contact us</p>
+                    {config.price > 0 ? (
+                      <p className="text-xl font-bold text-foreground">${config.price}<span className="text-xs font-normal text-muted-foreground">/mo</span></p>
                     ) : (
                       <p className="text-xl font-bold text-green-600">Free</p>
                     )}
                   </div>
-
-                  <p className="text-[11px] text-muted-foreground mb-3">{config.description}</p>
-
-                  {/* Key limits */}
-                  <div className="text-[11px] text-foreground space-y-1 mb-4">
-                    <p><strong>{config.maxUsers}</strong> {config.maxUsers === 999 ? "unlimited" : ""} users</p>
-                    <p><strong>{config.maxRespondents >= 99999 ? "Unlimited" : config.maxRespondents.toLocaleString()}</strong> respondents</p>
-                    <p><strong>{config.maxAIConversations === 0 ? "—" : config.maxAIConversations >= 99999 ? "Unlimited" : config.maxAIConversations.toLocaleString()}</strong> AI conversations</p>
-                    <p><strong>{config.maxWhatsAppConversations === 0 ? "—" : config.maxWhatsAppConversations >= 99999 ? "Unlimited" : config.maxWhatsAppConversations.toLocaleString()}</strong> WA conversations</p>
+                  <p className="text-[11px] text-muted-foreground mb-4">{config.description}</p>
+                  <div className="flex-1 space-y-1.5 mb-4">
+                    {config.highlights.map((h, i) => (
+                      <div key={i} className="flex items-start gap-2 text-[11px] text-foreground">
+                        <Check size={12} className="text-green-500 shrink-0 mt-0.5" />
+                        <span>{h}</span>
+                      </div>
+                    ))}
                   </div>
-
-                  {isCurrent ? (
-                    <Button variant="outline" size="sm" className="w-full" disabled>
-                      Current Plan
-                    </Button>
-                  ) : isUpgrade ? (
-                    <Button size="sm" className="w-full gap-1.5" onClick={() => handleUpgrade(tier)}>
-                      {tier === "enterprise" ? (
-                        <><Mail size={14} /> Contact Sales</>
-                      ) : (
-                        <><Sparkles size={14} /> Upgrade</>
-                      )}
-                    </Button>
-                  ) : (
-                    <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled>
-                      —
-                    </Button>
-                  )}
+                  <div className="mt-auto">
+                    {isCurrent ? (
+                      <Button variant="outline" size="sm" className="w-full" disabled>Current Plan</Button>
+                    ) : isUpgrade ? (
+                      <Button size="sm" className="w-full gap-1.5" onClick={() => handleUpgrade(tier)} style={{ backgroundColor: config.color }}>
+                        {tier === "enterprise" ? <><Mail size={14} /> Contact Sales</> : <><Sparkles size={14} /> Upgrade to {config.name}</>}
+                      </Button>
+                    ) : (
+                      <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled>&mdash;</Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             );
@@ -216,50 +171,107 @@ export default function BillingPage() {
         </div>
       </div>
 
+      {/* Add-ons */}
+      <div>
+        <h3 className="text-sm font-semibold text-foreground mb-1">Add-ons</h3>
+        <p className="text-xs text-muted-foreground mb-3">Bring your own provider. Pay them directly for usage — we only charge a one-time setup fee.</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {ADD_ONS.map((addon) => (
+            <Card key={addon.id} className="shadow-none">
+              <CardContent className="p-5">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0">
+                    <i className={cn("ti", addon.icon)} style={{ fontSize: "20px", color: "var(--color-text-secondary)" }} aria-hidden="true" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-bold text-foreground">{addon.name}</h4>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{addon.description}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-lg font-bold text-foreground">${addon.setupFee}</p>
+                    <p className="text-[10px] text-muted-foreground">one-time setup</p>
+                  </div>
+                </div>
+                <div className="space-y-1.5 mb-4">
+                  {addon.details.map((d, i) => (
+                    <div key={i} className="flex items-start gap-2 text-[11px] text-foreground">
+                      <Check size={12} className="text-green-500 shrink-0 mt-0.5" />
+                      <span>{d}</span>
+                    </div>
+                  ))}
+                </div>
+                <Button variant="outline" size="sm" className="w-full gap-1.5" onClick={() => handleAddOn(addon.id)}>
+                  <Wrench size={14} /> Request Setup
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
       {/* Feature comparison table */}
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-3">Feature Comparison</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-3">Detailed feature comparison</h3>
         <Card className="shadow-none overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-muted/30">
-                  <th className="text-left p-3 font-semibold text-foreground min-w-[200px]">Feature</th>
+                  <th className="text-left p-3 font-semibold text-foreground min-w-[220px]">Feature</th>
                   {tierOrder.map((tier) => (
-                    <th key={tier} className="text-center p-3 font-semibold min-w-[100px]" style={{ color: PLAN_CONFIGS[tier].color }}>
-                      {PLAN_CONFIGS[tier].name}
-                    </th>
+                    <th key={tier} className="text-center p-3 font-semibold min-w-[100px]" style={{ color: PLAN_CONFIGS[tier].color }}>{PLAN_CONFIGS[tier].name}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {featureGroups.map((group) => (
+                {/* Limits */}
+                <tr><td colSpan={5} className="px-3 py-2 bg-muted/20 font-semibold text-foreground text-[11px] uppercase tracking-wider">Limits & quotas</td></tr>
+                <tr className="border-t border-muted/30"><td className="p-3 text-foreground">Max users</td>{tierOrder.map(t => <td key={t} className="text-center p-3 font-medium">{formatLimit(PLAN_CONFIGS[t].maxUsers)}</td>)}</tr>
+                <tr className="border-t border-muted/30 bg-muted/5"><td className="p-3 text-foreground">Max respondents</td>{tierOrder.map(t => <td key={t} className="text-center p-3 font-medium">{formatLimit(PLAN_CONFIGS[t].maxRespondents)}</td>)}</tr>
+                <tr className="border-t border-muted/30"><td className="p-3 text-foreground">AI conversations / month</td>{tierOrder.map(t => <td key={t} className="text-center p-3 font-medium">{PLAN_CONFIGS[t].maxAIConversations === 0 ? "\u2014" : formatLimit(PLAN_CONFIGS[t].maxAIConversations)}</td>)}</tr>
+                <tr className="border-t border-muted/30 bg-muted/5"><td className="p-3 text-foreground">WA initiative conv. / month</td>{tierOrder.map(t => <td key={t} className="text-center p-3 font-medium">{PLAN_CONFIGS[t].maxWhatsAppInitiative === 0 ? "\u2014" : formatLimit(PLAN_CONFIGS[t].maxWhatsAppInitiative)}</td>)}</tr>
+                <tr className="border-t border-muted/30"><td className="p-3 text-foreground">Incoming WA messages</td>{tierOrder.map(t => <td key={t} className="text-center p-3">{PLAN_CONFIGS[t].unlimitedWAInbound ? <span className="text-green-600 font-medium">Unlimited</span> : "\u2014"}</td>)}</tr>
+
+                {/* Feature groups */}
+                {FEATURE_GROUPS.map((group) => (
                   <>
-                    <tr key={group.title}>
-                      <td colSpan={5} className="px-3 py-2 bg-muted/20 font-semibold text-foreground text-[11px] uppercase tracking-wider">
-                        {group.title}
-                      </td>
-                    </tr>
-                    {group.features.map((feature) => (
-                      <tr key={feature} className="border-t border-muted/30 hover:bg-muted/10">
+                    <tr key={group.title}><td colSpan={5} className="px-3 py-2 bg-muted/20 font-semibold text-foreground text-[11px] uppercase tracking-wider">{group.title}</td></tr>
+                    {group.features.map((feature, fi) => (
+                      <tr key={feature} className={cn("border-t border-muted/30", fi % 2 === 1 && "bg-muted/5")}>
                         <td className="p-3 text-foreground">{FEATURE_LABELS[feature]}</td>
                         {tierOrder.map((tier) => (
                           <td key={tier} className="text-center p-3">
-                            {PLAN_CONFIGS[tier].features[feature] ? (
-                              <Check size={16} className="text-green-500 mx-auto" />
-                            ) : (
-                              <X size={16} className="text-gray-300 mx-auto" />
-                            )}
+                            {PLAN_CONFIGS[tier].features[feature] ? <Check size={16} className="text-green-500 mx-auto" /> : <X size={16} className="text-gray-300 mx-auto" />}
                           </td>
                         ))}
                       </tr>
                     ))}
                   </>
                 ))}
+
+                {/* Add-ons row */}
+                <tr><td colSpan={5} className="px-3 py-2 bg-muted/20 font-semibold text-foreground text-[11px] uppercase tracking-wider">Add-ons (bring your own provider)</td></tr>
+                <tr className="border-t border-muted/30">
+                  <td className="p-3 text-foreground">AI \u2014 Bring Your Own Key</td>
+                  {tierOrder.map(t => <td key={t} className="text-center p-3"><span className="text-[10px] text-blue-600 font-medium">$29 setup</span></td>)}
+                </tr>
+                <tr className="border-t border-muted/30 bg-muted/5">
+                  <td className="p-3 text-foreground">Call / Telephony Integration</td>
+                  <td className="text-center p-3"><X size={16} className="text-gray-300 mx-auto" /></td>
+                  <td className="text-center p-3"><X size={16} className="text-gray-300 mx-auto" /></td>
+                  <td className="text-center p-3"><span className="text-[10px] text-blue-600 font-medium">$49 setup</span></td>
+                  <td className="text-center p-3"><span className="text-[10px] text-blue-600 font-medium">$49 setup</span></td>
+                </tr>
               </tbody>
             </table>
           </div>
         </Card>
+      </div>
+
+      {/* Bottom CTA */}
+      <div className="text-center py-6">
+        <p className="text-sm text-muted-foreground mb-2">Need help choosing the right plan?</p>
+        <a href="mailto:hello@reachthesoul.org" className="text-primary text-sm font-medium hover:underline">Contact us at hello@reachthesoul.org</a>
       </div>
     </div>
   );

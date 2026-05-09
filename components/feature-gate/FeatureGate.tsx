@@ -77,10 +77,9 @@ export function FeatureGate({ feature, children, inline, message }: FeatureGateP
           <div className="flex items-center justify-center gap-1.5 mb-5">
             <Sparkles size={14} className="text-amber-500" />
             <span className="text-xs font-medium text-amber-600">
-              Starting at{" "}
-              {requiredConfig.price.idr > 0
-                ? `Rp ${(requiredConfig.price.idr / 1000).toFixed(0)}K/mo`
-                : `$${requiredConfig.price.usd}/mo`
+              {requiredConfig.price > 0
+                ? `Starting at $${requiredConfig.price}/mo`
+                : "Contact sales for pricing"
               }
             </span>
           </div>
