@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { SoftPhone } from "@/components/calls/SoftPhone";
 import { useAuthStore } from "@/store/auth-store";
+import { useOrgStore } from "@/store/org-store";
 import { usePresenceStore } from "@/store/presence-store";
 import AuthProvider from "@/components/auth/AuthProvider";
 import { UsageBanner } from "@/components/feature-gate/UsageBanner";
@@ -36,6 +37,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router   = useRouter();
   const { currentUser, role, isLoading } = useAuthStore();
+  const orgLoading = useOrgStore((s) => s.isLoading);
   const { init: initPresence, cleanup: cleanupPresence } = usePresenceStore();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -47,12 +49,13 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
     return () => cleanupPresence();
   }, [isLoading, currentUser]);
 
-  // Redirect to login once auth state is confirmed empty (not while still loading)
+  // Redirect to login once auth state is FULLY confirmed empty
+  // Wait for both auth AND org loading to finish
   useEffect(() => {
-    if (!isLoading && !currentUser) {
+    if (!isLoading && !orgLoading && !currentUser) {
       router.replace("/login");
     }
-  }, [isLoading, currentUser, router]);
+  }, [isLoading, orgLoading, currentUser, router]);
 
   const getTitle = () => {
     if (pathname.startsWith("/dashboard/tickets/") && pathname !== "/dashboard/tickets/new") return "Conversation View";
@@ -70,7 +73,7 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
   };
 
   // Show spinner while Firebase resolves auth state
-  if (isLoading) {
+  if (isLoading || orgLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3">

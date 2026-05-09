@@ -1,5 +1,5 @@
 "use client";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
@@ -11,6 +11,9 @@ import { useOrgStore } from "@/store/org-store";
  * 1. Listens to Firebase Auth state
  * 2. Loads user profile + org memberships
  * 3. Loads active organization data
+ * 
+ * Key fix: isLoading stays TRUE until auth is fully resolved,
+ * preventing premature redirect to login on refresh.
  */
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const { setUser, setLoading } = useAuthStore();
@@ -20,10 +23,15 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
     setLoading: setOrgLoading,
     reset: resetOrg,
   } = useOrgStore();
+  const initialized = useRef(false);
 
   useEffect(() => {
-    setLoading(true);
-    setOrgLoading(true);
+    // Set loading on mount — prevents redirect flash
+    if (!initialized.current) {
+      setLoading(true);
+      setOrgLoading(true);
+      initialized.current = true;
+    }
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -31,16 +39,20 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
           // 1. Fetch user profile
           const snap = await getDoc(doc(db, "users", firebaseUser.uid));
           if (!snap.exists()) {
+            console.warn("[AuthProvider] User doc not found, signing out");
             await auth.signOut();
             setUser(null);
+            setLoading(false);
             resetOrg();
             return;
           }
 
           const data = snap.data();
           if (!data.isActive) {
+            console.warn("[AuthProvider] User inactive, signing out");
             await auth.signOut();
             setUser(null);
+            setLoading(false);
             resetOrg();
             return;
           }
@@ -62,43 +74,52 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
             isPlatformAdmin: data.isPlatformAdmin ?? false,
           };
 
-          setUser(user);
-          setMemberships(user.orgMemberships);
-
           // 2. Load active organization
           const activeOrgId = user.primaryOrgId;
           if (activeOrgId) {
-            const orgSnap = await getDoc(doc(db, "organizations", activeOrgId));
-            if (orgSnap.exists()) {
-              const orgData = orgSnap.data();
-              setActiveOrg({ orgId: orgSnap.id, ...orgData } as any);
+            try {
+              const orgSnap = await getDoc(doc(db, "organizations", activeOrgId));
+              if (orgSnap.exists()) {
+                const orgData = orgSnap.data();
+                setActiveOrg({ orgId: orgSnap.id, ...orgData } as any);
 
-              // Update role based on org membership
-              const membership = user.orgMemberships.find(
-                (m: any) => m.orgId === activeOrgId
-              );
-              if (membership) {
-                setUser({ ...user, role: membership.role });
+                // Update role based on org membership
+                const membership = user.orgMemberships.find(
+                  (m: any) => m.orgId === activeOrgId
+                );
+                if (membership) {
+                  user.role = membership.role;
+                }
               }
-            } else {
-              setOrgLoading(false);
+            } catch (orgErr) {
+              console.error("[AuthProvider] Failed to load org:", orgErr);
             }
-          } else {
-            setOrgLoading(false);
           }
+
+          // 3. Set user LAST — after org is loaded
+          setUser(user);
+          setMemberships(user.orgMemberships);
+          setOrgLoading(false);
+          setLoading(false);
+
         } catch (err) {
-          console.error("Failed to fetch user profile:", err);
+          console.error("[AuthProvider] Failed to fetch user profile:", err);
+          // Don't sign out on Firestore errors — auth token is still valid
+          // This prevents logout on transient network issues
           setUser(null);
+          setLoading(false);
           resetOrg();
         }
       } else {
+        // No Firebase Auth user — genuinely not logged in
         setUser(null);
+        setLoading(false);
         resetOrg();
       }
     });
 
     return () => unsubscribe();
-  }, [setUser, setLoading, setActiveOrg, setMemberships, setOrgLoading, resetOrg]);
+  }, []);
 
   return <>{children}</>;
 }
