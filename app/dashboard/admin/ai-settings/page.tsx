@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth-store";
+import { useOrgStore } from "@/store/org-store";
 import { FeatureGate } from "@/components/feature-gate/FeatureGate";
 import { cn } from "@/lib/utils";
 import type { EscalationReason } from "@/types";
@@ -92,6 +93,8 @@ const TRIGGER_ICONS: Record<string, React.ReactNode> = {
 
 function AISettingsContent() {
   const currentUser = useAuthStore((s) => s.currentUser);
+  const activeOrg = useOrgStore((s) => s.activeOrg);
+  const orgId = activeOrg?.orgId ?? "";
   const [settings, setSettings] = useState<AISettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -106,24 +109,26 @@ function AISettingsContent() {
   const [testLoading, setTestLoading] = useState(false);
   const [testError, setTestError] = useState<string | null>(null);
 
-  // Load settings from Firestore
+  // Load settings from organization document
   useEffect(() => {
+    if (!orgId) return;
     async function load() {
       try {
         const [{ doc, getDoc }, { db }] = await Promise.all([
           import("firebase/firestore"),
           import("@/lib/firebase"),
         ]);
-        const snap = await getDoc(doc(db, "system_config", "ai_settings"));
+        const snap = await getDoc(doc(db, "organizations", orgId));
         if (snap.exists()) {
-          const data = snap.data();
-          setSettings({
-            ...DEFAULT_SETTINGS,
-            ...data,
-            // Ensure arrays/objects have defaults
-            escalationTriggers: data.escalationTriggers ?? DEFAULT_SETTINGS.escalationTriggers,
-            channelToggles: data.channelToggles ?? DEFAULT_SETTINGS.channelToggles,
-          });
+          const data = snap.data()?.aiConfig;
+          if (data) {
+            setSettings({
+              ...DEFAULT_SETTINGS,
+              ...data,
+              escalationTriggers: data.escalationTriggers ?? DEFAULT_SETTINGS.escalationTriggers,
+              channelToggles: data.channelToggles ?? DEFAULT_SETTINGS.channelToggles,
+            });
+          }
         }
       } catch (err) {
         console.error("Failed to load AI settings:", err);
@@ -131,20 +136,24 @@ function AISettingsContent() {
       setLoading(false);
     }
     load();
-  }, []);
+  }, [orgId]);
 
-  // Save settings to Firestore
+  // Save settings to organization document
   const handleSave = async () => {
+    if (!orgId) return;
     setSaving(true);
     try {
-      const [{ doc, setDoc, serverTimestamp }, { db }] = await Promise.all([
+      const [{ doc, updateDoc, serverTimestamp }, { db }] = await Promise.all([
         import("firebase/firestore"),
         import("@/lib/firebase"),
       ]);
-      await setDoc(doc(db, "system_config", "ai_settings"), {
-        ...settings,
+      await updateDoc(doc(db, "organizations", orgId), {
+        aiConfig: {
+          ...settings,
+          updatedAt: new Date().toISOString(),
+          updatedBy: currentUser?.uid ?? "unknown",
+        },
         updatedAt: serverTimestamp(),
-        updatedBy: currentUser?.uid ?? "unknown",
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
