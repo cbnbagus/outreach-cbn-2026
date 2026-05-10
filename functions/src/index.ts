@@ -277,18 +277,36 @@ export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
 
   try {
     const body    = req.body;
-    const phone   = String(body.sender ?? "").startsWith("+")
-      ? body.sender : `+${body.sender}`;
+    const sender  = String(body.sender ?? "").replace(/\D/g, "");
+    const phone   = sender.startsWith("+") ? sender : `+${sender}`;
     const name    = String(body.name ?? phone);
     const message = String(body.message ?? "");
+    const device  = String(body.device ?? "").replace(/\D/g, "");
 
-    // Skip echo messages (sent by us via Fonnte API, echoed back)
+    // Skip echo messages — multiple checks
     const isEcho = body.fromMe === true || body.from_me === true ||
+                   body.isFromMe === true || body.is_from_me === true ||
                    message.includes("_Sent via fonnte.com_") ||
-                   message.includes("Sent via fonnte");
+                   message.includes("Sent via fonnte") ||
+                   body.status === "sent" || body.status === "delivered" || body.status === "read" ||
+                   (device && sender === device) ||  // sender is our own device number
+                   !message.trim();  // empty messages (status updates)
+
     if (isEcho) {
       res.status(200).json({ status: "ok", skipped: "echo" });
       return;
+    }
+
+    // Skip if sender looks like our own number (self-loop prevention)
+    // Load org to check device number
+    const db = getDb();
+    const orgDoc = await db.doc(`organizations/${orgId}`).get();
+    if (orgDoc.exists) {
+      const ownNumber = String(orgDoc.data()?.channelConfig?.fonnte_device_number ?? "").replace(/\D/g, "");
+      if (ownNumber && sender === ownNumber) {
+        res.status(200).json({ status: "ok", skipped: "self-message" });
+        return;
+      }
     }
 
     // Parse attachments from Fonnte
@@ -531,6 +549,19 @@ export const onRespondentMessage = onDocumentCreated(
       // Idempotency: skip if this message already has an AI reply after it
       const messageId = event.params.messageId;
       const messageCreatedAt = message.createdAt?.toMillis?.() ?? Date.now();
+
+      // COOLDOWN: check if ANY AI message was sent in last 60 seconds for this ticket
+      const recentCutoff = new Date(Date.now() - 60000); // 60 seconds ago
+      const recentAI = await db.collection(`tickets/${ticketId}/messages`)
+        .where("senderRole", "==", "ai")
+        .where("createdAt", ">", recentCutoff)
+        .limit(1)
+        .get();
+      if (!recentAI.empty) {
+        logger.info(`[onRespondentMessage] AI replied within last 60s, skipping to prevent loop`);
+        return;
+      }
+
       const laterMessages = await db.collection(`tickets/${ticketId}/messages`)
         .where("createdAt", ">", new Date(messageCreatedAt))
         .limit(5)
