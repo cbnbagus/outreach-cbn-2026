@@ -66,7 +66,7 @@ function ExpandSection({ title, children }: { title: string; children: React.Rea
 // ─── Channel card ─────────────────────────────────────────────────────────────
 function ChannelCard({
   icon, iconBg, iconColor, title, functionName, verifyToken, verifyTokenKey,
-  setupSteps, testCurl, projectId,
+  setupSteps, testCurl, projectId, orgId,
 }: {
   icon: React.ReactNode;
   iconBg: string;
