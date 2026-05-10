@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Copy, Check, MessageCircle, Instagram, Facebook,
   Phone, ExternalLink, ChevronDown, ChevronRight, Terminal,
@@ -139,6 +139,75 @@ export default function IntegrationsPage() {
   const [projectId, setProjectId] = useState("reachthesoul-prod");
   const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
 
+  // Channel config state
+  const [waProvider, setWaProvider] = useState("fonnte");
+  const [fonnteToken, setFonnteToken] = useState("");
+  const [metaPhoneId, setMetaPhoneId] = useState("");
+  const [metaToken, setMetaToken] = useState("");
+  const [metaAppSecret, setMetaAppSecret] = useState("");
+  const [fbPageToken, setFbPageToken] = useState("");
+  const [igToken, setIgToken] = useState("");
+  const [configSaving, setConfigSaving] = useState(false);
+  const [configSaved, setConfigSaved] = useState(false);
+  const [configLoaded, setConfigLoaded] = useState(false);
+  const [showTokens, setShowTokens] = useState(false);
+
+  // Load channel config from org
+  useEffect(() => {
+    if (!orgId || configLoaded) return;
+    async function loadConfig() {
+      try {
+        const [{ doc, getDoc }, { db }] = await Promise.all([
+          import("firebase/firestore"), import("@/lib/firebase"),
+        ]);
+        const snap = await getDoc(doc(db, "organizations", orgId));
+        if (snap.exists()) {
+          const cc = snap.data()?.channelConfig ?? {};
+          setWaProvider(cc.active_whatsapp_provider ?? "fonnte");
+          setFonnteToken(cc.fonnte_token ?? "");
+          setMetaPhoneId(cc.meta_phone_number_id ?? "");
+          setMetaToken(cc.meta_access_token ?? "");
+          setMetaAppSecret(cc.meta_app_secret ?? "");
+          setFbPageToken(cc.facebook_page_token ?? "");
+          setIgToken(cc.instagram_token ?? "");
+        }
+        setConfigLoaded(true);
+      } catch (err) {
+        console.error("Failed to load channel config:", err);
+        setConfigLoaded(true);
+      }
+    }
+    loadConfig();
+  }, [orgId, configLoaded]);
+
+  const saveChannelConfig = async () => {
+    if (!orgId) return;
+    setConfigSaving(true);
+    try {
+      const [{ doc, updateDoc, serverTimestamp }, { db }] = await Promise.all([
+        import("firebase/firestore"), import("@/lib/firebase"),
+      ]);
+      await updateDoc(doc(db, "organizations", orgId), {
+        channelConfig: {
+          active_whatsapp_provider: waProvider,
+          fonnte_token: fonnteToken.trim(),
+          meta_phone_number_id: metaPhoneId.trim(),
+          meta_access_token: metaToken.trim(),
+          meta_app_secret: metaAppSecret.trim(),
+          facebook_page_token: fbPageToken.trim(),
+          instagram_token: igToken.trim(),
+        },
+        updatedAt: serverTimestamp(),
+      });
+      setConfigSaved(true);
+      setTimeout(() => setConfigSaved(false), 3000);
+    } catch (err) {
+      console.error("Failed to save channel config:", err);
+      alert("Failed to save. Please try again.");
+    }
+    setConfigSaving(false);
+  };
+
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
 
@@ -146,7 +215,109 @@ export default function IntegrationsPage() {
       <div>
         <h1 className="text-base font-semibold">Integrations</h1>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Webhooks run as <strong>Firebase Cloud Functions</strong>. Every incoming message/call automatically creates a respondent and new ticket in Firestore.
+          Connect your messaging channels. Enter your credentials below, then set up webhooks to start receiving messages.
+        </p>
+      </div>
+
+      {/* ═══ CHANNEL CREDENTIALS ═══ */}
+      <Card className="border-2 border-primary/30 shadow-none">
+        <CardHeader className="px-5 pt-5 pb-3 border-b border-border">
+          <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+            <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center">
+              <MessageCircle size={14} className="text-primary" />
+            </div>
+            Channel Credentials
+          </CardTitle>
+          <p className="text-[10px] text-muted-foreground mt-1">
+            Enter your API tokens here. They are saved securely to your organization and used by Cloud Functions to send replies.
+          </p>
+        </CardHeader>
+        <CardContent className="p-5 flex flex-col gap-5">
+
+          {/* WhatsApp Provider */}
+          <div>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1.5">WhatsApp Provider</label>
+            <div className="flex gap-2">
+              <button onClick={() => setWaProvider("fonnte")} className={cn("flex-1 px-3 py-2 rounded-lg border text-xs font-medium transition-all", waProvider === "fonnte" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/30")}>
+                Fonnte (Quick Setup)
+              </button>
+              <button onClick={() => setWaProvider("meta")} className={cn("flex-1 px-3 py-2 rounded-lg border text-xs font-medium transition-all", waProvider === "meta" ? "border-primary bg-primary/5 text-primary" : "border-border text-muted-foreground hover:border-primary/30")}>
+                Meta Cloud API (Pro)
+              </button>
+            </div>
+          </div>
+
+          {/* Fonnte config */}
+          {waProvider === "fonnte" && (
+            <div className="p-4 rounded-lg bg-green-50/50 border border-green-200">
+              <p className="text-xs font-semibold text-green-800 mb-2">Fonnte Configuration</p>
+              <p className="text-[10px] text-green-700 mb-3">Get your token from <a href="https://fonnte.com" target="_blank" className="underline">fonnte.com</a> → Device → Token</p>
+              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Fonnte Device Token</label>
+              <Input
+                type={showTokens ? "text" : "password"}
+                value={fonnteToken}
+                onChange={(e) => setFonnteToken(e.target.value)}
+                placeholder="e.g. 9kRcuqZiM8PqhDuZZfdu"
+                className="h-8 text-xs font-mono"
+              />
+            </div>
+          )}
+
+          {/* Meta config */}
+          {waProvider === "meta" && (
+            <div className="p-4 rounded-lg bg-blue-50/50 border border-blue-200">
+              <p className="text-xs font-semibold text-blue-800 mb-2">Meta WhatsApp Cloud API</p>
+              <p className="text-[10px] text-blue-700 mb-3">Get credentials from <a href="https://developers.facebook.com" target="_blank" className="underline">developers.facebook.com</a> → Your App → WhatsApp</p>
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Phone Number ID</label>
+                  <Input type="text" value={metaPhoneId} onChange={(e) => setMetaPhoneId(e.target.value)} placeholder="e.g. 123456789012345" className="h-8 text-xs font-mono" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Permanent Access Token</label>
+                  <Input type={showTokens ? "text" : "password"} value={metaToken} onChange={(e) => setMetaToken(e.target.value)} placeholder="EAAxxxxxxx..." className="h-8 text-xs font-mono" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">App Secret (for webhook verification)</label>
+                  <Input type={showTokens ? "text" : "password"} value={metaAppSecret} onChange={(e) => setMetaAppSecret(e.target.value)} placeholder="abc123def456..." className="h-8 text-xs font-mono" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Facebook */}
+          <div>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Facebook Page Token <span className="text-muted-foreground/50">(optional)</span></label>
+            <Input type={showTokens ? "text" : "password"} value={fbPageToken} onChange={(e) => setFbPageToken(e.target.value)} placeholder="Page Access Token" className="h-8 text-xs font-mono" />
+          </div>
+
+          {/* Instagram */}
+          <div>
+            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Instagram Token <span className="text-muted-foreground/50">(optional)</span></label>
+            <Input type={showTokens ? "text" : "password"} value={igToken} onChange={(e) => setIgToken(e.target.value)} placeholder="Instagram Graph API Token" className="h-8 text-xs font-mono" />
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center justify-between pt-2 border-t border-border">
+            <button onClick={() => setShowTokens(!showTokens)} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+              {showTokens ? "🙈 Hide tokens" : "👁 Show tokens"}
+            </button>
+            <div className="flex items-center gap-2">
+              {configSaved && <span className="text-xs text-green-600 font-medium flex items-center gap-1"><Check size={12} /> Saved!</span>}
+              <button onClick={saveChannelConfig} disabled={configSaving} className="px-4 py-1.5 rounded-md bg-primary text-white text-xs font-semibold hover:bg-primary/90 disabled:opacity-50 transition-colors">
+                {configSaving ? "Saving..." : "Save Credentials"}
+              </button>
+            </div>
+          </div>
+
+        </CardContent>
+      </Card>
+
+      {/* ═══ WEBHOOK URLS ═══ */}
+      <div>
+        <h2 className="text-sm font-semibold text-foreground mb-1">Webhook URLs</h2>
+        <p className="text-[10px] text-muted-foreground mb-3">
+          After saving credentials above, configure these webhook URLs in your provider dashboard. Webhooks run as Firebase Cloud Functions.
         </p>
       </div>
 
@@ -174,7 +345,7 @@ export default function IntegrationsPage() {
       {/* Deploy instructions */}
       <Card className="border border-amber-200 bg-amber-50 shadow-none">
         <CardContent className="p-4 flex flex-col gap-2">
-          <p className="text-xs font-semibold text-amber-800">Langkah deploy Cloud Functions</p>
+          <p className="text-xs font-semibold text-amber-800">Deploy Cloud Functions</p>
           <ol className="flex flex-col gap-1.5 text-xs text-amber-800 list-decimal list-inside leading-relaxed">
             <li>Install Firebase CLI: <code className="bg-amber-100 px-1 rounded font-mono">npm install -g firebase-tools</code></li>
             <li>Login: <code className="bg-amber-100 px-1 rounded font-mono">firebase login</code></li>

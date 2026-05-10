@@ -85,7 +85,7 @@ export const onMessageCreated = onDocumentCreated(
           config.active_whatsapp_provider === "fonnte") {
         const token = config.fonnte_token ?? "";
         if (!token) {
-          logger.warn("[onMessageCreated] Fonnte token not configured in system_config/channel_settings");
+          logger.warn("[onMessageCreated] Fonnte token not configured in organization channelConfig");
           return;
         }
 
@@ -509,13 +509,18 @@ export const onRespondentMessage = onDocumentCreated(
         return;
       }
 
-      // Load AI settings
-      const aiDoc = await db.doc("system_config/ai_settings").get();
-      if (!aiDoc.exists) {
-        logger.info("[onRespondentMessage] No AI settings configured");
+      // Load AI settings from organization document
+      const orgId = ticket.orgId ?? "";
+      if (!orgId) {
+        logger.info("[onRespondentMessage] No orgId on ticket");
         return;
       }
-      const aiConfig = aiDoc.data()!;
+      const orgDoc = await db.doc(`organizations/${orgId}`).get();
+      if (!orgDoc.exists) {
+        logger.info("[onRespondentMessage] Organization not found");
+        return;
+      }
+      const aiConfig = orgDoc.data()?.aiConfig ?? {};
 
       // Check if AI is enabled globally
       if (!aiConfig.enabled || !aiConfig.autoReply) {
