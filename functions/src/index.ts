@@ -454,10 +454,14 @@ export const webhookCall = onRequest({ cors: true }, async (req, res) => {
     const phone   = String(body.phone ?? "").trim();
     if (!phone) { res.status(400).json({ error: "phone is required" }); return; }
 
+    const orgId = req.query.org as string;
+    if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
+
     const name    = String(body.name ?? phone);
     const message = String(body.subject ?? body.notes ?? "Inbound call");
 
     await processIncomingMessage({
+      orgId,
       channel:     "call",
       senderId:    phone,
       senderName:  name,
