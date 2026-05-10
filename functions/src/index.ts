@@ -309,6 +309,31 @@ export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
       }
     }
 
+    // ANTI-ECHO: Check if this exact message was recently sent by AI to this sender
+    // This catches Fonnte echoing back our own replies as incoming messages
+    const recentTickets = await db.collection("tickets")
+      .where("orgId", "==", orgId)
+      .where("respondentId", "!=", "")  // any respondent
+      .orderBy("updatedAt", "desc")
+      .limit(5)
+      .get();
+
+    for (const tDoc of recentTickets.docs) {
+      const recentMsgs = await db.collection(`tickets/${tDoc.id}/messages`)
+        .orderBy("createdAt", "desc")
+        .limit(3)
+        .get();
+      const isDuplicate = recentMsgs.docs.some((m) => {
+        const d = m.data();
+        return d.senderRole === "ai" && d.content?.trim() === message.trim();
+      });
+      if (isDuplicate) {
+        logger.info(`[webhookFonnte] Skipping echo — message matches recent AI reply`);
+        res.status(200).json({ status: "ok", skipped: "echo-duplicate" });
+        return;
+      }
+    }
+
     // Parse attachments from Fonnte
     // Fonnte sends media URL in `url` field, type in `type` field
     // type can be: image, video, audio, document, sticker, location, etc.
