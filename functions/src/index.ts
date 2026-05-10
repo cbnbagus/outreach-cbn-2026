@@ -283,6 +283,8 @@ export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
     const message = String(body.message ?? "");
     const device  = String(body.device ?? "").replace(/\D/g, "");
 
+    logger.info(`[webhookFonnte] Incoming — sender: ${sender}, device: ${device}, fromMe: ${body.fromMe}, message: "${message.substring(0, 50)}..."`);
+
     // Skip echo messages — multiple checks
     const isEcho = body.fromMe === true || body.from_me === true ||
                    body.isFromMe === true || body.is_from_me === true ||
@@ -311,26 +313,29 @@ export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
 
     // ANTI-ECHO: Check if this exact message was recently sent by AI to this sender
     // This catches Fonnte echoing back our own replies as incoming messages
-    const recentTickets = await db.collection("tickets")
-      .where("orgId", "==", orgId)
-      .where("respondentId", "!=", "")  // any respondent
-      .orderBy("updatedAt", "desc")
-      .limit(5)
-      .get();
-
-    for (const tDoc of recentTickets.docs) {
-      const recentMsgs = await db.collection(`tickets/${tDoc.id}/messages`)
-        .orderBy("createdAt", "desc")
+    const senderClean = sender.replace(/\D/g, "");
+    if (message.trim() && senderClean) {
+      const recentTickets = await db.collection("tickets")
+        .where("orgId", "==", orgId)
+        .where("channel", "==", "whatsapp_fonnte")
+        .orderBy("updatedAt", "desc")
         .limit(3)
         .get();
-      const isDuplicate = recentMsgs.docs.some((m) => {
-        const d = m.data();
-        return d.senderRole === "ai" && d.content?.trim() === message.trim();
-      });
-      if (isDuplicate) {
-        logger.info(`[webhookFonnte] Skipping echo — message matches recent AI reply`);
-        res.status(200).json({ status: "ok", skipped: "echo-duplicate" });
-        return;
+
+      for (const tDoc of recentTickets.docs) {
+        const recentMsgs = await db.collection(`tickets/${tDoc.id}/messages`)
+          .orderBy("createdAt", "desc")
+          .limit(2)
+          .get();
+        const isDuplicate = recentMsgs.docs.some((m) => {
+          const d = m.data();
+          return (d.senderRole === "ai" || d.senderRole === "agent") && d.content?.trim() === message.trim();
+        });
+        if (isDuplicate) {
+          logger.info(`[webhookFonnte] Skipping echo — message matches recent AI/agent reply`);
+          res.status(200).json({ status: "ok", skipped: "echo-duplicate" });
+          return;
+        }
       }
     }
 
