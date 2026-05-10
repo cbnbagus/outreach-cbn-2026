@@ -216,7 +216,7 @@ export const onMessageCreated = onDocumentCreated(
 // 1. WhatsApp Business Cloud API (Meta)
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
-  const WA_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? "oms_wa_token";
+  const WA_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? "rts_wa_token";
 
   if (req.method === "GET") {
     const mode      = req.query["hub.mode"];
@@ -347,7 +347,7 @@ async function parseFonnteAttachments(body: any): Promise<any[]> {
 // 3. Instagram Direct Message (Meta)
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
-  const IG_VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN ?? "oms_ig_token";
+  const IG_VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN ?? "rts_ig_token";
 
   if (req.method === "GET") {
     const mode      = req.query["hub.mode"];
@@ -393,7 +393,7 @@ export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
 // 4. Facebook Messenger (Meta)
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookFacebook = onRequest({ cors: true }, async (req, res) => {
-  const FB_VERIFY_TOKEN = process.env.FACEBOOK_VERIFY_TOKEN ?? "oms_fb_token";
+  const FB_VERIFY_TOKEN = process.env.FACEBOOK_VERIFY_TOKEN ?? "rts_fb_token";
 
   if (req.method === "GET") {
     const mode      = req.query["hub.mode"];

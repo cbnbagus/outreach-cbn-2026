@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useOrgStore } from "@/store/org-store";
 import { cn } from "@/lib/utils";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -77,9 +78,10 @@ function ChannelCard({
   setupSteps: React.ReactNode;
   testCurl: (url: string) => string;
   projectId: string;
+  orgId: string;
 }) {
   const region = "asia-southeast1";
-  const url = `https://${region}-${projectId}.cloudfunctions.net/${functionName}`;
+  const url = `https://${region}-${projectId}.cloudfunctions.net/${functionName}?org=${orgId}`;
 
   return (
     <Card className="border border-border shadow-none">
@@ -123,7 +125,7 @@ function ChannelCard({
           </div>
         )}
 
-        <ExpandSection title="Cara setup">{setupSteps}</ExpandSection>
+        <ExpandSection title="How to set up">{setupSteps}</ExpandSection>
         <ExpandSection title="Test with curl">
           <CodeBlock id={`${functionName}-curl`}>{testCurl(url)}</CodeBlock>
         </ExpandSection>
@@ -134,7 +136,8 @@ function ChannelCard({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function IntegrationsPage() {
-  const [projectId, setProjectId] = useState("crm-outreach-7deee");
+  const [projectId, setProjectId] = useState("reachthesoul-prod");
+  const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
 
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
@@ -187,13 +190,13 @@ export default function IntegrationsPage() {
 
       {/* WhatsApp Meta */}
       <ChannelCard
-        projectId={projectId}
+        projectId={projectId} orgId={orgId}
         functionName="webhookWhatsapp"
         title="WhatsApp Business Cloud API (Meta)"
         icon={<MessageCircle size={14} />}
         iconBg="bg-emerald-100"
         iconColor="text-emerald-700"
-        verifyToken="oms_wa_token"
+        verifyToken="rts_wa_token"
         verifyTokenKey="WHATSAPP_VERIFY_TOKEN"
         testCurl={(url) => `curl -X POST "${url}" \\
   -H "Content-Type: application/json" \\
@@ -219,7 +222,7 @@ export default function IntegrationsPage() {
 
       {/* WhatsApp Fonnte */}
       <ChannelCard
-        projectId={projectId}
+        projectId={projectId} orgId={orgId}
         functionName="webhookFonnte"
         title="WhatsApp via Fonnte / Wablas"
         icon={<MessageCircle size={14} />}
@@ -240,13 +243,13 @@ export default function IntegrationsPage() {
 
       {/* Instagram */}
       <ChannelCard
-        projectId={projectId}
+        projectId={projectId} orgId={orgId}
         functionName="webhookInstagram"
         title="Instagram Direct Message"
         icon={<Instagram size={14} />}
         iconBg="bg-pink-100"
         iconColor="text-pink-700"
-        verifyToken="oms_ig_token"
+        verifyToken="rts_ig_token"
         verifyTokenKey="INSTAGRAM_VERIFY_TOKEN"
         testCurl={(url) => `curl -X POST "${url}" \\
   -H "Content-Type: application/json" \\
@@ -270,13 +273,13 @@ export default function IntegrationsPage() {
 
       {/* Facebook */}
       <ChannelCard
-        projectId={projectId}
+        projectId={projectId} orgId={orgId}
         functionName="webhookFacebook"
         title="Facebook Messenger"
         icon={<Facebook size={14} />}
         iconBg="bg-blue-100"
         iconColor="text-blue-700"
-        verifyToken="oms_fb_token"
+        verifyToken="rts_fb_token"
         verifyTokenKey="FACEBOOK_VERIFY_TOKEN"
         testCurl={(url) => `curl -X POST "${url}" \\
   -H "Content-Type: application/json" \\
@@ -300,7 +303,7 @@ export default function IntegrationsPage() {
 
       {/* Call */}
       <ChannelCard
-        projectId={projectId}
+        projectId={projectId} orgId={orgId}
         functionName="webhookCall"
         title="Inbound Call (VOIP / PBX / Manual)"
         icon={<Phone size={14} />}
