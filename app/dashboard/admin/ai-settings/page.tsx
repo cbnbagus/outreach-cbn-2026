@@ -30,6 +30,7 @@ interface AISettings {
     keywords: string[];
     enabled: boolean;
   }[];
+  escalationReplyMessage: string;
   channelToggles: Record<string, boolean>;
 }
 
@@ -61,6 +62,7 @@ const DEFAULT_SETTINGS: AISettings = {
     { reason: "baptism_request", label: "Baptism Request", keywords: ["baptis", "baptism", "dibaptis", "pembaptisan"], enabled: true },
     { reason: "manual_escalation", label: "Manual Escalation", keywords: ["talk to human", "talk to human", "agent", "counselor", "counselor"], enabled: true },
   ],
+  escalationReplyMessage: "Thank you for reaching out. I'm connecting you with a team member who can assist you personally. They'll be with you shortly! 🙏",
   channelToggles: {
     WhatsApp: true,
     Instagram: true,
@@ -536,6 +538,25 @@ function AISettingsContent() {
                   </div>
                 );
               })}
+            </CardContent>
+          </Card>
+
+          {/* Escalation Reply Message */}
+          <Card className="border border-border shadow-none">
+            <CardHeader className="py-3 px-4 border-b border-border">
+              <CardTitle className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <HandHeart size={12} className="text-purple-600" />Escalation Reply Message
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 flex flex-col gap-2">
+              <p className="text-[10px] text-muted-foreground">This message is sent to the respondent when an escalation trigger is detected. Let them know a human is on the way.</p>
+              <Textarea
+                value={settings.escalationReplyMessage}
+                onChange={(e) => setSettings((s) => ({ ...s, escalationReplyMessage: e.target.value }))}
+                rows={3}
+                className="text-xs resize-none"
+                placeholder="Thank you for reaching out. I'm connecting you with a team member..."
+              />
             </CardContent>
           </Card>
 

@@ -534,7 +534,8 @@ export const onRespondentMessage = onDocumentCreated(
       if (!ticketDoc.exists) return;
       const ticket = ticketDoc.data()!;
 
-      // Skip if ticket is already handled by human or escalated
+      // Skip if ticket is explicitly handled by human or escalated
+      // undefined or "ai" = AI handles it
       if (ticket.handledBy === "human" || ticket.handledBy === "escalated") {
         logger.info(`[onRespondentMessage] Ticket ${ticketId} is ${ticket.handledBy}, skipping AI`);
         return;
@@ -627,14 +628,14 @@ export const onRespondentMessage = onDocumentCreated(
 
       if (detectedTrigger) {
         logger.info(`[onRespondentMessage] Escalation detected: ${detectedTrigger}`);
-        // Mark ticket as escalated, stop AI handling
+        // Mark ticket as escalated
         await db.doc(`tickets/${ticketId}`).update({
           handledBy: "escalated",
           escalation: detectedTrigger,
           priority: "high",
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        // Add system message notifying escalation
+        // Add internal system message
         await db.collection(`tickets/${ticketId}/messages`).add({
           senderId: "system",
           senderName: "System",
@@ -643,6 +644,24 @@ export const onRespondentMessage = onDocumentCreated(
           isInternal: true,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
+        // Send visible reply to respondent — they need to know a human is coming
+        const escalationReply = aiConfig.escalationReplyMessage
+          ?? "Thank you for reaching out. I'm connecting you with a team member who can assist you personally. They'll be with you shortly! 🙏";
+        await db.collection(`tickets/${ticketId}/messages`).add({
+          senderId: "ai_assistant",
+          senderName: "AI Assistant",
+          senderRole: "ai",
+          content: escalationReply,
+          isInternal: false,
+          aiGenerated: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        // Save last AI reply for echo detection
+        try {
+          await db.doc(`organizations/${orgId}`).update({
+            "channelConfig.last_ai_reply": escalationReply,
+          });
+        } catch (e) { /* non-critical */ }
         return;
       }
 
