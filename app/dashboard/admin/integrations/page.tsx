@@ -142,6 +142,7 @@ export default function IntegrationsPage() {
   // Channel config state
   const [waProvider, setWaProvider] = useState("fonnte");
   const [fonnteToken, setFonnteToken] = useState("");
+  const [fonnteDeviceNumber, setFonnteDeviceNumber] = useState("");
   const [metaPhoneId, setMetaPhoneId] = useState("");
   const [metaToken, setMetaToken] = useState("");
   const [metaAppSecret, setMetaAppSecret] = useState("");
@@ -165,6 +166,7 @@ export default function IntegrationsPage() {
           const cc = snap.data()?.channelConfig ?? {};
           setWaProvider(cc.active_whatsapp_provider ?? "fonnte");
           setFonnteToken(cc.fonnte_token ?? "");
+          setFonnteDeviceNumber(cc.fonnte_device_number ?? "");
           setMetaPhoneId(cc.meta_phone_number_id ?? "");
           setMetaToken(cc.meta_access_token ?? "");
           setMetaAppSecret(cc.meta_app_secret ?? "");
@@ -191,6 +193,7 @@ export default function IntegrationsPage() {
         channelConfig: {
           active_whatsapp_provider: waProvider,
           fonnte_token: fonnteToken.trim(),
+          fonnte_device_number: fonnteDeviceNumber.trim().replace(/\D/g, ""),
           meta_phone_number_id: metaPhoneId.trim(),
           meta_access_token: metaToken.trim(),
           meta_app_secret: metaAppSecret.trim(),
@@ -252,14 +255,29 @@ export default function IntegrationsPage() {
             <div className="p-4 rounded-lg bg-green-50/50 border border-green-200">
               <p className="text-xs font-semibold text-green-800 mb-2">Fonnte Configuration</p>
               <p className="text-[10px] text-green-700 mb-3">Get your token from <a href="https://fonnte.com" target="_blank" className="underline">fonnte.com</a> → Device → Token</p>
-              <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Fonnte Device Token</label>
-              <Input
-                type={showTokens ? "text" : "password"}
-                value={fonnteToken}
-                onChange={(e) => setFonnteToken(e.target.value)}
-                placeholder="e.g. 9kRcuqZiM8PqhDuZZfdu"
-                className="h-8 text-xs font-mono"
-              />
+              <div className="flex flex-col gap-3">
+                <div>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Fonnte Device Token</label>
+                  <Input
+                    type={showTokens ? "text" : "password"}
+                    value={fonnteToken}
+                    onChange={(e) => setFonnteToken(e.target.value)}
+                    placeholder="e.g. 9kRcuqZiM8PqhDuZZfdu"
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide block mb-1">Your WhatsApp Number (Device Number)</label>
+                  <Input
+                    type="text"
+                    value={fonnteDeviceNumber}
+                    onChange={(e) => setFonnteDeviceNumber(e.target.value)}
+                    placeholder="e.g. 6285974773341 (without +)"
+                    className="h-8 text-xs font-mono"
+                  />
+                  <p className="text-[9px] text-green-600 mt-1">This is used to prevent AI from replying to its own messages (loop prevention).</p>
+                </div>
+              </div>
             </div>
           )}
 

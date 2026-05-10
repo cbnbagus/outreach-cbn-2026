@@ -551,13 +551,18 @@ export const onRespondentMessage = onDocumentCreated(
       const messageCreatedAt = message.createdAt?.toMillis?.() ?? Date.now();
 
       // COOLDOWN: check if ANY AI message was sent in last 60 seconds for this ticket
-      const recentCutoff = new Date(Date.now() - 60000); // 60 seconds ago
-      const recentAI = await db.collection(`tickets/${ticketId}/messages`)
-        .where("senderRole", "==", "ai")
-        .where("createdAt", ">", recentCutoff)
-        .limit(1)
+      const recentMessages = await db.collection(`tickets/${ticketId}/messages`)
+        .orderBy("createdAt", "desc")
+        .limit(5)
         .get();
-      if (!recentAI.empty) {
+      const now = Date.now();
+      const hasRecentAI = recentMessages.docs.some((d) => {
+        const data = d.data();
+        if (data.senderRole !== "ai") return false;
+        const msgTime = data.createdAt?.toMillis?.() ?? 0;
+        return (now - msgTime) < 60000; // within last 60 seconds
+      });
+      if (hasRecentAI) {
         logger.info(`[onRespondentMessage] AI replied within last 60s, skipping to prevent loop`);
         return;
       }
