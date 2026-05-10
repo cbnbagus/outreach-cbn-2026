@@ -311,31 +311,14 @@ export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
       }
     }
 
-    // ANTI-ECHO: Check if this exact message was recently sent by AI to this sender
-    // This catches Fonnte echoing back our own replies as incoming messages
-    const senderClean = sender.replace(/\D/g, "");
-    if (message.trim() && senderClean) {
-      const recentTickets = await db.collection("tickets")
-        .where("orgId", "==", orgId)
-        .where("channel", "==", "whatsapp_fonnte")
-        .orderBy("updatedAt", "desc")
-        .limit(3)
-        .get();
-
-      for (const tDoc of recentTickets.docs) {
-        const recentMsgs = await db.collection(`tickets/${tDoc.id}/messages`)
-          .orderBy("createdAt", "desc")
-          .limit(2)
-          .get();
-        const isDuplicate = recentMsgs.docs.some((m) => {
-          const d = m.data();
-          return (d.senderRole === "ai" || d.senderRole === "agent") && d.content?.trim() === message.trim();
-        });
-        if (isDuplicate) {
-          logger.info(`[webhookFonnte] Skipping echo — message matches recent AI/agent reply`);
-          res.status(200).json({ status: "ok", skipped: "echo-duplicate" });
-          return;
-        }
+    // ANTI-ECHO: Simple approach — if this message content was recently sent by our AI,
+    // it's an echo from Fonnte. We store last AI reply in org document.
+    if (message.trim() && orgDoc.exists) {
+      const lastAIReply = orgDoc.data()?.channelConfig?.last_ai_reply ?? "";
+      if (lastAIReply && message.trim() === lastAIReply.trim()) {
+        logger.info(`[webhookFonnte] Skipping echo — message matches last AI reply`);
+        res.status(200).json({ status: "ok", skipped: "echo-duplicate" });
+        return;
       }
     }
 
@@ -759,6 +742,15 @@ export const onRespondentMessage = onDocumentCreated(
         handledBy: "ai",
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
+
+      // Save last AI reply for echo detection in webhookFonnte
+      try {
+        await db.doc(`organizations/${orgId}`).update({
+          "channelConfig.last_ai_reply": aiReply.trim(),
+        });
+      } catch (e) {
+        // Non-critical, don't fail
+      }
 
       logger.info(`[onRespondentMessage] AI replied to ticket ${ticketId}`);
 

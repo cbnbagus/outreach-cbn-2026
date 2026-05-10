@@ -83,6 +83,12 @@ export default function TicketDetailPage() {
           createdAt: t.createdAt?.toDate?.()?.toISOString?.() ?? t.createdAt ?? "",
           updatedAt: t.updatedAt?.toDate?.()?.toISOString?.() ?? t.updatedAt ?? "",
         } as Ticket);
+        // Set handledBy from ticket data (default to "ai" if not set — let AI handle new tickets)
+        if (t.handledBy) {
+          setHandledBy(t.handledBy as HandledBy);
+        } else {
+          setHandledBy("ai"); // New tickets default to AI mode
+        }
         // Mark as read — clear hasUnread flag
         if (t.hasUnread) {
           try {
@@ -134,7 +140,7 @@ export default function TicketDetailPage() {
   }, [ticket]);
 
   // AI state
-  const [handledBy, setHandledBy]       = useState<HandledBy>("human");
+  const [handledBy, setHandledBy]       = useState<HandledBy>("ai");
   const [escalation, setEscalation]     = useState<EscalationTrigger | null>(null);
   const [aiTyping, setAiTyping]         = useState(false);
   const [aiEnabled]                     = useState(false); // TODO: load from system config
@@ -817,16 +823,54 @@ export default function TicketDetailPage() {
                   </div>
                 </div>
               )}
-              {handledBy !== "human" && (
-                <Button variant="outline" size="sm" onClick={handleTakeOver} className="w-full h-7 text-xs gap-1.5">
-                  <UserCheck size={10} />Take Over Conversation
-                </Button>
-              )}
-              {handledBy === "human" && (
-                <div className="flex items-center gap-1.5 text-[10px] text-green-700">
-                  <UserCheck size={10} />You are now handling this conversation
-                </div>
-              )}
+              {/* Toggle buttons */}
+              <div className="grid grid-cols-2 gap-1.5 mt-1">
+                <button
+                  onClick={async () => {
+                    setHandledBy("ai");
+                    try {
+                      const [{ doc, updateDoc, serverTimestamp }, { db }] = await Promise.all([
+                        import("firebase/firestore"), import("@/lib/firebase"),
+                      ]);
+                      await updateDoc(doc(db, "tickets", ticket.ticketId), {
+                        handledBy: "ai",
+                        updatedAt: serverTimestamp(),
+                      });
+                    } catch (e) { console.error(e); }
+                  }}
+                  className={cn("flex items-center justify-center gap-1.5 px-2 py-2 rounded-md text-xs font-medium transition-all border",
+                    handledBy === "ai"
+                      ? "border-blue-400 bg-blue-100 text-blue-700"
+                      : "border-border text-muted-foreground hover:border-blue-300 hover:text-blue-600"
+                  )}
+                >
+                  <Bot size={12} /> AI Mode
+                </button>
+                <button
+                  onClick={async () => {
+                    setHandledBy("human");
+                    try {
+                      const [{ doc, updateDoc, serverTimestamp }, { db }] = await Promise.all([
+                        import("firebase/firestore"), import("@/lib/firebase"),
+                      ]);
+                      await updateDoc(doc(db, "tickets", ticket.ticketId), {
+                        handledBy: "human",
+                        updatedAt: serverTimestamp(),
+                      });
+                    } catch (e) { console.error(e); }
+                  }}
+                  className={cn("flex items-center justify-center gap-1.5 px-2 py-2 rounded-md text-xs font-medium transition-all border",
+                    handledBy === "human"
+                      ? "border-green-400 bg-green-100 text-green-700"
+                      : "border-border text-muted-foreground hover:border-green-300 hover:text-green-600"
+                  )}
+                >
+                  <UserCheck size={12} /> Human
+                </button>
+              </div>
+              <p className="text-[9px] text-muted-foreground text-center">
+                {handledBy === "ai" ? "AI will auto-reply to new messages" : "AI paused. You handle replies manually."}
+              </p>
             </CardContent>
           </Card>
 
