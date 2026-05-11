@@ -7,6 +7,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useOrgStore } from "@/store/org-store";
+import { SetupRequestGate } from "@/components/feature-gate/FeatureGate";
 import { cn } from "@/lib/utils";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -138,6 +139,7 @@ function ChannelCard({
 export default function IntegrationsPage() {
   const [projectId, setProjectId] = useState("reachthesoul-prod");
   const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
+  const plan = (useOrgStore((s) => s.activeOrg?.plan) ?? "free") as "free" | "starter" | "growth" | "enterprise";
 
   // Channel config state
   const [waProvider, setWaProvider] = useState("fonnte");
@@ -223,6 +225,7 @@ export default function IntegrationsPage() {
       </div>
 
       {/* ═══ CHANNEL CREDENTIALS ═══ */}
+      <SetupRequestGate plan={plan} selfServiceMinPlan="growth" featureLabel="Channel Integration" setupFee="$29 - $49">
       <Card className="border-2 border-primary/30 shadow-none">
         <CardHeader className="px-5 pt-5 pb-3 border-b border-border">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold">
@@ -330,6 +333,7 @@ export default function IntegrationsPage() {
 
         </CardContent>
       </Card>
+      </SetupRequestGate>
 
       {/* ═══ WEBHOOK URLS ═══ */}
       <div>

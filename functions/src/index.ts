@@ -574,10 +574,10 @@ export const onRespondentMessage = onDocumentCreated(
         const data = d.data();
         if (data.senderRole !== "ai") return false;
         const msgTime = data.createdAt?.toMillis?.() ?? 0;
-        return (now - msgTime) < 60000; // within last 60 seconds
+        return (now - msgTime) < 5000; // within last 5 seconds
       });
       if (hasRecentAI) {
-        logger.info(`[onRespondentMessage] AI replied within last 60s, skipping to prevent loop`);
+        logger.info(`[onRespondentMessage] AI replied within last 5s, skipping to prevent loop`);
         return;
       }
 

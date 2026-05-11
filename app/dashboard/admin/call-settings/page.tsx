@@ -99,7 +99,10 @@ const PROVIDERS: { id: Provider; label: string; badge?: string; color: string; b
 ];
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
-export default function CallSettingsPage() {
+import { FeatureGate, SetupRequestGate } from "@/components/feature-gate/FeatureGate";
+import { useOrgStore } from "@/store/org-store";
+
+function CallSettingsContent() {
   const [activeProvider, setActiveProvider] = useState<Provider>("twilio");
   const [saved, setSaved]                   = useState(false);
   const [testState, setTestState]           = useState<TestState>("idle");
@@ -464,5 +467,16 @@ function Field({ label, hint, children }: { label: string; hint?: string; childr
       </div>
       {children}
     </div>
+  );
+}
+
+export default function CallSettingsPage() {
+  const plan = (useOrgStore((s) => s.activeOrg?.plan) ?? "free") as "free" | "starter" | "growth" | "enterprise";
+  return (
+    <FeatureGate feature="callFeature">
+      <SetupRequestGate plan={plan} selfServiceMinPlan="enterprise" featureLabel="Call / Telephony" setupFee="$49">
+        <CallSettingsContent />
+      </SetupRequestGate>
+    </FeatureGate>
   );
 }

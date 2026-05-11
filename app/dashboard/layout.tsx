@@ -26,6 +26,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard/admin/lead-sources": "Lead Sources",
   "/dashboard/admin/outcomes":     "Interaction Outcomes",
   "/dashboard/admin/integrations": "Integrations",
+  "/dashboard/admin/widget":       "Chat Widget",
   "/dashboard/admin/ai-settings":   "AI Integration Settings",
   "/dashboard/admin/call-settings": "Call Settings",
   "/dashboard/billing":              "Plan & Billing",

@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuthStore } from "@/store/auth-store";
 import { useOrgStore } from "@/store/org-store";
-import { FeatureGate } from "@/components/feature-gate/FeatureGate";
+import { FeatureGate, SetupRequestGate } from "@/components/feature-gate/FeatureGate";
 import { cn } from "@/lib/utils";
 import type { EscalationReason } from "@/types";
 
@@ -615,9 +615,12 @@ function AISettingsContent() {
 }
 
 export default function AISettingsPage() {
+  const plan = (useOrgStore((s) => s.activeOrg?.plan) ?? "free") as "free" | "starter" | "growth" | "enterprise";
   return (
     <FeatureGate feature="aiAutoReply">
-      <AISettingsContent />
+      <SetupRequestGate plan={plan} selfServiceMinPlan="growth" featureLabel="AI Configuration" setupFee="$29">
+        <AISettingsContent />
+      </SetupRequestGate>
     </FeatureGate>
   );
 }
