@@ -79,8 +79,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    // Add when you register with search engines:
-    // google: 'your-google-verification-code',
+    google: 'RYyJAK4FT8Ztg8SthQSDkUTPuunAhpm7b5Wb0EwLeFg',
   },
   icons: {
     icon: [
