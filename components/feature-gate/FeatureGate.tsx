@@ -1,5 +1,6 @@
 "use client";
 import { useOrgStore } from "@/store/org-store";
+import { useAuthStore } from "@/store/auth-store";
 import { isFeatureAvailable, getMinimumPlanForFeature, getPlanConfig, FEATURE_LABELS } from "@/lib/plans";
 import type { FeatureKey } from "@/lib/plans";
 import type { PlanTier } from "@/types";
@@ -16,10 +17,12 @@ interface FeatureGateProps {
 
 export function FeatureGate({ feature, children, inline, message }: FeatureGateProps) {
   const activeOrg = useOrgStore((s) => s.activeOrg);
+  const isPlatformAdmin = useAuthStore((s) => s.currentUser?.isPlatformAdmin ?? false);
   const plan = (activeOrg?.plan ?? "free") as PlanTier;
   const available = isFeatureAvailable(plan, feature);
 
-  if (available) return <>{children}</>;
+  // Platform admin always has full access
+  if (available || isPlatformAdmin) return <>{children}</>;
 
   const requiredPlan = getMinimumPlanForFeature(feature);
   const requiredConfig = getPlanConfig(requiredPlan);
@@ -97,7 +100,8 @@ interface SetupRequestGateProps {
 const TIER_ORDER: PlanTier[] = ["free", "starter", "growth", "enterprise"];
 
 export function SetupRequestGate({ plan, selfServiceMinPlan, featureLabel, setupFee, children }: SetupRequestGateProps) {
-  const canSelfService = TIER_ORDER.indexOf(plan) >= TIER_ORDER.indexOf(selfServiceMinPlan);
+  const isPlatformAdmin = useAuthStore((s) => s.currentUser?.isPlatformAdmin ?? false);
+  const canSelfService = isPlatformAdmin || TIER_ORDER.indexOf(plan) >= TIER_ORDER.indexOf(selfServiceMinPlan);
 
   if (canSelfService) return <>{children}</>;
 
