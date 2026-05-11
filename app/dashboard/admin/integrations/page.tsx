@@ -137,7 +137,7 @@ function ChannelCard({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function IntegrationsPage() {
-  const [projectId, setProjectId] = useState("reachthesoul-prod");
+  const projectId = "reachthesoul-prod";
   const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
   const plan = (useOrgStore((s) => s.activeOrg?.plan) ?? "free") as "free" | "starter" | "growth" | "enterprise";
 
@@ -342,44 +342,6 @@ export default function IntegrationsPage() {
           After saving credentials above, configure these webhook URLs in your provider dashboard. Webhooks run as Firebase Cloud Functions.
         </p>
       </div>
-
-      {/* Project ID input */}
-      <Card className="border border-border shadow-none">
-        <CardContent className="p-5 flex flex-col gap-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Terminal size={14} className="text-muted-foreground" />
-            <span className="text-xs font-semibold">Firebase Project ID</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Input
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-              className="h-8 text-xs font-mono"
-              placeholder="your-firebase-project-id"
-            />
-          </div>
-          <p className="text-[10px] text-muted-foreground">
-            Change the project ID above to generate correct URLs. See <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" className="text-primary underline inline-flex items-center gap-0.5">Firebase Console <ExternalLink size={9} /></a>.
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Deploy instructions */}
-      <Card className="border border-amber-200 bg-amber-50 shadow-none">
-        <CardContent className="p-4 flex flex-col gap-2">
-          <p className="text-xs font-semibold text-amber-800">Deploy Cloud Functions</p>
-          <ol className="flex flex-col gap-1.5 text-xs text-amber-800 list-decimal list-inside leading-relaxed">
-            <li>Install Firebase CLI: <code className="bg-amber-100 px-1 rounded font-mono">npm install -g firebase-tools</code></li>
-            <li>Login: <code className="bg-amber-100 px-1 rounded font-mono">firebase login</code></li>
-            <li>Go to functions folder: <code className="bg-amber-100 px-1 rounded font-mono">cd functions && npm install</code></li>
-            <li>Set verify tokens: <code className="bg-amber-100 px-1 rounded font-mono">firebase functions:secrets:set WHATSAPP_VERIFY_TOKEN</code> (repeat for IG, FB, etc)</li>
-            <li>Deploy: <code className="bg-amber-100 px-1 rounded font-mono">firebase deploy --only functions</code></li>
-          </ol>
-          <p className="text-[10px] text-amber-700 mt-1">
-            Functions will deploy to region <strong>asia-southeast1 (Singapore)</strong> for low latency.
-          </p>
-        </CardContent>
-      </Card>
 
       {/* WhatsApp Meta */}
       <ChannelCard
