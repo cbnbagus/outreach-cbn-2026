@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard/
+Disallow: /api/
+Disallow: /invite
+
+Sitemap: https://reachthesoul.org/sitemap.xml
