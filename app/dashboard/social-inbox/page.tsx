@@ -183,7 +183,7 @@ function DetailPanel({
             {(comment.status as string) === "converted" && comment.convertedTicketId && (
               <p className="text-xs text-violet-600 flex items-center gap-1">
                 <Ticket size={11} />
-                Tiket #{comment.convertedTicketId} sudah dibuat
+                Ticket #{comment.convertedTicketId} has been created
               </p>
             )}
           </div>
@@ -403,7 +403,7 @@ function SocialInboxContent() {
         ) : (
           <div className="flex-1 hidden md:flex flex-col items-center justify-center gap-3 text-muted-foreground bg-muted/20">
             <MessageSquare size={32} className="opacity-15" />
-            <p className="text-xs">Pilih komentar untuk melihat detail</p>
+            <p className="text-xs">Select a comment to view details</p>
             <div className="flex gap-3 mt-2">
               {(["youtube", "facebook", "instagram"] as SocialChannel[]).map((ch) => (
                 <div key={ch} className="flex items-center gap-1 text-[10px] text-muted-foreground">

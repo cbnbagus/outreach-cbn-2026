@@ -2,24 +2,61 @@
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#0F1B2D"/>
+      <stop offset="50%" style="stop-color:#1A2942"/>
       <stop offset="100%" style="stop-color:#243B5C"/>
     </linearGradient>
+    <radialGradient id="glow" cx="80%" cy="30%" r="50%">
+      <stop offset="0%" style="stop-color:rgba(45,212,191,0.15)"/>
+      <stop offset="100%" style="stop-color:rgba(45,212,191,0)"/>
+    </radialGradient>
   </defs>
+  
+  <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
-  <!-- Teal accent circle -->
-  <circle cx="1050" cy="150" r="200" fill="#2DD4BF" opacity="0.08"/>
-  <!-- Heart icon -->
-  <g transform="translate(80, 200)">
-    <rect width="64" height="64" rx="16" fill="#2DD4BF"/>
-    <path d="M32 50c0 0-18-12-18-22a8 8 0 0 1 8-8c4 0 7 2 10 6c3-4 6-6 10-6a8 8 0 0 1 8 8c0 10-18 22-18 22z" fill="#0F1B2D"/>
-  </g>
-  <!-- Title -->
-  <text x="80" y="320" font-family="Georgia, serif" font-size="52" fill="white" font-weight="bold">Every prayer heard.</text>
-  <text x="80" y="385" font-family="Georgia, serif" font-size="52" fill="#2DD4BF" font-weight="bold">Every soul cared for.</text>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  
+  <!-- Logo icon -->
+  <rect x="80" y="80" width="56" height="56" rx="14" fill="#2DD4BF"/>
+  <text x="108" y="116" font-family="Arial" font-size="28" fill="#0F1B2D" text-anchor="middle">&#9829;</text>
+  
+  <!-- Logo text -->
+  <text x="150" y="115" font-family="Georgia, serif" font-size="28" fill="white">ReachTheSoul</text>
+  
+  <!-- Main title -->
+  <text x="80" y="240" font-family="Georgia, serif" font-size="52" fill="white">Every prayer</text>
+  <text x="445" y="240" font-family="Georgia, serif" font-size="52" fill="#2DD4BF"> heard.</text>
+  <text x="80" y="310" font-family="Georgia, serif" font-size="52" fill="white">Every soul</text>
+  <text x="395" y="310" font-family="Georgia, serif" font-size="52" fill="#2DD4BF"> cared for.</text>
+  
   <!-- Subtitle -->
-  <text x="80" y="440" font-family="Arial, sans-serif" font-size="22" fill="rgba(255,255,255,0.5)">AI-powered prayer &amp; counseling platform for churches</text>
-  <!-- URL -->
-  <text x="80" y="560" font-family="Arial, sans-serif" font-size="20" fill="#2DD4BF" font-weight="bold">reachthesoul.org</text>
+  <text x="80" y="380" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.5)">AI-powered prayer &amp; counseling platform</text>
+  <text x="80" y="410" font-family="Arial, sans-serif" font-size="20" fill="rgba(255,255,255,0.5)">for churches and ministries</text>
+  
   <!-- Stats -->
-  <text x="500" y="560" font-family="Arial, sans-serif" font-size="16" fill="rgba(255,255,255,0.3)">WhatsApp · Instagram · Facebook · AI Auto-Reply · 24/7</text>
+  <text x="80" y="500" font-family="Georgia, serif" font-size="36" fill="#2DD4BF">24/7</text>
+  <text x="80" y="525" font-family="Arial" font-size="13" fill="rgba(255,255,255,0.4)">AI First Response</text>
+  
+  <text x="250" y="500" font-family="Georgia, serif" font-size="36" fill="#2DD4BF">3 min</text>
+  <text x="250" y="525" font-family="Arial" font-size="13" fill="rgba(255,255,255,0.4)">Avg. Response Time</text>
+  
+  <text x="440" y="500" font-family="Georgia, serif" font-size="36" fill="#2DD4BF">100%</text>
+  <text x="440" y="525" font-family="Arial" font-size="13" fill="rgba(255,255,255,0.4)">Follow-up Rate</text>
+  
+  <!-- URL -->
+  <text x="80" y="580" font-family="Arial" font-size="16" fill="rgba(255,255,255,0.3)">reachthesoul.org</text>
+  
+  <!-- Right side decoration - chat bubbles -->
+  <rect x="750" y="180" width="380" height="60" rx="12" fill="rgba(255,255,255,0.08)"/>
+  <text x="775" y="217" font-family="Arial" font-size="15" fill="rgba(255,255,255,0.5)">&#128591; Please pray for my family...</text>
+  
+  <rect x="800" y="270" width="350" height="80" rx="12" fill="rgba(45,212,191,0.15)" stroke="rgba(45,212,191,0.3)" stroke-width="1"/>
+  <text x="825" y="300" font-family="Arial" font-size="13" fill="#2DD4BF">AI Assistant</text>
+  <text x="825" y="322" font-family="Arial" font-size="14" fill="rgba(255,255,255,0.7)">I hear you, and I want you to know</text>
+  <text x="825" y="342" font-family="Arial" font-size="14" fill="rgba(255,255,255,0.7)">you are not alone. Let me connect...</text>
+  
+  <rect x="750" y="380" width="380" height="50" rx="12" fill="rgba(255,255,255,0.05)"/>
+  <text x="775" y="412" font-family="Arial" font-size="14" fill="rgba(255,255,255,0.4)">&#128153; A counselor will reach out shortly</text>
+  
+  <!-- Bottom accent line -->
+  <rect x="0" y="620" width="1200" height="10" fill="#2DD4BF" opacity="0.6"/>
 </svg>

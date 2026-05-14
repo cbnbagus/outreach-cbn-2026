@@ -419,7 +419,7 @@ export default function IntegrationsPage() {
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
             <li>Go to Meta Developer Console → pilih app → <strong>Instagram → Webhooks</strong>.</li>
-            <li>Masukkan <em>Callback URL</em> dan <em>Verify Token</em> (sama dengan secret <code className="bg-muted px-1 rounded">INSTAGRAM_VERIFY_TOKEN</code>).</li>
+            <li>Enter the <em>Callback URL</em> and <em>Verify Token</em> (same as the secret <code className="bg-muted px-1 rounded">INSTAGRAM_VERIFY_TOKEN</code>).</li>
             <li>Subscribe to field: <code className="bg-muted px-1 rounded">messages</code>.</li>
             <li>Pastikan Instagram account terhubung ke Facebook Page dan Page terhubung ke app.</li>
           </ol>
@@ -449,9 +449,9 @@ export default function IntegrationsPage() {
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
             <li>Go to Meta Developer Console → pilih app → <strong>Messenger → Configuration → Webhooks</strong>.</li>
-            <li>Masukkan <em>Callback URL</em> dan <em>Verify Token</em> (sama dengan secret <code className="bg-muted px-1 rounded">FACEBOOK_VERIFY_TOKEN</code>).</li>
+            <li>Enter the <em>Callback URL</em> and <em>Verify Token</em> (same as the secret <code className="bg-muted px-1 rounded">FACEBOOK_VERIFY_TOKEN</code>).</li>
             <li>Subscribe to field: <code className="bg-muted px-1 rounded">messages</code>.</li>
-            <li>Pastikan Facebook Page sudah disubscribe ke app.</li>
+            <li>Make sure the Facebook Page is subscribed to your app.</li>
           </ol>
         }
       />

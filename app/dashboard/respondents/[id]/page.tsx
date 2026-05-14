@@ -27,9 +27,9 @@ import { DEFAULT_PROGRESS_STEPS, DEFAULT_PROGRAM_SOURCES } from "@/types";
 // Progress step config
 const PROGRESS_CONFIG: Record<RespondentProgress, { color: string; bg: string; border: string; desc: string }> = {
   Data:       { color: "text-slate-600",   bg: "bg-slate-100",   border: "border-slate-300",  desc: "Identity recorded" },
-  Doa:        { color: "text-blue-600",    bg: "bg-blue-50",     border: "border-blue-200",   desc: "Prayed for" },
-  Konseling:  { color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200",  desc: "In counseling process" },
-  Rekomitmen: { color: "text-purple-600",  bg: "bg-purple-50",   border: "border-purple-200", desc: "Recommitment made" },
+  Prayer:    { color: "text-blue-600",    bg: "bg-blue-50",     border: "border-blue-200",   desc: "Prayed for" },
+  Counseling: { color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200",  desc: "In counseling" },
+  Recommitment: { color: "text-purple-600",  bg: "bg-purple-50",   border: "border-purple-200", desc: "Recommitment made" },
   Salvation:  { color: "text-emerald-600", bg: "bg-emerald-50",  border: "border-emerald-200",desc: "Accepted salvation" },
   POP:        { color: "text-orange-600",  bg: "bg-orange-50",   border: "border-orange-200", desc: "Part of the Parish" },
 };
@@ -906,7 +906,7 @@ export default function RespondentProfilePage() {
             <div>
               <h3 className="text-sm font-semibold text-foreground">Block Respondent</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Nomor <span className="font-mono font-semibold text-foreground">{respondent.phone ?? "—"}</span> tidak akan bisa menghubungi OMS di semua channel.
+                This number will be blocked from contacting your organization on all channels.
               </p>
             </div>
           </div>
@@ -916,7 +916,7 @@ export default function RespondentProfilePage() {
               Alasan Pemblokiran <span className="text-red-500">*</span>
             </label>
             <div className="flex flex-col gap-1.5 mb-2">
-              {["Spam / Bot", "Kata-kata tidak pantas", "Pelecehan agent", "Nomor tidak valid", "Lainnya"].map((reason) => (
+              {["Spam / Bot", "Inappropriate language", "Agent harassment", "Invalid number", "Other"].map((reason) => (
                 <button
                   key={reason}
                   onClick={() => setBlockReason(reason)}
@@ -933,7 +933,7 @@ export default function RespondentProfilePage() {
             </div>
             <Input
               placeholder="Atau tulis alasan lain..."
-              value={["Spam / Bot", "Kata-kata tidak pantas", "Pelecehan agent", "Nomor tidak valid", "Lainnya"].includes(blockReason) ? "" : blockReason}
+              value={["Spam / Bot", "Inappropriate language", "Agent harassment", "Invalid number", "Other"].includes(blockReason) ? "" : blockReason}
               onChange={(e) => setBlockReason(e.target.value)}
               className="h-8 text-xs"
             />

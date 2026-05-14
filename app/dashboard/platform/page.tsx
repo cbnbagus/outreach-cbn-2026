@@ -385,6 +385,72 @@ export default function PlatformAdminPage() {
                         <p className="text-lg font-bold text-foreground">{org.usage.waConversationsThisMonth}</p>
                       </div>
                     </div>
+
+                    {/* Plan Management */}
+                    <div className="mt-4 p-3 rounded-lg border border-primary/20 bg-primary/5">
+                      <p className="text-[10px] font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                        <Crown size={11} className="text-amber-500" /> Plan Management
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1">
+                          <label className="text-[9px] text-muted-foreground uppercase tracking-wide block mb-1">Current Plan</label>
+                          <select
+                            value={org.plan}
+                            onChange={async (e) => {
+                              const newPlan = e.target.value;
+                              try {
+                                const [{ doc, updateDoc, serverTimestamp }, { db }] = await Promise.all([
+                                  import("firebase/firestore"), import("@/lib/firebase"),
+                                ]);
+                                await updateDoc(doc(db, "organizations", org.orgId), {
+                                  plan: newPlan,
+                                  updatedAt: serverTimestamp(),
+                                });
+                                setOrgs((prev) => prev.map((o) => o.orgId === org.orgId ? { ...o, plan: newPlan } : o));
+                              } catch (err) {
+                                console.error("Failed to update plan:", err);
+                                alert("Failed to update plan. Please try again.");
+                              }
+                            }}
+                            className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs font-semibold capitalize"
+                          >
+                            <option value="free">Free ($0)</option>
+                            <option value="starter">Starter ($29/mo)</option>
+                            <option value="growth">Growth ($79/mo)</option>
+                            <option value="enterprise">Enterprise ($249+/mo)</option>
+                          </select>
+                        </div>
+                        <div className="flex-1">
+                          <label className="text-[9px] text-muted-foreground uppercase tracking-wide block mb-1">Status</label>
+                          <button
+                            onClick={async () => {
+                              const newStatus = !org.isActive;
+                              try {
+                                const [{ doc, updateDoc, serverTimestamp }, { db }] = await Promise.all([
+                                  import("firebase/firestore"), import("@/lib/firebase"),
+                                ]);
+                                await updateDoc(doc(db, "organizations", org.orgId), {
+                                  isActive: newStatus,
+                                  updatedAt: serverTimestamp(),
+                                });
+                                setOrgs((prev) => prev.map((o) => o.orgId === org.orgId ? { ...o, isActive: newStatus } : o));
+                              } catch (err) {
+                                console.error("Failed to toggle status:", err);
+                              }
+                            }}
+                            className={cn(
+                              "w-full h-8 rounded-md text-xs font-semibold transition-colors",
+                              org.isActive
+                                ? "bg-green-100 text-green-700 border border-green-300 hover:bg-green-200"
+                                : "bg-red-100 text-red-700 border border-red-300 hover:bg-red-200"
+                            )}
+                          >
+                            {org.isActive ? "✓ Active" : "✕ Inactive"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="mt-3 flex gap-2">
                       <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                         <Calendar size={11} /> Created: {new Date(org.createdAt).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}

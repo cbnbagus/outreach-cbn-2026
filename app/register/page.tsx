@@ -109,7 +109,7 @@ export default function RegisterPage() {
           ],
           channelToggles: {},
         },
-        progressSteps: ["Data", "Doa", "Konseling", "Rekomitmen", "Salvation", "POP"],
+        progressSteps: ["Data", "Prayer", "Counseling", "Recommitment", "Salvation", "Community"],
         programSources: ["Website", "WhatsApp", "Instagram", "Facebook", "YouTube", "Referral", "Event"],
         billingEmail: email.trim(),
         timezone,

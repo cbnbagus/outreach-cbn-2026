@@ -298,7 +298,7 @@ function CallSettingsContent() {
               <Field label="Virtual Number">
                 <Input value={vonageNumber} onChange={(e) => setVonageNumber(e.target.value)} placeholder="+62811xxxxxxx" className="h-8 text-xs font-mono" />
               </Field>
-              <ExpandSection title="Cara setup di Vonage Dashboard">
+              <ExpandSection title="How to set up in Vonage Dashboard">
                 <ol className="flex flex-col gap-2 list-decimal list-inside">
                   <li>Go to <a href="https://dashboard.nexmo.com" target="_blank" rel="noreferrer" className="text-primary underline">dashboard.nexmo.com</a>, copy API Key dan Secret.</li>
                   <li>Buat Voice Application: <strong>Applications → Create a new application</strong>, aktifkan Voice capability.</li>
@@ -327,7 +327,7 @@ function CallSettingsContent() {
               </Field>
               <ExpandSection title="Cara mendapatkan akses WhatsApp Calling">
                 <ol className="flex flex-col gap-2 list-decimal list-inside">
-                  <li>Pastikan bisnis Anda sudah terverifikasi di Meta Business Manager.</li>
+                  <li>Make sure your business is verified in Meta Business Manager.</li>
                   <li>Register for the beta program via Meta Partner Portal.</li>
                   <li>Setelah disetujui, aktifkan "Calls" di <a href="https://developers.facebook.com/apps" target="_blank" rel="noreferrer" className="text-primary underline">App Dashboard</a> → WhatsApp → Configuration.</li>
                   <li>Use a Permanent Page Access Token with scope <code className="bg-muted px-1 rounded">whatsapp_business_messaging</code>.</li>

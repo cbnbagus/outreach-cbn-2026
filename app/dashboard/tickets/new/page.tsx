@@ -414,9 +414,9 @@ function NewTicketInner() {
                       <Check size={14} className="text-emerald-600 flex-shrink-0" />
                       <div className="flex-1">
                         <p className="text-xs font-semibold text-emerald-700">
-                          {channelConfig.label} sudah dibuka
+                          {channelConfig.label} is already open
                         </p>
-                        <p className="text-[10px] text-emerald-600 mt-0.5">Lanjutkan untuk membuat tiket dari percakapan ini.</p>
+                        <p className="text-[10px] text-emerald-600 mt-0.5">Continue to create a ticket from this conversation.</p>
                       </div>
                       <Button
                         size="sm"
@@ -575,7 +575,7 @@ function NewTicketInner() {
               </div>
 
               <div className="flex justify-end gap-2 pt-2 border-t border-border">
-                <Button variant="outline" size="sm" asChild><Link href="/dashboard/tickets">Batal</Link></Button>
+                <Button variant="outline" size="sm" asChild><Link href="/dashboard/tickets">Cancel</Link></Button>
                 <Button
                   size="sm"
                   disabled={!respondentId || !subject.trim() || saving}
@@ -596,7 +596,7 @@ function NewTicketInner() {
         <Card className="border border-border shadow-none">
           <CardHeader className="pb-3 px-5 pt-5 border-b border-border">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <ArrowDownLeft size={14} className="text-primary" />Tiket Masuk (Inbound)
+              <ArrowDownLeft size={14} className="text-primary" />Inbound Ticket
             </CardTitle>
           </CardHeader>
           <CardContent className="p-5 flex flex-col gap-4">
@@ -623,7 +623,7 @@ function NewTicketInner() {
                       <span className="text-xs text-muted-foreground">{respondent.city}</span>
                     )}
                     {prevTickets.length > 0 && (
-                      <span className="text-xs text-muted-foreground">{prevTickets.length} tiket sebelumnya</span>
+                      <span className="text-xs text-muted-foreground">{prevTickets.length} previous tickets</span>
                     )}
                   </div>
                 </div>
@@ -662,7 +662,7 @@ function NewTicketInner() {
                 </Select>
               </div>
               <div>
-                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Masuk via (Channel)</label>
+                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 block">Received via (Channel)</label>
                 <Select value={leadSourceId} onValueChange={setLeadSourceId}>
                   <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih channel..." /></SelectTrigger>
                   <SelectContent>
@@ -712,7 +712,7 @@ function NewTicketInner() {
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-border">
-              <Button variant="outline" size="sm" asChild><Link href="/dashboard/tickets">Batal</Link></Button>
+              <Button variant="outline" size="sm" asChild><Link href="/dashboard/tickets">Cancel</Link></Button>
               <Button size="sm" disabled={!respondentId || !subject.trim() || saving} onClick={handleSave}>
                 {saving ? <><Check size={13} className="mr-1.5" />Menyimpan...</> : "Buat Tiket"}
               </Button>
