@@ -662,6 +662,52 @@ export const onRespondentMessage = onDocumentCreated(
             "channelConfig.last_ai_reply": escalationReply,
           });
         } catch (e) { /* non-critical */ }
+
+        // ── EMERGENCY NOTIFICATION: Send WA to emergency contacts ──
+        try {
+          const orgData = orgDoc.data();
+          const emergencyContacts = orgData?.emergencyContacts ?? [];
+          const channelConfig = orgData?.channelConfig ?? {};
+          const fonnteToken = channelConfig.fonnte_token ?? "";
+
+          // Get respondent info for context
+          const respondentDoc = await db.doc(`respondents/${ticket.respondentId}`).get();
+          const respondentName = respondentDoc.exists ? (respondentDoc.data()?.displayName ?? "Unknown") : "Unknown";
+          const ticketNumber = ticket.ticketNumber ?? ticketId;
+
+          if (fonnteToken && emergencyContacts.length > 0) {
+            const alertMessage = `🚨 *URGENT ESCALATION*\n\n` +
+              `Respondent: *${respondentName}*\n` +
+              `Ticket: *${ticketNumber}*\n` +
+              `Trigger: *${detectedTrigger}*\n` +
+              `Message: "${messageContent.substring(0, 200)}"\n\n` +
+              `⚡ Please check the dashboard immediately and take action.\n` +
+              `🔗 https://reachthesoul.org/dashboard/tickets/${ticketId}`;
+
+            for (const contact of emergencyContacts) {
+              const phone = String(contact.phone ?? "").replace(/\D/g, "");
+              if (!phone) continue;
+              try {
+                await fetch("https://api.fonnte.com/send", {
+                  method: "POST",
+                  headers: {
+                    "Authorization": fonnteToken,
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ target: phone, message: alertMessage }),
+                });
+                logger.info(`[onRespondentMessage] Emergency alert sent to ${contact.name} (${phone})`);
+              } catch (sendErr) {
+                logger.error(`[onRespondentMessage] Failed to send alert to ${phone}:`, sendErr);
+              }
+            }
+          } else {
+            logger.info(`[onRespondentMessage] No emergency contacts or Fonnte token configured — skipping alert`);
+          }
+        } catch (alertErr) {
+          logger.error("[onRespondentMessage] Emergency alert error:", alertErr);
+        }
+
         return;
       }
 

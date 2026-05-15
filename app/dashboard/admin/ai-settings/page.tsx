@@ -98,6 +98,7 @@ function AISettingsContent() {
   const activeOrg = useOrgStore((s) => s.activeOrg);
   const orgId = activeOrg?.orgId ?? "";
   const [settings, setSettings] = useState<AISettings>(DEFAULT_SETTINGS);
+  const [emergencyContacts, setEmergencyContacts] = useState<{name: string; phone: string; role: string}[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -134,6 +135,11 @@ function AISettingsContent() {
               },
             });
           }
+          // Load emergency contacts
+          const ec = snap.data()?.emergencyContacts;
+          if (ec && Array.isArray(ec)) {
+            setEmergencyContacts(ec);
+          }
         }
       } catch (err) {
         console.error("Failed to load AI settings:", err);
@@ -158,6 +164,7 @@ function AISettingsContent() {
           updatedAt: new Date().toISOString(),
           updatedBy: currentUser?.uid ?? "unknown",
         },
+        emergencyContacts: emergencyContacts.filter((c) => c.phone.trim()),
         updatedAt: serverTimestamp(),
       });
       setSaved(true);
@@ -557,6 +564,62 @@ function AISettingsContent() {
                 className="text-xs resize-none"
                 placeholder="Thank you for reaching out. I'm connecting you with a team member..."
               />
+            </CardContent>
+          </Card>
+
+          {/* Emergency Contacts */}
+          <Card className="border border-red-200 shadow-none">
+            <CardHeader className="py-3 px-4 border-b border-red-100 bg-red-50/50">
+              <CardTitle className="text-xs font-semibold text-red-800 flex items-center gap-2">
+                <AlertTriangle size={12} />Emergency Contacts
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 flex flex-col gap-3">
+              <p className="text-[10px] text-muted-foreground">
+                When an escalation trigger is detected, these people will receive an <strong>instant WhatsApp alert</strong> with the respondent's name, message, and ticket link. Add your on-call pastor, youth leader, or crisis counselor.
+              </p>
+              {emergencyContacts.map((contact, idx) => (
+                <div key={idx} className="flex items-center gap-2">
+                  <Input
+                    value={contact.name}
+                    onChange={(e) => {
+                      const updated = [...emergencyContacts];
+                      updated[idx] = { ...updated[idx], name: e.target.value };
+                      setEmergencyContacts(updated);
+                    }}
+                    placeholder="Name (e.g. Pastor John)"
+                    className="h-8 text-xs flex-1"
+                  />
+                  <Input
+                    value={contact.phone}
+                    onChange={(e) => {
+                      const updated = [...emergencyContacts];
+                      updated[idx] = { ...updated[idx], phone: e.target.value };
+                      setEmergencyContacts(updated);
+                    }}
+                    placeholder="WhatsApp number (e.g. 6281234567890)"
+                    className="h-8 text-xs flex-1 font-mono"
+                  />
+                  <Input
+                    value={contact.role}
+                    onChange={(e) => {
+                      const updated = [...emergencyContacts];
+                      updated[idx] = { ...updated[idx], role: e.target.value };
+                      setEmergencyContacts(updated);
+                    }}
+                    placeholder="Role (e.g. Youth Pastor)"
+                    className="h-8 text-xs w-36"
+                  />
+                  <button
+                    onClick={() => setEmergencyContacts(emergencyContacts.filter((_, i) => i !== idx))}
+                    className="text-red-400 hover:text-red-600 text-xs px-1"
+                  >✕</button>
+                </div>
+              ))}
+              <button
+                onClick={() => setEmergencyContacts([...emergencyContacts, { name: "", phone: "", role: "" }])}
+                className="text-xs text-primary hover:text-primary/80 font-medium w-fit"
+              >+ Add emergency contact</button>
             </CardContent>
           </Card>
 
