@@ -106,7 +106,7 @@ function ChannelCard({
             <CopyButton text={url} id={`${functionName}-url`} />
           </div>
           <p className="text-[10px] text-muted-foreground mt-0.5">
-            Replace <code className="bg-muted px-1 rounded">YOUR_PROJECT_ID</code> with your Firebase project ID if different.
+            
           </p>
         </div>
 
@@ -342,8 +342,8 @@ export default function IntegrationsPage() {
       </Card>
       </SetupRequestGate>
 
-      {/* ═══ WEBHOOK URLS — WhatsApp for Starter+, Social for Growth+ ═══ */}
-      {plan !== "free" && (
+      {/* ═══ WEBHOOK URLS — Growth+ only (self-service) ═══ */}
+      {(plan === "growth" || plan === "enterprise") && (
       <>
       <div>
         <h2 className="text-sm font-semibold text-foreground mb-1">Webhook URLs — WhatsApp</h2>
@@ -458,12 +458,6 @@ export default function IntegrationsPage() {
         }
       />
       </>
-      ) : (
-        <div className="mt-4 p-4 rounded-lg border border-dashed border-purple-300 bg-purple-50/50 text-center">
-          <p className="text-xs font-semibold text-purple-800">Social Media Channels (Instagram, Facebook, TikTok)</p>
-          <p className="text-[10px] text-purple-600 mt-1">Available on Growth plan ($79/mo) and above.</p>
-          <a href="/dashboard/billing" className="text-[10px] text-primary font-medium hover:underline">Upgrade to Growth →</a>
-        </div>
       )}
 
       {/* Call */}
@@ -476,12 +470,11 @@ export default function IntegrationsPage() {
         iconColor="text-amber-700"
         testCurl={(url) => `curl -X POST "${url}" \\
   -H "Content-Type: application/json" \\
-  -d '{"phone":"+628123456789","name":"Budi Santoso","subject":"Inbound call — minta callback"}'`}
+  -d '{"phone":"+628123456789","name":"Budi Santoso","subject":"Inbound call"}'`}
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
             <li>Configure your PBX/VoIP to POST to the URL above for every incoming call.</li>
             <li>Body minimal: <code className="bg-muted px-1 rounded font-mono">{"{ phone: '+62...', name: '...' }"}</code>.</li>
-            <li>Opsional: tambahkan Authorization header dan set secret <code className="bg-muted px-1 rounded font-mono">CALL_WEBHOOK_TOKEN</code>.</li>
             <li>For manual input, use the same endpoint from internal forms or scripts.</li>
           </ol>
         }
