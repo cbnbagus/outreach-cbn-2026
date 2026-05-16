@@ -460,7 +460,8 @@ export default function IntegrationsPage() {
       </>
       )}
 
-      {/* Call */}
+      {/* Call — Growth+ only */}
+      {(plan === "growth" || plan === "enterprise") && (
       <ChannelCard
         projectId={projectId} orgId={orgId}
         functionName="webhookCall"
@@ -479,8 +480,6 @@ export default function IntegrationsPage() {
           </ol>
         }
       />
-
-      </>
       )}
 
     </div>
