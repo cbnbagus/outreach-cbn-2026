@@ -404,13 +404,11 @@ export default function IntegrationsPage() {
         }
       />
 
-      {/* ═══ SOCIAL MEDIA WEBHOOKS — Growth+ only ═══ */}
-      {(plan === "growth" || plan === "enterprise") ? (
-      <>
+      {/* ═══ SOCIAL MEDIA WEBHOOKS ═══ */}
       <div className="mt-4">
         <h2 className="text-sm font-semibold text-foreground mb-1">Webhook URLs — Social Media</h2>
         <p className="text-[10px] text-muted-foreground mb-3">
-          Connect Instagram, Facebook, and other social channels. Available on Growth plan and above.
+          Connect Instagram, Facebook, and other social channels.
         </p>
       </div>
 
@@ -457,6 +455,7 @@ export default function IntegrationsPage() {
           </ol>
         }
       />
+
       </>
       )}
 
