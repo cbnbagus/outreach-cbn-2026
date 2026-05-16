@@ -94,16 +94,19 @@ interface SetupRequestGateProps {
   selfServiceMinPlan: PlanTier; // minimum plan for self-service config
   featureLabel: string;
   setupFee?: string;
+  description?: string;
   children: React.ReactNode;
 }
 
 const TIER_ORDER: PlanTier[] = ["free", "starter", "growth", "enterprise"];
 
-export function SetupRequestGate({ plan, selfServiceMinPlan, featureLabel, setupFee, children }: SetupRequestGateProps) {
+export function SetupRequestGate({ plan, selfServiceMinPlan, featureLabel, setupFee, description, children }: SetupRequestGateProps) {
   const isPlatformAdmin = useAuthStore((s) => s.currentUser?.isPlatformAdmin ?? false);
   const canSelfService = isPlatformAdmin || TIER_ORDER.indexOf(plan) >= TIER_ORDER.indexOf(selfServiceMinPlan);
 
   if (canSelfService) return <>{children}</>;
+
+  const isChannelIntegration = featureLabel === "Channel Integration";
 
   return (
     <div className="relative">
@@ -111,15 +114,27 @@ export function SetupRequestGate({ plan, selfServiceMinPlan, featureLabel, setup
         {children}
       </div>
       <div className="absolute inset-0 flex items-center justify-center z-10">
-        <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-2xl shadow-lg p-6 max-w-sm w-full mx-4 text-center">
+        <div className="bg-white/95 backdrop-blur-sm border border-blue-200 rounded-2xl shadow-lg p-6 max-w-md w-full mx-4 text-center">
           <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center mx-auto mb-3">
             <Wrench size={22} className="text-blue-600" />
           </div>
           <h3 className="text-base font-bold text-gray-900 mb-1">Setup Required</h3>
           <p className="text-sm text-gray-500 mb-3">
-            {featureLabel} configuration is available on your plan, but requires setup assistance from our team.
+            {description ?? `${featureLabel} configuration is available on your plan, but requires setup assistance from our team.`}
           </p>
-          {setupFee && (
+          {isChannelIntegration && (
+            <div className="text-left mb-4 space-y-2">
+              <div className="p-2.5 rounded-lg bg-green-50 border border-green-200">
+                <p className="text-[11px] font-semibold text-green-800">Option A: Fonnte (Quick Setup) — $29</p>
+                <p className="text-[10px] text-green-700">Connect via QR code, works in minutes. Unofficial WhatsApp API. No attachments, no blasting. Best for getting started fast.</p>
+              </div>
+              <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200">
+                <p className="text-[11px] font-semibold text-blue-800">Option B: Meta Cloud API (Official) — $49</p>
+                <p className="text-[10px] text-blue-700">Official WhatsApp Business API. Professional, no watermark, verified badge. Requires Meta Business verification (1-2 weeks for approval).</p>
+              </div>
+            </div>
+          )}
+          {!isChannelIntegration && setupFee && (
             <p className="text-xs text-blue-600 font-medium mb-4">One-time setup fee: {setupFee}</p>
           )}
           <div className="flex flex-col gap-2">

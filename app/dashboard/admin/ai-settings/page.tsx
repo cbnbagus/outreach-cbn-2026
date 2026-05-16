@@ -681,7 +681,7 @@ export default function AISettingsPage() {
   const plan = (useOrgStore((s) => s.activeOrg?.plan) ?? "free") as "free" | "starter" | "growth" | "enterprise";
   return (
     <FeatureGate feature="aiAutoReply">
-      <SetupRequestGate plan={plan} selfServiceMinPlan="growth" featureLabel="AI Configuration" setupFee="$29">
+      <SetupRequestGate plan={plan} selfServiceMinPlan="starter" featureLabel="AI Configuration" setupFee="$29">
         <AISettingsContent />
       </SetupRequestGate>
     </FeatureGate>

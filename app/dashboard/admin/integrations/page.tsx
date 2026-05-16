@@ -226,6 +226,13 @@ export default function IntegrationsPage() {
 
       {/* ═══ CHANNEL CREDENTIALS ═══ */}
       <SetupRequestGate plan={plan} selfServiceMinPlan="growth" featureLabel="Channel Integration" setupFee="$29 - $49">
+      {/* Note for Growth users: free setup as compliment */}
+      {plan === "growth" && (
+        <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200">
+          <p className="text-xs text-green-800 font-medium">🎉 Free setup included with your Growth plan!</p>
+          <p className="text-[10px] text-green-700 mt-1">Need help? Contact hello@reachthesoul.org and we'll set up your channels for free.</p>
+        </div>
+      )}
       <Card className="border-2 border-primary/30 shadow-none">
         <CardHeader className="px-5 pt-5 pb-3 border-b border-border">
           <CardTitle className="flex items-center gap-2 text-sm font-semibold">
@@ -335,11 +342,13 @@ export default function IntegrationsPage() {
       </Card>
       </SetupRequestGate>
 
-      {/* ═══ WEBHOOK URLS ═══ */}
+      {/* ═══ WEBHOOK URLS — WhatsApp for Starter+, Social for Growth+ ═══ */}
+      {plan !== "free" && (
+      <>
       <div>
-        <h2 className="text-sm font-semibold text-foreground mb-1">Webhook URLs</h2>
+        <h2 className="text-sm font-semibold text-foreground mb-1">Webhook URLs — WhatsApp</h2>
         <p className="text-[10px] text-muted-foreground mb-3">
-          After saving credentials above, configure these webhook URLs in your provider dashboard. Webhooks run as Firebase Cloud Functions.
+          Configure these webhook URLs in your WhatsApp provider dashboard.
         </p>
       </div>
 
@@ -369,7 +378,7 @@ export default function IntegrationsPage() {
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
             <li>Go to <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="text-primary underline">developers.facebook.com</a> and select your app.</li>
             <li>Go to <strong>WhatsApp → Configuration → Webhooks</strong>.</li>
-            <li>Enter the <em>Callback URL</em> above and the <em>Verify Token</em> matching the secret value <code className="bg-muted px-1 rounded">WHATSAPP_VERIFY_TOKEN</code>.</li>
+            <li>Enter the <em>Callback URL</em> above and the <em>Verify Token</em>.</li>
             <li>Subscribe to field: <code className="bg-muted px-1 rounded">messages</code>.</li>
           </ol>
         }
@@ -390,11 +399,20 @@ export default function IntegrationsPage() {
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
             <li>Go to <a href="https://fonnte.com" target="_blank" rel="noreferrer" className="text-primary underline">fonnte.com</a> or Wablas dashboard.</li>
             <li>Select device → <strong>Settings → Webhook URL</strong>.</li>
-            <li>Paste URL Function di atas, klik Save.</li>
-            <li>Optional: set token in Fonnte and run <code className="bg-muted px-1 rounded font-mono">firebase functions:secrets:set FONNTE_WEBHOOK_TOKEN</code>.</li>
+            <li>Paste the webhook URL above, click Save.</li>
           </ol>
         }
       />
+
+      {/* ═══ SOCIAL MEDIA WEBHOOKS — Growth+ only ═══ */}
+      {(plan === "growth" || plan === "enterprise") ? (
+      <>
+      <div className="mt-4">
+        <h2 className="text-sm font-semibold text-foreground mb-1">Webhook URLs — Social Media</h2>
+        <p className="text-[10px] text-muted-foreground mb-3">
+          Connect Instagram, Facebook, and other social channels. Available on Growth plan and above.
+        </p>
+      </div>
 
       {/* Instagram */}
       <ChannelCard
@@ -408,20 +426,12 @@ export default function IntegrationsPage() {
         verifyTokenKey="INSTAGRAM_VERIFY_TOKEN"
         testCurl={(url) => `curl -X POST "${url}" \\
   -H "Content-Type: application/json" \\
-  -d '{
-  "entry": [{
-    "messaging": [{
-      "sender": {"id": "17841400000000"},
-      "message": {"text": "Halo, saya mau tanya tentang produk"}
-    }]
-  }]
-}'`}
+  -d '{"entry": [{"messaging": [{"sender": {"id": "17841400000000"},"message": {"text": "Hello"}}]}]}'`}
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
-            <li>Go to Meta Developer Console → pilih app → <strong>Instagram → Webhooks</strong>.</li>
-            <li>Enter the <em>Callback URL</em> and <em>Verify Token</em> (same as the secret <code className="bg-muted px-1 rounded">INSTAGRAM_VERIFY_TOKEN</code>).</li>
+            <li>Go to Meta Developer Console → your app → <strong>Instagram → Webhooks</strong>.</li>
+            <li>Enter the <em>Callback URL</em> and <em>Verify Token</em>.</li>
             <li>Subscribe to field: <code className="bg-muted px-1 rounded">messages</code>.</li>
-            <li>Pastikan Instagram account terhubung ke Facebook Page dan Page terhubung ke app.</li>
           </ol>
         }
       />
@@ -438,23 +448,23 @@ export default function IntegrationsPage() {
         verifyTokenKey="FACEBOOK_VERIFY_TOKEN"
         testCurl={(url) => `curl -X POST "${url}" \\
   -H "Content-Type: application/json" \\
-  -d '{
-  "entry": [{
-    "messaging": [{
-      "sender": {"id": "10000000000001"},
-      "message": {"text": "Halo, minta informasi program"}
-    }]
-  }]
-}'`}
+  -d '{"entry": [{"messaging": [{"sender": {"id": "10000000000001"},"message": {"text": "Hello"}}]}]}'`}
         setupSteps={
           <ol className="flex flex-col gap-2 text-xs text-muted-foreground list-decimal list-inside leading-relaxed">
-            <li>Go to Meta Developer Console → pilih app → <strong>Messenger → Configuration → Webhooks</strong>.</li>
-            <li>Enter the <em>Callback URL</em> and <em>Verify Token</em> (same as the secret <code className="bg-muted px-1 rounded">FACEBOOK_VERIFY_TOKEN</code>).</li>
+            <li>Go to Meta Developer Console → your app → <strong>Messenger → Webhooks</strong>.</li>
+            <li>Enter the <em>Callback URL</em> and <em>Verify Token</em>.</li>
             <li>Subscribe to field: <code className="bg-muted px-1 rounded">messages</code>.</li>
-            <li>Make sure the Facebook Page is subscribed to your app.</li>
           </ol>
         }
       />
+      </>
+      ) : (
+        <div className="mt-4 p-4 rounded-lg border border-dashed border-purple-300 bg-purple-50/50 text-center">
+          <p className="text-xs font-semibold text-purple-800">Social Media Channels (Instagram, Facebook, TikTok)</p>
+          <p className="text-[10px] text-purple-600 mt-1">Available on Growth plan ($79/mo) and above.</p>
+          <a href="/dashboard/billing" className="text-[10px] text-primary font-medium hover:underline">Upgrade to Growth →</a>
+        </div>
+      )}
 
       {/* Call */}
       <ChannelCard
@@ -476,6 +486,9 @@ export default function IntegrationsPage() {
           </ol>
         }
       />
+
+      </>
+      )}
 
     </div>
   );

@@ -10,6 +10,29 @@ const VARIANT_TO_PLAN: Record<string, string> = {
   [process.env.LS_VARIANT_ENTERPRISE ?? "1662339"]: "enterprise",
 };
 
+const ADMIN_WA_NUMBER = process.env.ADMIN_WA_NUMBER ?? "6285974773341";
+const ADMIN_FONNTE_TOKEN = process.env.ADMIN_FONNTE_TOKEN ?? "";
+
+async function notifyAdmin(message: string) {
+  try {
+    if (!ADMIN_FONNTE_TOKEN) {
+      console.log("[LS Webhook] No ADMIN_FONNTE_TOKEN — skipping WA notification");
+      return;
+    }
+    await fetch("https://api.fonnte.com/send", {
+      method: "POST",
+      headers: {
+        "Authorization": ADMIN_FONNTE_TOKEN,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ target: ADMIN_WA_NUMBER, message }),
+    });
+    console.log(`[LS Webhook] Admin notified via WA`);
+  } catch (err) {
+    console.error("[LS Webhook] Failed to notify admin:", err);
+  }
+}
+
 function verifySignature(rawBody: string, signature: string): boolean {
   if (!WEBHOOK_SECRET) return false;
   const hmac = crypto.createHmac("sha256", WEBHOOK_SECRET);
@@ -84,6 +107,10 @@ export async function POST(req: NextRequest) {
       case "subscription_created":
         // New subscription — upgrade plan
         await updateOrgPlan(orgId, plan, subscription);
+        // Notify admin via WhatsApp
+        await notifyAdmin(
+          `🎉 *NEW SUBSCRIPTION*\n\nOrg: *${orgId}*\nPlan: *${plan.toUpperCase()}*\nEmail: ${subscription?.attributes?.user_email ?? customData?.email ?? "unknown"}\nAmount: $${(subscription?.attributes?.first_subscription_item?.price ?? 0) / 100}/mo\n\n⚡ This customer may need setup assistance for WhatsApp integration.\n\n🔗 https://reachthesoul.org/dashboard/platform`
+        );
         break;
 
       case "subscription_updated":
@@ -112,6 +139,9 @@ export async function POST(req: NextRequest) {
       case "subscription_cancelled":
         // Will expire at period end — mark but don't downgrade yet
         await updateOrgPlan(orgId, plan, subscription);
+        await notifyAdmin(
+          `⚠️ *SUBSCRIPTION CANCELLED*\n\nOrg: *${orgId}*\nPlan: *${plan.toUpperCase()}*\nExpires: ${subscription?.attributes?.ends_at ?? "end of period"}\n\nConsider reaching out to understand why they cancelled.`
+        );
         break;
 
       case "subscription_expired":
