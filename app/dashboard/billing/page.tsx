@@ -1,8 +1,11 @@
 "use client";
+import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useOrgStore } from "@/store/org-store";
+import { useAuthStore } from "@/store/auth-store";
 import { PLAN_CONFIGS, getPlanConfig, FEATURE_LABELS, FEATURE_GROUPS, ADD_ONS, formatLimit } from "@/lib/plans";
 import type { PlanTier } from "@/types";
-import { Check, X, Crown, Sparkles, ArrowRight, Mail, Database, Infinity, Wrench } from "lucide-react";
+import { Check, X, Crown, Sparkles, ArrowRight, Mail, Database, Infinity, Wrench, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -11,6 +14,9 @@ const tierOrder: PlanTier[] = ["free", "starter", "growth", "enterprise"];
 
 export default function BillingPage() {
   const activeOrg = useOrgStore((s) => s.activeOrg);
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const searchParams = useSearchParams();
+  const upgradedPlan = searchParams.get("upgraded");
   const currentPlan = (activeOrg?.plan ?? "free") as PlanTier;
   const currentConfig = getPlanConfig(currentPlan);
   const usage = activeOrg?.usage;
@@ -22,12 +28,37 @@ export default function BillingPage() {
     { label: "WA Initiative Conv. / month", current: usage?.waConversationsThisMonth ?? 0, max: currentConfig.maxWhatsAppInitiative },
   ];
 
-  const handleUpgrade = (tier: PlanTier) => {
+  const [upgrading, setUpgrading] = useState<string | null>(null);
+
+  const handleUpgrade = async (tier: PlanTier) => {
     if (tier === "enterprise") {
       window.open("mailto:hello@reachthesoul.org?subject=Enterprise Plan Inquiry&body=Hi, I would like to learn more about the Enterprise plan for our organization.", "_blank");
-    } else {
-      alert("Payment integration coming soon!\n\nTo upgrade to " + getPlanConfig(tier).name + ", please contact:\nhello@reachthesoul.org");
+      return;
     }
+
+    setUpgrading(tier);
+    try {
+      const res = await fetch("/api/lemon-squeezy/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan: tier,
+          orgId: activeOrg?.orgId ?? "",
+          userEmail: currentUser?.email ?? "",
+          userName: currentUser?.displayName ?? "",
+        }),
+      });
+      const data = await res.json();
+      if (data.checkoutUrl) {
+        window.open(data.checkoutUrl, "_blank");
+      } else {
+        alert("Failed to create checkout. Please try again or contact hello@reachthesoul.org");
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("Something went wrong. Please contact hello@reachthesoul.org");
+    }
+    setUpgrading(null);
   };
 
   const handleAddOn = (addOnId: string) => {
@@ -157,8 +188,8 @@ export default function BillingPage() {
                     {isCurrent ? (
                       <Button variant="outline" size="sm" className="w-full" disabled>Current Plan</Button>
                     ) : isUpgrade ? (
-                      <Button size="sm" className="w-full gap-1.5" onClick={() => handleUpgrade(tier)} style={{ backgroundColor: config.color }}>
-                        {tier === "enterprise" ? <><Mail size={14} /> Contact Sales</> : <><Sparkles size={14} /> Upgrade to {config.name}</>}
+                      <Button size="sm" className="w-full gap-1.5" onClick={() => handleUpgrade(tier)} disabled={upgrading === tier} style={{ backgroundColor: config.color }}>
+                        {upgrading === tier ? "Processing..." : tier === "enterprise" ? <><Mail size={14} /> Contact Sales</> : <><Sparkles size={14} /> Upgrade to {config.name}</>}
                       </Button>
                     ) : (
                       <Button variant="ghost" size="sm" className="w-full text-muted-foreground" disabled>&mdash;</Button>
