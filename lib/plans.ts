@@ -38,7 +38,6 @@ export interface PlanConfig {
     exportCSV: boolean;
     dataRetention: boolean;
     schedule: boolean;
-    socialInbox: boolean;
     teamManagement: boolean;
     inviteLinks: boolean;
     customBranding: boolean;
@@ -134,7 +133,6 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       exportCSV: false,
       dataRetention: true,
       schedule: true,
-      socialInbox: false,
       teamManagement: false,
       inviteLinks: false,
       customBranding: false,
@@ -186,7 +184,6 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       exportCSV: true,
       dataRetention: true,
       schedule: true,
-      socialInbox: false,
       teamManagement: true,
       inviteLinks: true,
       customBranding: false,
@@ -244,7 +241,6 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       exportCSV: true,
       dataRetention: true,
       schedule: true,
-      socialInbox: true,
       teamManagement: true,
       inviteLinks: true,
       customBranding: true,
@@ -302,7 +298,6 @@ export const PLAN_CONFIGS: Record<PlanTier, PlanConfig> = {
       exportCSV: true,
       dataRetention: true,
       schedule: true,
-      socialInbox: true,
       teamManagement: true,
       inviteLinks: true,
       customBranding: true,
@@ -402,7 +397,6 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
   exportCSV:             "Export Data to CSV",
   dataRetention:         "All Data Stored & Retrievable",
   schedule:              "Schedule & Calendar",
-  socialInbox:           "Social Inbox (Comments & DMs)",
   teamManagement:        "Team Management",
   inviteLinks:           "Invite Links for Team",
   customBranding:        "Custom Branding (Logo & Colors)",
@@ -417,7 +411,7 @@ export const FEATURE_LABELS: Record<FeatureKey, string> = {
 export const FEATURE_GROUPS: { title: string; features: FeatureKey[] }[] = [
   { title: "Channels & Messaging", features: ["websiteChat", "whatsapp", "omnichannel", "instagram", "facebook", "tiktok", "youtube"] },
   { title: "AI & Automation", features: ["aiAutoReply", "aiHandoffToHuman", "aiCounseling24_7", "advancedAIModel", "escalationTriggers"] },
-  { title: "Team & Management", features: ["teamManagement", "inviteLinks", "customProgressSteps", "customProgramSources", "socialInbox", "schedule"] },
+  { title: "Team & Management", features: ["teamManagement", "inviteLinks", "customProgressSteps", "customProgramSources", "schedule"] },
   { title: "Data, Reports & Export", features: ["dataRetention", "reporting", "advancedReporting", "exportCSV"] },
   { title: "Customization & Integration", features: ["customBranding", "apiAccess", "webhookAccess"] },
   { title: "Support & SLA", features: ["prioritySupport", "dedicatedSupport", "sla", "onboarding"] },

@@ -226,7 +226,6 @@ export default function ProfilePage() {
               { key: "ticketAssigned", label: "Ticket assigned to me",       desc: "When a ticket is assigned to you" },
               { key: "newMessage",     label: "New message on my tickets",   desc: "When someone replies on a ticket you own" },
               { key: "ticketResolved", label: "Ticket resolved",             desc: "When a ticket you own is marked resolved" },
-              { key: "newComment",     label: "New social media comment",    desc: "When a new comment arrives in Social Inbox" },
               { key: "systemUpdates",  label: "System updates",              desc: "Maintenance notices and system announcements" },
               { key: "emailDigest",    label: "Daily email digest",          desc: "Summary of activity sent to your email every morning" },
             ] as { key: keyof typeof notifPrefs; label: string; desc: string }[]).map((item, i, arr) => (

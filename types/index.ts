@@ -273,25 +273,3 @@ export interface CallRecord {
   notes?:         string;
   createdAt:      string;
 }
-
-export type SocialChannel = "youtube" | "facebook" | "instagram";
-export type CommentStatus = "new" | "replied" | "converted" | "ignored";
-
-export interface SocialComment {
-  commentId: string;
-  orgId: string;  // tenant identifier
-  channel: SocialChannel;
-  authorName: string;
-  authorHandle: string;
-  authorAvatar?: string;
-  content: string;
-  postTitle: string;
-  postUrl: string;
-  postThumbnail?: string;
-  likeCount: number;
-  replyCount: number;
-  status: CommentStatus;
-  convertedTicketId?: string;
-  createdAt: string;
-  fetchedAt: string;
-}
