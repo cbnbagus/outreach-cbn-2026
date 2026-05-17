@@ -141,6 +141,42 @@ export async function deleteLeadSource(id: string) {
   return deleteDoc(doc(db, "lead_sources", id));
 }
 
+const DEFAULT_LEAD_SOURCES = [
+  { name: "WhatsApp",  description: "Direct WhatsApp message" },
+  { name: "Instagram", description: "Via Instagram profile or reels" },
+  { name: "Facebook",  description: "Via Facebook page or ads" },
+  { name: "YouTube",   description: "Respondent found ministry through YouTube channel" },
+  { name: "Website",   description: "Via ministry website contact form" },
+  { name: "Referral",  description: "Referred by another respondent" },
+  { name: "Event",     description: "Via event or conference" },
+];
+
+export async function seedDefaultLeadSources(orgId: string, createdBy: string) {
+  const [{ collection, addDoc, getDocs, query, where, serverTimestamp }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+
+  // Double-check: only seed if truly empty
+  const existing = await getDocs(
+    query(collection(db, "lead_sources"), where("orgId", "==", orgId))
+  );
+  if (!existing.empty) return;
+
+  const batch = DEFAULT_LEAD_SOURCES.map((ls) =>
+    addDoc(collection(db, "lead_sources"), {
+      orgId,
+      name: ls.name,
+      description: ls.description,
+      isActive: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      createdBy,
+    })
+  );
+  await Promise.all(batch);
+}
+
 // ---------------------------------------------------------------------------
 // INTERACTION OUTCOMES
 // ---------------------------------------------------------------------------

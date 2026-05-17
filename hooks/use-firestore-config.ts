@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useOrgStore } from "@/store/org-store";
+import { useAuthStore } from "@/store/auth-store";
 
 /**
  * Generic real-time Firestore collection hook — MULTI-TENANT version.
@@ -94,7 +95,24 @@ export function useCategories() {
 }
 
 export function useLeadSources() {
-  return useFirestoreCollection("lead_sources", "leadSourceId");
+  const result = useFirestoreCollection("lead_sources", "leadSourceId");
+  const activeOrg = useOrgStore((s) => s.activeOrg);
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const seeded = useRef(false);
+
+  useEffect(() => {
+    if (result.loading || seeded.current) return;
+    if (!activeOrg?.orgId || !currentUser?.uid) return;
+    if (result.items.length > 0) return;
+
+    // Lead sources empty for this org — seed defaults
+    seeded.current = true;
+    import("@/lib/firestore-services").then(({ seedDefaultLeadSources }) => {
+      seedDefaultLeadSources(activeOrg.orgId, currentUser.uid).catch(console.error);
+    });
+  }, [result.loading, result.items.length, activeOrg?.orgId, currentUser?.uid]);
+
+  return result;
 }
 
 export function useOutcomes() {

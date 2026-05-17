@@ -5,7 +5,7 @@ import {
   Filter, Search, ChevronRight, Download,
   CheckSquare, X, UserCheck, CheckCircle2, XCircle, Trash2,
   LayoutList, Columns, Bot, ShieldAlert, ChevronUp, ChevronDown as ChevronDownIcon,
-  Calendar,
+  Calendar, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import { TicketStatusBadge, TicketPriorityBadge } from "@/components/tickets/Tic
 import { KanbanBoard } from "@/components/tickets/KanbanBoard";
 import { useTickets } from "@/hooks/use-firestore-tickets";
 import { useRespondents } from "@/hooks/use-firestore-respondents";
-import { useUsers } from "@/hooks/use-firestore-config";
+import { useUsers, useLeadSources } from "@/hooks/use-firestore-config";
 import type { Ticket, TicketStatus } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,18 @@ const HOD_LABELS: Record<string, string> = {
   grief_or_crisis:   "Grief / Crisis",
   baptism_request:   "Baptism Request",
   manual_escalation: "Manual",
+};
+
+const SOURCE_STYLE: Record<string, { color: string; bg: string }> = {
+  whatsapp:  { color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200" },
+  instagram: { color: "text-pink-700",    bg: "bg-pink-50 border-pink-200" },
+  facebook:  { color: "text-blue-700",    bg: "bg-blue-50 border-blue-200" },
+  youtube:   { color: "text-red-700",     bg: "bg-red-50 border-red-200" },
+  website:   { color: "text-slate-700",   bg: "bg-slate-50 border-slate-200" },
+  referral:  { color: "text-amber-700",   bg: "bg-amber-50 border-amber-200" },
+  event:     { color: "text-violet-700",  bg: "bg-violet-50 border-violet-200" },
+  tiktok:    { color: "text-gray-700",    bg: "bg-gray-50 border-gray-200" },
+  email:     { color: "text-cyan-700",    bg: "bg-cyan-50 border-cyan-200" },
 };
 
 // ── Period helpers ────────────────────────────────────────────────────────────
@@ -61,6 +73,7 @@ export default function TicketsPage() {
   const { tickets: firestoreTickets, loading: ticketsLoading } = useTickets();
   const { respondents, loading: respLoading } = useRespondents();
   const { items: users, loading: usersLoading } = useUsers();
+  const { items: leadSources } = useLeadSources();
 
   const [search, setSearch]               = useState("");
   const [statusFilter, setStatusFilter]   = useState<string>("all");
@@ -84,6 +97,24 @@ export default function TicketsPage() {
 
   const getRespondentName = (id: string) =>
     respondents.find((r) => r.respondentId === id)?.fullName ?? "Unknown";
+
+  const getSourceName = (ticket: Ticket) => {
+    // Try lead source from ticket first
+    if (ticket.leadSourceId) {
+      const ls = leadSources.find((s: any) => s.id === ticket.leadSourceId);
+      if (ls) return (ls as any).name as string;
+    }
+    // Fallback: derive from channel field (set by webhook processor)
+    const ch = (ticket as any).channel as string | undefined;
+    if (ch) {
+      const MAP: Record<string, string> = {
+        whatsapp_meta: "WhatsApp", whatsapp_fonnte: "WhatsApp",
+        instagram: "Instagram", facebook: "Facebook", call: "Call",
+      };
+      return MAP[ch] ?? ch;
+    }
+    return null;
+  };
 
   // ── Toggle sort column ────────────────────────────────────────────────────
   const handleSort = (key: SortKey) => {
@@ -372,6 +403,9 @@ export default function TicketsPage() {
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-3">Subject</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-3">Status</th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-3">Priority</th>
+                <th className="text-left text-xs font-medium text-muted-foreground px-3 py-3">
+                  <span className="flex items-center gap-1"><Globe size={10} />Source</span>
+                </th>
                 <th className="text-left text-xs font-medium text-muted-foreground px-3 py-3">Agent</th>
 
                 {/* Sortable Date */}
@@ -404,7 +438,7 @@ export default function TicketsPage() {
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="text-center py-14 text-sm text-muted-foreground">
+                  <td colSpan={12} className="text-center py-14 text-sm text-muted-foreground">
                     No tickets match your filters.
                   </td>
                 </tr>
@@ -472,6 +506,20 @@ export default function TicketsPage() {
 
                     {/* Priority */}
                     <td className="px-3 py-3"><TicketPriorityBadge priority={ticket.priority} /></td>
+
+                    {/* Source */}
+                    <td className="px-3 py-3">
+                      {(() => {
+                        const src = getSourceName(ticket);
+                        if (!src) return <span className="text-[10px] text-muted-foreground/40">—</span>;
+                        const style = SOURCE_STYLE[src.toLowerCase()] ?? { color: "text-slate-700", bg: "bg-slate-50 border-slate-200" };
+                        return (
+                          <span className={cn("text-[10px] font-medium px-2 py-0.5 rounded-full border whitespace-nowrap", style.color, style.bg)}>
+                            {src}
+                          </span>
+                        );
+                      })()}
+                    </td>
 
                     {/* Agent */}
                     <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
