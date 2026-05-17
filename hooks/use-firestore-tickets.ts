@@ -32,7 +32,10 @@ export function useTickets() {
             updatedAt: data.updatedAt?.toDate?.()?.toISOString() ?? data.updatedAt ?? "",
             resolvedAt: data.resolvedAt?.toDate?.()?.toISOString() ?? null,
             closedAt: data.closedAt?.toDate?.()?.toISOString() ?? null,
-            scheduledAt: data.scheduledAt?.toDate?.()?.toISOString() ?? null,
+            scheduledAt: data.scheduledAt?.toDate?.()?.toISOString() ?? data.scheduledAt ?? null,
+            followUpChannel: data.followUpChannel ?? null,
+            followUpNote: data.followUpNote ?? null,
+            followUpCreatedBy: data.followUpCreatedBy ?? null,
           } as unknown as Ticket;
         });
         setTickets(docs);

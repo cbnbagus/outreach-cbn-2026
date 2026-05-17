@@ -5,7 +5,6 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
-import { SoftPhone } from "@/components/calls/SoftPhone";
 import { useAuthStore } from "@/store/auth-store";
 import { useOrgStore } from "@/store/org-store";
 import { usePresenceStore } from "@/store/presence-store";
@@ -112,7 +111,6 @@ function DashboardShell({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      <SoftPhone />
     </div>
   );
 }
