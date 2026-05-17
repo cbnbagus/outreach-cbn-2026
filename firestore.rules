@@ -91,6 +91,11 @@ service cloud.firestore {
       allow write: if isOrgAdmin(resource.data.orgId) || isOrgAdmin(request.resource.data.orgId);
     }
 
+    match /program_sources/{docId} {
+      allow read:  if isOrgMember(resource.data.orgId);
+      allow write: if isOrgAdmin(resource.data.orgId) || isOrgAdmin(request.resource.data.orgId);
+    }
+
     match /interaction_outcomes/{docId} {
       allow read:  if isOrgMember(resource.data.orgId);
       allow write: if isOrgAdmin(resource.data.orgId) || isOrgAdmin(request.resource.data.orgId);

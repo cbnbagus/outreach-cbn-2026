@@ -59,6 +59,14 @@
       ]
     },
     {
+      "collectionGroup": "program_sources",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "orgId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "interaction_outcomes",
       "queryScope": "COLLECTION",
       "fields": [

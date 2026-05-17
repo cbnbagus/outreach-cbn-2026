@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Ticket, MessageSquare,
   BarChart2, Settings, Tag, Globe, CheckCircle2,
-  ChevronDown, UserCog, LogOut, Plug, CircleUser, X, CalendarDays, Bot, PhoneCall, CreditCard, Shield,
+  ChevronDown, UserCog, LogOut, Plug, CircleUser, X, CalendarDays, Bot, PhoneCall, CreditCard, Shield, Tv2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types";
@@ -40,6 +40,7 @@ const navItems: NavItem[] = [
       { label: "Users", href: "/dashboard/admin/users", icon: UserCog },
       { label: "Categories", href: "/dashboard/admin/categories", icon: Tag },
       { label: "Lead Sources", href: "/dashboard/admin/lead-sources", icon: Globe },
+      { label: "Program Sources", href: "/dashboard/admin/program-sources", icon: Tv2 },
       { label: "Outcomes", href: "/dashboard/admin/outcomes", icon: CheckCircle2 },
       { label: "Integrations", href: "/dashboard/admin/integrations",    icon: Plug },
       { label: "Chat Widget",  href: "/dashboard/admin/widget",          icon: MessageSquare },

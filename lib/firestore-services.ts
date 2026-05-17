@@ -178,6 +178,102 @@ export async function seedDefaultLeadSources(orgId: string, createdBy: string) {
 }
 
 // ---------------------------------------------------------------------------
+// PROGRAM SOURCES
+// ---------------------------------------------------------------------------
+export async function fetchProgramSources(orgId: string) {
+  const [{ collection, getDocs, orderBy, query, where }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  const q = query(
+    collection(db, "program_sources"),
+    where("orgId", "==", orgId),
+    orderBy("createdAt", "asc")
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function addProgramSource(
+  orgId: string,
+  data: { name: string; description: string },
+  createdBy: string
+) {
+  const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  return addDoc(collection(db, "program_sources"), {
+    orgId,
+    name: data.name,
+    description: data.description,
+    isActive: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    createdBy,
+  });
+}
+
+export async function updateProgramSource(
+  id: string,
+  data: { name?: string; description?: string; isActive?: boolean }
+) {
+  const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  return updateDoc(doc(db, "program_sources", id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deleteProgramSource(id: string) {
+  const [{ doc, deleteDoc }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  return deleteDoc(doc(db, "program_sources", id));
+}
+
+const DEFAULT_PROGRAM_SOURCES_SEED = [
+  { name: "Solusi TV",    description: "Respondent from Solusi TV program" },
+  { name: "Superbook",    description: "Respondent from Superbook children's ministry" },
+  { name: "Super Youth",  description: "Respondent from Super Youth program" },
+  { name: "Jawaban.com",  description: "Respondent from Jawaban.com website" },
+  { name: "CBN News",     description: "Respondent from CBN News program" },
+  { name: "Nana Station", description: "Respondent from Nana Station program" },
+  { name: "Church Event", description: "Respondent from a church event or service" },
+  { name: "Other",        description: "Other source not listed" },
+];
+
+export async function seedDefaultProgramSources(orgId: string, createdBy: string) {
+  const [{ collection, addDoc, getDocs, query, where, serverTimestamp }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+
+  // Only seed if truly empty
+  const existing = await getDocs(
+    query(collection(db, "program_sources"), where("orgId", "==", orgId))
+  );
+  if (!existing.empty) return;
+
+  const batch = DEFAULT_PROGRAM_SOURCES_SEED.map((ps) =>
+    addDoc(collection(db, "program_sources"), {
+      orgId,
+      name: ps.name,
+      description: ps.description,
+      isActive: true,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      createdBy,
+    })
+  );
+  await Promise.all(batch);
+}
+
+// ---------------------------------------------------------------------------
 // INTERACTION OUTCOMES
 // ---------------------------------------------------------------------------
 export async function fetchOutcomes(orgId: string) {

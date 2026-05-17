@@ -115,6 +115,27 @@ export function useLeadSources() {
   return result;
 }
 
+export function useProgramSources() {
+  const result = useFirestoreCollection("program_sources", "programSourceId");
+  const activeOrg = useOrgStore((s) => s.activeOrg);
+  const currentUser = useAuthStore((s) => s.currentUser);
+  const seeded = useRef(false);
+
+  useEffect(() => {
+    if (result.loading || seeded.current) return;
+    if (!activeOrg?.orgId || !currentUser?.uid) return;
+    if (result.items.length > 0) return;
+
+    // Program sources empty for this org — seed defaults
+    seeded.current = true;
+    import("@/lib/firestore-services").then(({ seedDefaultProgramSources }) => {
+      seedDefaultProgramSources(activeOrg.orgId, currentUser.uid).catch(console.error);
+    });
+  }, [result.loading, result.items.length, activeOrg?.orgId, currentUser?.uid]);
+
+  return result;
+}
+
 export function useOutcomes() {
   return useFirestoreCollection("interaction_outcomes", "outcomeId");
 }

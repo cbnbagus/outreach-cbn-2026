@@ -16,13 +16,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TicketStatusBadge, TicketPriorityBadge } from "@/components/tickets/TicketStatusBadge";
 import { useRespondent } from "@/hooks/use-firestore-respondents";
 import { useTicketsByRespondent, useMessages } from "@/hooks/use-firestore-tickets";
-import { useLeadSources } from "@/hooks/use-firestore-config";
+import { useLeadSources, useProgramSources } from "@/hooks/use-firestore-config";
 import { updateRespondent } from "@/lib/firestore-services";
 import { useAuthStore } from "@/store/auth-store";
 import { useOrgStore } from "@/store/org-store";
 import { cn } from "@/lib/utils";
 import type { Respondent, RespondentProgress } from "@/types";
-import { DEFAULT_PROGRESS_STEPS, DEFAULT_PROGRAM_SOURCES } from "@/types";
+import { DEFAULT_PROGRESS_STEPS } from "@/types";
 
 // Progress step config
 const PROGRESS_CONFIG: Record<RespondentProgress, { color: string; bg: string; border: string; desc: string }> = {
@@ -68,6 +68,7 @@ export default function RespondentProfilePage() {
   const { respondent: firestoreRespondent, loading: respLoading } = useRespondent(id);
   const { tickets, loading: ticketsLoading } = useTicketsByRespondent(id);
   const { items: leadSources } = useLeadSources();
+  const { items: programSourceItems } = useProgramSources();
 
   const [respondent, setRespondent] = useState<Respondent | null>(null);
   const [editing, setEditing]       = useState(false);
@@ -415,7 +416,10 @@ export default function RespondentProfilePage() {
                         <SelectValue placeholder="Select program..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {[...DEFAULT_PROGRAM_SOURCES, ...customProgramSources].map((p) => (
+                        {programSourceItems.filter((ps: any) => ps.isActive !== false).map((ps: any) => (
+                          <SelectItem key={ps.name} value={ps.name}>{ps.name}</SelectItem>
+                        ))}
+                        {customProgramSources.map((p) => (
                           <SelectItem key={p} value={p}>{p}</SelectItem>
                         ))}
                       </SelectContent>
@@ -429,7 +433,8 @@ export default function RespondentProfilePage() {
                           if (e.key === "Enter") {
                             e.preventDefault();
                             const trimmed = newProgramSource.trim();
-                            if (trimmed && !DEFAULT_PROGRAM_SOURCES.includes(trimmed) && !customProgramSources.includes(trimmed)) {
+                            const existingNames = programSourceItems.map((ps: any) => ps.name);
+                            if (trimmed && !existingNames.includes(trimmed) && !customProgramSources.includes(trimmed)) {
                               setCustomProgramSources((prev) => [...prev, trimmed]);
                               setEditProgramSource(trimmed);
                             }
@@ -443,7 +448,8 @@ export default function RespondentProfilePage() {
                         size="sm" variant="outline" className="h-7 px-2"
                         onClick={() => {
                           const trimmed = newProgramSource.trim();
-                          if (trimmed && !DEFAULT_PROGRAM_SOURCES.includes(trimmed) && !customProgramSources.includes(trimmed)) {
+                          const existingNames = programSourceItems.map((ps: any) => ps.name);
+                          if (trimmed && !existingNames.includes(trimmed) && !customProgramSources.includes(trimmed)) {
                             setCustomProgramSources((prev) => [...prev, trimmed]);
                             setEditProgramSource(trimmed);
                           }
@@ -453,7 +459,7 @@ export default function RespondentProfilePage() {
                         <Plus size={11} />
                       </Button>
                     </div>
-                    <p className="text-[9px] text-muted-foreground mt-1">e.g. Website, Instagram, Crusade Event</p>
+                    <p className="text-[9px] text-muted-foreground mt-1">Manage options in Admin → Program Sources</p>
                   </div>
 
                   <div>
@@ -645,17 +651,17 @@ export default function RespondentProfilePage() {
                   </button>
                 )}
                 <div className="flex flex-wrap gap-1 mt-3">
-                  {DEFAULT_PROGRAM_SOURCES.map((p) => (
+                  {programSourceItems.filter((ps: any) => ps.isActive !== false).map((ps: any) => (
                     <span
-                      key={p}
+                      key={ps.name}
                       className={cn(
                         "text-[10px] font-medium px-2 py-0.5 rounded-full border cursor-default transition-colors",
-                        respondent.programSource === p
+                        respondent.programSource === ps.name
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-muted border-border text-muted-foreground"
                       )}
                     >
-                      {p}
+                      {ps.name}
                     </span>
                   ))}
                 </div>

@@ -230,6 +230,15 @@ export interface LeadSource {
   createdAt: string;
 }
 
+export interface ProgramSource {
+  programSourceId: string;
+  orgId: string;  // tenant identifier
+  name: string;
+  description: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface InteractionOutcome {
   outcomeId: string;
   orgId: string;  // tenant identifier
