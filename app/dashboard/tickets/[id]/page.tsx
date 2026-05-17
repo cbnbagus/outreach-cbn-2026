@@ -7,6 +7,7 @@ import {
   Globe, Tag, CheckCircle2, ChevronDown, User, Zap, X, Printer,
   Bot, UserCheck, Sparkles, HandHeart, HeartHandshake, Droplets,
   ShieldAlert, UserCog, RefreshCw, StickyNote, Plus, Trash2,
+  CalendarDays, MessageSquare,
 } from "lucide-react";
 import { usePrint } from "@/hooks/use-print";
 import { Button } from "@/components/ui/button";
@@ -17,12 +18,12 @@ import { TicketStatusBadge, TicketPriorityBadge } from "@/components/tickets/Tic
 import { useCategories, useOutcomes, useUsers } from "@/hooks/use-firestore-config";
 import { useMessages } from "@/hooks/use-firestore-tickets";
 import { useRespondent } from "@/hooks/use-firestore-respondents";
-import { fetchTicketById, updateTicketStatus, updateTicketClassification, sendMessage } from "@/lib/firestore-services";
+import { fetchTicketById, updateTicketStatus, updateTicketClassification, sendMessage, updateTicketFollowUp, clearTicketFollowUp } from "@/lib/firestore-services";
 import { useAuthStore } from "@/store/auth-store";
 import { usePresenceStore } from "@/store/presence-store";
 import { generateAIReply, sleep, detectEscalation, ESCALATION_COLORS, ESCALATION_LABELS } from "@/lib/ai-engine";
 import { cn } from "@/lib/utils";
-import type { TicketStatus, Message, EscalationTrigger, HandledBy, EscalationReason, Ticket } from "@/types";
+import type { TicketStatus, Message, EscalationTrigger, HandledBy, EscalationReason, Ticket, OutboundChannel } from "@/types";
 
 const statusFlow: TicketStatus[] = ["open", "in_progress", "resolved", "closed"];
 
@@ -195,6 +196,84 @@ export default function TicketDetailPage() {
   };
   const removeProblemCategory = (cat: string) => {
     setProblemCategories((prev) => prev.filter((c) => c !== cat));
+  };
+
+  // Follow-up scheduling
+  const FOLLOWUP_CHANNELS: { id: OutboundChannel; label: string; icon: string }[] = [
+    { id: "whatsapp",     label: "WhatsApp",     icon: "💬" },
+    { id: "call",         label: "Call",          icon: "📞" },
+    { id: "instagram_dm", label: "Instagram DM",  icon: "📸" },
+    { id: "facebook_dm",  label: "Facebook DM",   icon: "👤" },
+    { id: "email",        label: "Email",         icon: "📧" },
+  ];
+  const [fuChannel, setFuChannel]   = useState<OutboundChannel | "">(ticket?.followUpChannel ?? "");
+  const [fuDate, setFuDate]         = useState(ticket?.scheduledAt?.slice(0, 16) ?? "");
+  const [fuNote, setFuNote]         = useState(ticket?.followUpNote ?? "");
+  const [fuSaving, setFuSaving]     = useState(false);
+  const [fuSaved, setFuSaved]       = useState(false);
+  const [showFuForm, setShowFuForm] = useState(false);
+
+  useEffect(() => {
+    if (!ticket) return;
+    setFuChannel(ticket.followUpChannel ?? "");
+    setFuDate(ticket.scheduledAt?.slice(0, 16) ?? "");
+    setFuNote(ticket.followUpNote ?? "");
+  }, [ticket?.scheduledAt, ticket?.followUpChannel, ticket?.followUpNote]);
+
+  const hasFollowUp = !!ticket?.scheduledAt;
+  const followUpPast = hasFollowUp && new Date(ticket!.scheduledAt!) < new Date();
+
+  const saveFollowUp = async () => {
+    if (!ticket || !fuChannel || !fuDate) return;
+    setFuSaving(true);
+    try {
+      await updateTicketFollowUp(ticket.ticketId, {
+        scheduledAt: new Date(fuDate).toISOString(),
+        followUpChannel: fuChannel,
+        followUpNote: fuNote.trim(),
+        followUpCreatedBy: currentUser?.uid ?? "",
+      });
+      setTicket({ ...ticket, scheduledAt: new Date(fuDate).toISOString(), followUpChannel: fuChannel as OutboundChannel, followUpNote: fuNote.trim() });
+      setFuSaved(true);
+      setShowFuForm(false);
+      setTimeout(() => setFuSaved(false), 3000);
+    } catch (err) {
+      console.error("Failed to save follow-up:", err);
+    }
+    setFuSaving(false);
+  };
+
+  const removeFollowUp = async () => {
+    if (!ticket) return;
+    setFuSaving(true);
+    try {
+      await clearTicketFollowUp(ticket.ticketId);
+      setTicket({ ...ticket, scheduledAt: undefined, followUpChannel: undefined, followUpNote: undefined });
+      setFuChannel("");
+      setFuDate("");
+      setFuNote("");
+      setShowFuForm(false);
+    } catch (err) {
+      console.error("Failed to clear follow-up:", err);
+    }
+    setFuSaving(false);
+  };
+
+  const launchFollowUp = () => {
+    if (!respondent || !ticket?.followUpChannel) return;
+    const ch = ticket.followUpChannel;
+    if (ch === "whatsapp" && respondent.phone) {
+      const num = respondent.phone.replace(/[^0-9]/g, "");
+      window.open(`https://wa.me/${num}`, "_blank");
+    } else if (ch === "call" && respondent.phone) {
+      window.open(`tel:${respondent.phone}`, "_self");
+    } else if (ch === "email" && respondent.email) {
+      window.open(`mailto:${respondent.email}`, "_blank");
+    } else if (ch === "instagram_dm") {
+      window.open("https://www.instagram.com/direct/inbox/", "_blank");
+    } else if (ch === "facebook_dm") {
+      window.open("https://www.facebook.com/messages/", "_blank");
+    }
   };
 
   const addNote = async () => {
@@ -997,6 +1076,151 @@ export default function TicketDetailPage() {
                   <Plus size={12} /> Add Note
                 </button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Schedule Follow-up */}
+          <Card className={cn("border shadow-none", hasFollowUp && !followUpPast ? "border-primary/30 bg-primary/[0.02]" : "border-border")}>
+            <CardHeader className="py-2.5 px-4 border-b border-border flex flex-row items-center justify-between">
+              <CardTitle className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+                <CalendarDays size={10} />Follow-up Schedule
+              </CardTitle>
+              {!hasFollowUp && !showFuForm && (
+                <button onClick={() => setShowFuForm(true)} className="text-[10px] text-primary hover:underline flex items-center gap-1">
+                  <Plus size={10} />Add
+                </button>
+              )}
+            </CardHeader>
+            <CardContent className="p-3 flex flex-col gap-2.5">
+              {/* Existing follow-up display */}
+              {hasFollowUp && !showFuForm && (
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "text-[10px] font-semibold px-2 py-0.5 rounded-full border",
+                      followUpPast
+                        ? "bg-red-50 border-red-200 text-red-700"
+                        : "bg-primary/10 border-primary/20 text-primary"
+                    )}>
+                      {followUpPast ? "Overdue" : "Scheduled"}
+                    </span>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+                      {FOLLOWUP_CHANNELS.find((c) => c.id === ticket?.followUpChannel)?.icon}{" "}
+                      {FOLLOWUP_CHANNELS.find((c) => c.id === ticket?.followUpChannel)?.label ?? ticket?.followUpChannel}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <CalendarDays size={11} className="text-muted-foreground/50 flex-shrink-0" />
+                    <span className="font-medium text-foreground">
+                      {new Date(ticket!.scheduledAt!).toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+                    </span>
+                    <span className="text-muted-foreground">
+                      {new Date(ticket!.scheduledAt!).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                  {ticket?.followUpNote && (
+                    <p className="text-[10px] text-muted-foreground bg-muted/50 rounded-md p-2 leading-relaxed">
+                      {ticket.followUpNote}
+                    </p>
+                  )}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      onClick={launchFollowUp}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md bg-primary text-white text-[10px] font-semibold hover:bg-primary/90 transition-colors"
+                    >
+                      <MessageSquare size={10} />Contact Now
+                    </button>
+                    <button
+                      onClick={() => setShowFuForm(true)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-border text-[10px] font-medium text-muted-foreground hover:bg-muted transition-colors"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={removeFollowUp}
+                      disabled={fuSaving}
+                      className="flex items-center gap-1 px-2 py-1.5 rounded-md border border-border text-[10px] text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 size={9} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* No follow-up and form not shown */}
+              {!hasFollowUp && !showFuForm && (
+                <div className="text-center py-3">
+                  <CalendarDays size={18} className="mx-auto text-muted-foreground/20 mb-2" />
+                  <p className="text-[10px] text-muted-foreground italic">No follow-up scheduled.</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-0.5">Schedule a call or message to follow up with this respondent.</p>
+                </div>
+              )}
+
+              {/* Follow-up form */}
+              {showFuForm && (
+                <div className="flex flex-col gap-2.5">
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Channel</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {FOLLOWUP_CHANNELS.map((ch) => (
+                        <button
+                          key={ch.id}
+                          onClick={() => setFuChannel(ch.id)}
+                          className={cn(
+                            "flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium border transition-colors",
+                            fuChannel === ch.id
+                              ? "bg-primary/10 border-primary/30 text-primary"
+                              : "border-border text-muted-foreground hover:border-muted-foreground/40"
+                          )}
+                        >
+                          {ch.icon} {ch.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Date & Time</p>
+                    <input
+                      type="datetime-local"
+                      value={fuDate}
+                      onChange={(e) => setFuDate(e.target.value)}
+                      className="w-full h-7 text-xs border border-border rounded-md px-2 bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Note (optional)</p>
+                    <textarea
+                      rows={2}
+                      value={fuNote}
+                      onChange={(e) => setFuNote(e.target.value)}
+                      placeholder="e.g. Discuss baptism preparation..."
+                      className="w-full text-xs border border-border rounded-md px-2.5 py-2 resize-none bg-background focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-muted-foreground/50"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={saveFollowUp}
+                      disabled={!fuChannel || !fuDate || fuSaving}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-md bg-primary text-white text-[10px] font-semibold hover:bg-primary/90 disabled:opacity-40 transition-colors"
+                    >
+                      <CalendarDays size={10} />{fuSaving ? "Saving..." : "Save Schedule"}
+                    </button>
+                    <button
+                      onClick={() => setShowFuForm(false)}
+                      className="px-2.5 py-1.5 rounded-md border border-border text-[10px] text-muted-foreground hover:bg-muted transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Success toast */}
+              {fuSaved && (
+                <div className="flex items-center gap-1.5 text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md px-2.5 py-1.5">
+                  <CheckCircle2 size={10} />Follow-up scheduled successfully
+                </div>
+              )}
             </CardContent>
           </Card>
 

@@ -194,6 +194,9 @@ export interface Ticket {
   outboundChannel?:  OutboundChannel;
   outboundStatus?:   "pending" | "sent" | "no_answer" | "replied";
   scheduledAt?:      string;   // ISO — if scheduled for later
+  followUpChannel?:  OutboundChannel;  // channel for scheduled follow-up
+  followUpNote?:     string;           // brief note for the follow-up
+  followUpCreatedBy?: string;          // uid of agent who scheduled it
 }
 
 export interface Message {

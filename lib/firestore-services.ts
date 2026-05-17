@@ -441,6 +441,42 @@ export async function updateTicketClassification(
   return updateDoc(doc(db, "tickets", id), cleanData);
 }
 
+export async function updateTicketFollowUp(
+  id: string,
+  data: {
+    scheduledAt: string;
+    followUpChannel: string;
+    followUpNote?: string;
+    followUpCreatedBy: string;
+  }
+) {
+  const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  return updateDoc(doc(db, "tickets", id), {
+    scheduledAt: data.scheduledAt,
+    followUpChannel: data.followUpChannel,
+    followUpNote: data.followUpNote ?? "",
+    followUpCreatedBy: data.followUpCreatedBy,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function clearTicketFollowUp(id: string) {
+  const [{ doc, updateDoc, serverTimestamp, deleteField }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  return updateDoc(doc(db, "tickets", id), {
+    scheduledAt: deleteField(),
+    followUpChannel: deleteField(),
+    followUpNote: deleteField(),
+    followUpCreatedBy: deleteField(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // MESSAGES (subcollection: tickets/{ticketId}/messages)
 // ---------------------------------------------------------------------------
