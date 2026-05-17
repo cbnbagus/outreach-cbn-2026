@@ -155,7 +155,7 @@ export function AdminConfigTable({ title, subtitle, items, onAdd, onUpdate, onDe
               </tr>
             )}
             {items.map((item) => (
-              <tr key={item.id} className="border-b border-border last:border-0 hover:bg-muted/10 transition-colors">
+              <tr key={item.id} className="group border-b border-border last:border-0 hover:bg-muted/10 transition-colors">
                 <td className="px-5 py-3">
                   {editingId === item.id ? (
                     <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-7 text-xs" autoFocus />

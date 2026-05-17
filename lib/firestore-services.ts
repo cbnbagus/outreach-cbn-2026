@@ -237,14 +237,14 @@ export async function deleteProgramSource(id: string) {
 }
 
 const DEFAULT_PROGRAM_SOURCES_SEED = [
-  { name: "Solusi TV",    description: "Respondent from Solusi TV program" },
-  { name: "Superbook",    description: "Respondent from Superbook children's ministry" },
-  { name: "Super Youth",  description: "Respondent from Super Youth program" },
-  { name: "Jawaban.com",  description: "Respondent from Jawaban.com website" },
-  { name: "CBN News",     description: "Respondent from CBN News program" },
-  { name: "Nana Station", description: "Respondent from Nana Station program" },
-  { name: "Church Event", description: "Respondent from a church event or service" },
-  { name: "Other",        description: "Other source not listed" },
+  { name: "TV Program",      description: "Respondent from a TV program" },
+  { name: "Sunday Service",   description: "Respondent from Sunday service" },
+  { name: "Youth Service",    description: "Respondent from youth service" },
+  { name: "Women Service",    description: "Respondent from women's ministry" },
+  { name: "Men Service",      description: "Respondent from men's ministry" },
+  { name: "Online Event",     description: "Respondent from online event or webinar" },
+  { name: "Crusade / Rally",  description: "Respondent from evangelistic event" },
+  { name: "Other",            description: "Other source not listed" },
 ];
 
 export async function seedDefaultProgramSources(orgId: string, createdBy: string) {
