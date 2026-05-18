@@ -75,7 +75,7 @@ async function nextTicketNumber(orgId: string): Promise<string> {
     return next;
   });
 
-  return `RTS-${String(result).padStart(5, "0")}`;
+  return `CBN-${String(result).padStart(5, "0")}`;
 }
 
 async function findActiveTicket(respondentId: string, orgId: string): Promise<string | null> {

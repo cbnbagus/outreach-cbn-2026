@@ -72,7 +72,7 @@ export function FeatureGate({ feature, children, inline, message }: FeatureGateP
               </Button>
             </Link>
             {isRequestMode && (
-              <a href="mailto:hello@reachthesoul.org?subject=Setup%20Request%20-%20${encodeURIComponent(featureLabel)}" target="_blank">
+              <a href="mailto:outreach@cbn.or.id?subject=Setup%20Request%20-%20${encodeURIComponent(featureLabel)}" target="_blank">
                 <Button variant="outline" className="w-full gap-2">
                   <Wrench size={14} /> Request Setup Assistance
                 </Button>
@@ -138,7 +138,7 @@ export function SetupRequestGate({ plan, selfServiceMinPlan, featureLabel, setup
             <p className="text-xs text-blue-600 font-medium mb-4">One-time setup fee: {setupFee}</p>
           )}
           <div className="flex flex-col gap-2">
-            <a href={`mailto:hello@reachthesoul.org?subject=Setup Request: ${encodeURIComponent(featureLabel)}&body=Hi, I would like to set up ${encodeURIComponent(featureLabel)} for my organization. Please let me know the next steps.`} target="_blank">
+            <a href={`mailto:outreach@cbn.or.id?subject=Setup Request: ${encodeURIComponent(featureLabel)}&body=Hi, I would like to set up ${encodeURIComponent(featureLabel)} for my organization. Please let me know the next steps.`} target="_blank">
               <Button className="w-full gap-2">
                 <Mail size={14} /> Request Setup
               </Button>

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Ticket, MessageSquare,
   BarChart2, Settings, Tag, Globe, CheckCircle2,
-  ChevronDown, UserCog, LogOut, Plug, CircleUser, X, CalendarDays, Bot, PhoneCall, CreditCard, Shield, Tv2,
+  ChevronDown, UserCog, LogOut, Plug, CircleUser, X, CalendarDays, Bot, PhoneCall, Shield, Radio,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { UserRole } from "@/types";
@@ -32,7 +32,6 @@ const navItems: NavItem[] = [
   { label: "Schedule",     href: "/dashboard/schedule",     icon: CalendarDays,  roles: ["agent", "supervisor", "admin"] },
   { label: "Team",     href: "/dashboard/team",     icon: Users,        roles: ["agent", "supervisor", "admin"] },
   { label: "Reports",  href: "/dashboard/reports",  icon: BarChart2,    roles: ["supervisor", "admin"] },
-  { label: "Billing",  href: "/dashboard/billing",  icon: CreditCard,   roles: ["admin"] },
   { label: "AI Settings", href: "/dashboard/admin/ai-settings", icon: Bot, roles: ["supervisor", "admin"] },
   {
     label: "Admin", href: "/dashboard/admin", icon: Settings, roles: ["admin"],
@@ -40,10 +39,9 @@ const navItems: NavItem[] = [
       { label: "Users", href: "/dashboard/admin/users", icon: UserCog },
       { label: "Categories", href: "/dashboard/admin/categories", icon: Tag },
       { label: "Lead Sources", href: "/dashboard/admin/lead-sources", icon: Globe },
-      { label: "Program Sources", href: "/dashboard/admin/program-sources", icon: Tv2 },
+      { label: "Program Sources", href: "/dashboard/admin/program-sources", icon: Radio },
       { label: "Outcomes", href: "/dashboard/admin/outcomes", icon: CheckCircle2 },
       { label: "Integrations", href: "/dashboard/admin/integrations",    icon: Plug },
-      { label: "Chat Widget",  href: "/dashboard/admin/widget",          icon: MessageSquare },
       { label: "AI Settings",  href: "/dashboard/admin/ai-settings",    icon: Bot },
       { label: "Call Settings", href: "/dashboard/admin/call-settings", icon: PhoneCall },
     ],
@@ -96,8 +94,8 @@ export function Sidebar({ role, userName, onLogout, mobileOpen, onMobileClose }:
           <MessageSquare size={16} className="text-white" />
         </div>
         <div className="flex-1">
-          <p className="text-xs font-bold text-white leading-tight">{activeOrg?.name ?? "ReachTheSoul"}</p>
-          <p className="text-[10px] text-sidebar-foreground/50 leading-tight">reachthesoul.org</p>
+          <p className="text-xs font-bold text-white leading-tight">{activeOrg?.name ?? "CBN Outreach"}</p>
+          <p className="text-[10px] text-sidebar-foreground/50 leading-tight">Cahaya Bagi Negeri</p>
         </div>
         <button
           className="lg:hidden p-1 rounded text-sidebar-foreground/60 hover:text-white transition-colors"

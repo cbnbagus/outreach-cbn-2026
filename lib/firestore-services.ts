@@ -20,7 +20,7 @@ async function getDb() {
 }
 
 function generateTicketNumber(index: number): string {
-  return `RTS-${String(index).padStart(5, "0")}`;
+  return `CBN-${String(index).padStart(5, "0")}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -271,6 +271,51 @@ export async function seedDefaultProgramSources(orgId: string, createdBy: string
     })
   );
   await Promise.all(batch);
+}
+
+// ---------------------------------------------------------------------------
+// PROGRAM SOURCES
+// ---------------------------------------------------------------------------
+export async function fetchProgramSources(orgId: string) {
+  const [{ collection, getDocs, orderBy, query, where }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
+  const q = query(collection(db, "program_sources"), where("orgId", "==", orgId), orderBy("createdAt", "asc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function addProgramSource(orgId: string, data: { name: string; description: string }, createdBy: string) {
+  const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
+  return addDoc(collection(db, "program_sources"), { orgId, name: data.name, description: data.description, isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy });
+}
+
+export async function updateProgramSource(id: string, data: { name?: string; description?: string; isActive?: boolean }) {
+  const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
+  return updateDoc(doc(db, "program_sources", id), { ...data, updatedAt: serverTimestamp() });
+}
+
+export async function deleteProgramSource(id: string) {
+  const [{ doc, deleteDoc }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
+  return deleteDoc(doc(db, "program_sources", id));
+}
+
+const DEFAULT_PROGRAM_SOURCES_SEED = [
+  { name: "TV Program",      description: "Respondent from a TV program" },
+  { name: "Sunday Service",   description: "Respondent from Sunday service" },
+  { name: "Youth Service",    description: "Respondent from youth service" },
+  { name: "Women Service",    description: "Respondent from women's ministry" },
+  { name: "Men Service",      description: "Respondent from men's ministry" },
+  { name: "Online Event",     description: "Respondent from online event or webinar" },
+  { name: "Crusade / Rally",  description: "Respondent from evangelistic event" },
+  { name: "Other",            description: "Other source not listed" },
+];
+
+export async function seedDefaultProgramSources(orgId: string, createdBy: string) {
+  const [{ collection, addDoc, getDocs, query, where, serverTimestamp }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
+  const existing = await getDocs(query(collection(db, "program_sources"), where("orgId", "==", orgId)));
+  if (!existing.empty) return;
+  await Promise.all(DEFAULT_PROGRAM_SOURCES_SEED.map((ps) =>
+    addDoc(collection(db, "program_sources"), { orgId, ...ps, isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy })
+  ));
 }
 
 // ---------------------------------------------------------------------------

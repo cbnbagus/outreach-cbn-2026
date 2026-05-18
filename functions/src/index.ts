@@ -682,7 +682,7 @@ export const onRespondentMessage = onDocumentCreated(
               `Trigger: *${detectedTrigger}*\n` +
               `Message: "${messageContent.substring(0, 200)}"\n\n` +
               `⚡ Please check the dashboard immediately and take action.\n` +
-              `🔗 https://reachthesoul.org/dashboard/tickets/${ticketId}`;
+              `🔗 https://outreachcbn.com/dashboard/tickets/${ticketId}`;
 
             for (const contact of emergencyContacts) {
               const phone = String(contact.phone ?? "").replace(/\D/g, "");

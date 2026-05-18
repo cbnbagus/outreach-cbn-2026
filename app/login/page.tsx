@@ -113,8 +113,8 @@ export default function LoginPage() {
             <Heart size={16} className="text-white" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white leading-tight">ReachTheSoul</p>
-            <p className="text-[10px] text-sidebar-foreground/40 uppercase tracking-widest leading-tight">reachthesoul.org</p>
+            <p className="text-sm font-bold text-white leading-tight">CBN Outreach</p>
+            <p className="text-[10px] text-sidebar-foreground/40 uppercase tracking-widest leading-tight">outreachcbn.com</p>
           </div>
         </div>
 
@@ -125,8 +125,8 @@ export default function LoginPage() {
             <span className="text-xs text-sidebar-primary font-medium">Prayer & Counseling Platform</span>
           </div>
           <h1 className="text-2xl lg:text-4xl font-bold text-white leading-tight text-balance mb-3 lg:mb-4">
-            Every prayer heard.<br className="hidden lg:block" />
-            Every soul cared for.
+            Cahaya Bagi Negeri.<br className="hidden lg:block" />
+            Outreach Management Platform.
           </h1>
           <p className="text-xs lg:text-sm text-sidebar-foreground/50 leading-relaxed max-w-xs">
             Built for churches and ministries who provide prayer support, counseling, and pastoral care across digital channels.
@@ -150,7 +150,7 @@ export default function LoginPage() {
 
         {/* Bottom tagline — desktop only */}
         <p className="hidden lg:block mt-auto pt-8 text-[10px] text-sidebar-foreground/25 border-t border-sidebar-border">
-          ReachTheSoul &copy; {new Date().getFullYear()} &middot; Where every soul finds care
+          CBN Outreach &copy; {new Date().getFullYear()} &middot; Cahaya Bagi Negeri
         </p>
       </div>
 
@@ -160,7 +160,7 @@ export default function LoginPage() {
 
           {/* Heading */}
           <div className="mb-7">
-            <h2 className="text-xl lg:text-2xl font-bold text-foreground text-balance">Sign in to ReachTheSoul</h2>
+            <h2 className="text-xl lg:text-2xl font-bold text-foreground text-balance">Sign in to CBN Outreach</h2>
             <p className="text-sm text-muted-foreground mt-1.5">Enter your credentials to continue.</p>
           </div>
 

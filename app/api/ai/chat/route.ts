@@ -5,7 +5,7 @@ import { getFirestore } from "firebase-admin/firestore";
 function getDb() {
   if (!getApps().length) {
     initializeApp({
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "reachthesoul-prod",
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "outreach-cbn-2026",
     });
   }
   return getFirestore();

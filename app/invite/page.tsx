@@ -133,8 +133,8 @@ function InviteForm() {
             <MessageSquare size={14} className="text-white" />
           </div>
           <span className="font-bold text-foreground text-xs leading-tight">
-            ReachTheSoul<br />
-            <span className="text-[10px] font-normal text-muted-foreground">reachthesoul.org</span>
+            CBN Outreach<br />
+            <span className="text-[10px] font-normal text-muted-foreground">outreachcbn.com</span>
           </span>
         </div>
 

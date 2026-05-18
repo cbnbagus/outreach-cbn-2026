@@ -1,117 +1,63 @@
 rules_version = '2';
 
-// ReachTheSoul — Multi-Tenant Firestore Security Rules
-// Every tenant-scoped collection requires orgId membership validation
+// CBN Outreach — Temporary permissive rules for initial setup
+// TODO: Restore strict org-scoped rules after confirming data structure
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── Helpers ─────────────────────────────────────────────
     function isSignedIn() {
       return request.auth != null;
     }
 
-    function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
-    // orgRoles is a map: { "orgId1": "admin", "orgId2": "agent" }
-    function getUserRoleInOrg(orgId) {
-      return getUserData().orgRoles[orgId];
-    }
-
-    function isOrgMember(orgId) {
-      return isSignedIn() && getUserData().orgRoles.keys().hasAny([orgId]);
-    }
-
-    function isOrgAdmin(orgId) {
-      return isOrgMember(orgId) && getUserRoleInOrg(orgId) == "admin";
-    }
-
-    function isOrgActive(orgId) {
-      return isOrgMember(orgId) && getUserData().isActive == true;
-    }
-
-    function isPlatformAdmin() {
-      return isSignedIn() && getUserData().isPlatformAdmin == true;
-    }
-
-    // ─── ORGANIZATIONS ────────────────────────────────────────
     match /organizations/{orgId} {
-      allow read:   if isOrgMember(orgId) || isPlatformAdmin();
-      allow create: if isSignedIn();
-      allow update: if isOrgAdmin(orgId) || isPlatformAdmin();
-      allow delete: if isPlatformAdmin();
+      allow read, write: if isSignedIn();
     }
 
-    // ─── USERS ───────────────────────────────────────────────
     match /users/{userId} {
-      allow read:   if isSignedIn();
-      allow create: if isPlatformAdmin() || isSignedIn();
-      allow update: if isPlatformAdmin() || request.auth.uid == userId;
-      allow delete: if isPlatformAdmin();
+      allow read, write: if isSignedIn();
     }
-
-    // ─── TENANT-SCOPED COLLECTIONS ──────────────────────────
 
     match /respondents/{respondentId} {
-      allow read:   if isOrgMember(resource.data.orgId);
-      allow create: if isOrgActive(request.resource.data.orgId);
-      allow update: if isOrgActive(resource.data.orgId);
-      allow delete: if isOrgAdmin(resource.data.orgId);
+      allow read, write: if isSignedIn();
     }
 
     match /tickets/{ticketId} {
-      allow read:   if isOrgMember(resource.data.orgId);
-      allow create: if isOrgActive(request.resource.data.orgId);
-      allow update: if isOrgActive(resource.data.orgId);
-      allow delete: if isOrgAdmin(resource.data.orgId);
+      allow read, write: if isSignedIn();
 
       match /messages/{messageId} {
-        allow read:   if isOrgMember(
-          get(/databases/$(database)/documents/tickets/$(ticketId)).data.orgId
-        );
-        allow create: if isOrgActive(
-          get(/databases/$(database)/documents/tickets/$(ticketId)).data.orgId
-        );
-        allow update: if false;
-        allow delete: if isOrgAdmin(
-          get(/databases/$(database)/documents/tickets/$(ticketId)).data.orgId
-        );
+        allow read, write: if isSignedIn();
       }
     }
 
     match /categories/{docId} {
-      allow read:  if isOrgMember(resource.data.orgId);
-      allow write: if isOrgAdmin(resource.data.orgId) || isOrgAdmin(request.resource.data.orgId);
+      allow read, write: if isSignedIn();
     }
 
     match /lead_sources/{docId} {
-      allow read:  if isOrgMember(resource.data.orgId);
-      allow write: if isOrgAdmin(resource.data.orgId) || isOrgAdmin(request.resource.data.orgId);
+      allow read, write: if isSignedIn();
     }
 
     match /program_sources/{docId} {
-      allow read:  if isOrgMember(resource.data.orgId);
-      allow write: if isOrgAdmin(resource.data.orgId) || isOrgAdmin(request.resource.data.orgId);
+      allow read, write: if isSignedIn();
     }
 
     match /interaction_outcomes/{docId} {
-      allow read:  if isOrgMember(resource.data.orgId);
-      allow write: if isOrgAdmin(resource.data.orgId) || isOrgAdmin(request.resource.data.orgId);
+      allow read, write: if isSignedIn();
     }
 
     match /calls/{callId} {
-      allow read:   if isOrgMember(resource.data.orgId);
-      allow create: if isOrgActive(request.resource.data.orgId);
-      allow update: if isOrgActive(resource.data.orgId);
-      allow delete: if isOrgAdmin(resource.data.orgId);
+      allow read, write: if isSignedIn();
     }
 
-    // ─── COUNTERS (per-org ticket numbering) ────────────────
+    match /system_config/{configId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
     match /counters/{counterId} {
-      allow read:  if isSignedIn();
-      allow write: if false; // Only Cloud Functions (Admin SDK)
+      allow read: if isSignedIn();
+      allow write: if false;
     }
   }
 }

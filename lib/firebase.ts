@@ -4,13 +4,13 @@ import { getAuth, type Auth } from "firebase/auth";
 import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY            || "AIzaSyBwDi5SOFvQU_k-2U36V8vphzTs7Df6lSw",
-  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN        || "reachthesoul-prod.firebaseapp.com",
-  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID         || "reachthesoul-prod",
-  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET     || "reachthesoul-prod.firebasestorage.app",
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "211204916402",
-  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID             || "1:211204916402:web:c906137a259dfc675bb5ab",
-  measurementId:     process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID     || "G-EN9GZFLR7W",
+  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY            || "",
+  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN        || "outreach-cbn-2026.firebaseapp.com",
+  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID         || "outreach-cbn-2026",
+  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET     || "outreach-cbn-2026.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID             || "",
+  measurementId:     process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID     || "",
 };
 
 // Lazy singletons — only initialized in browser, never during SSR

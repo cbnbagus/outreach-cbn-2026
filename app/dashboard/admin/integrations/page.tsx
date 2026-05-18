@@ -137,7 +137,7 @@ function ChannelCard({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function IntegrationsPage() {
-  const projectId = "reachthesoul-prod";
+  const projectId = "outreach-cbn-2026";
   const orgId = useOrgStore((s) => s.activeOrg?.orgId ?? "");
   const plan = (useOrgStore((s) => s.activeOrg?.plan) ?? "free") as "free" | "starter" | "growth" | "enterprise";
 
@@ -230,7 +230,7 @@ export default function IntegrationsPage() {
       {plan === "growth" && (
         <div className="mb-4 p-3 rounded-lg bg-green-50 border border-green-200">
           <p className="text-xs text-green-800 font-medium">🎉 Free setup included with your Growth plan!</p>
-          <p className="text-[10px] text-green-700 mt-1">Need help? Contact hello@reachthesoul.org and we'll set up your channels for free.</p>
+          <p className="text-[10px] text-green-700 mt-1">Need help? Contact outreach@cbn.or.id and we'll set up your channels for free.</p>
         </div>
       )}
       <Card className="border-2 border-primary/30 shadow-none">

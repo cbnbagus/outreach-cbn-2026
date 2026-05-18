@@ -16,7 +16,7 @@ export default function WidgetSetupPage() {
   const [copied, setCopied] = useState(false);
   const [preview, setPreview] = useState(false);
 
-  const embedCode = `<script src="https://reachthesoul.org/widget.js" data-org="${orgId}" data-color="${color}" data-title="${title}" data-subtitle="${subtitle}"></script>`;
+  const embedCode = `<script src="https://outreachcbn.com/widget.js" data-org="${orgId}" data-color="${color}" data-title="${title}" data-subtitle="${subtitle}"></script>`;
 
   const copyCode = () => {
     navigator.clipboard.writeText(embedCode);
@@ -29,7 +29,7 @@ export default function WidgetSetupPage() {
       <div>
         <h2 className="text-base font-semibold text-foreground">Website Chat Widget</h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Add a chat widget to your website. Visitors can send messages directly to your ReachTheSoul dashboard.
+          Add a chat widget to your website. Visitors can send messages directly to your CBN Outreach dashboard.
         </p>
       </div>
 
@@ -62,7 +62,7 @@ export default function WidgetSetupPage() {
                   <button className="px-3 py-1.5 rounded-lg text-xs text-white font-semibold" style={{ background: color }}>Send</button>
                 </div>
                 <div className="text-center py-1.5 border-t text-[9px] text-gray-400">
-                  Powered by <span className="font-semibold text-gray-500">ReachTheSoul</span>
+                  Powered by <span className="font-semibold text-gray-500">CBN Outreach</span>
                 </div>
               </div>
             ) : (
@@ -144,7 +144,7 @@ export default function WidgetSetupPage() {
             <p className="text-[11px] text-blue-800 font-medium mb-1">How it works:</p>
             <ul className="text-[10px] text-blue-700 space-y-1">
               <li>• Visitor opens chat widget on your website</li>
-              <li>• Their message is sent to your ReachTheSoul dashboard as a new ticket</li>
+              <li>• Their message is sent to your CBN Outreach dashboard as a new ticket</li>
               <li>• If AI is enabled, it auto-replies immediately</li>
               <li>• Your counseling team can take over at any time</li>
               <li>• All conversations are stored and tracked</li>
