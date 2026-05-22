@@ -1,5 +1,6 @@
-// Firestore Service Layer — MULTI-TENANT version
-// All CRUD operations scoped by orgId for tenant isolation.
+// Firestore Service Layer — client-side only via dynamic imports
+// All CRUD operations for OMS collections.
+// Dynamic imports used to prevent Firebase SDK from being touched during SSR.
 
 import type {
   Respondent,
@@ -20,37 +21,28 @@ async function getDb() {
 }
 
 function generateTicketNumber(index: number): string {
-  return `CBN-${String(index).padStart(5, "0")}`;
+  return `TKT-${String(index).padStart(5, "0")}`;
 }
 
 // ---------------------------------------------------------------------------
 // CATEGORIES
 // ---------------------------------------------------------------------------
-export async function fetchCategories(orgId: string) {
+export async function fetchCategories() {
   const [{ collection, getDocs, query, where, orderBy }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  const q = query(
-    collection(db, "categories"),
-    where("orgId", "==", orgId),
-    orderBy("createdAt", "asc")
-  );
+  const q = query(collection(db, "categories"), orderBy("createdAt", "asc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-export async function addCategory(
-  orgId: string,
-  data: { name: string; description: string },
-  createdBy: string
-) {
+export async function addCategory(data: { name: string; description: string }, createdBy: string) {
   const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
   return addDoc(collection(db, "categories"), {
-    orgId,
     name: data.name,
     description: data.description,
     isActive: true,
@@ -60,18 +52,12 @@ export async function addCategory(
   });
 }
 
-export async function updateCategory(
-  id: string,
-  data: { name?: string; description?: string; isActive?: boolean }
-) {
+export async function updateCategory(id: string, data: { name?: string; description?: string; isActive?: boolean }) {
   const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  return updateDoc(doc(db, "categories", id), {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  return updateDoc(doc(db, "categories", id), { ...data, updatedAt: serverTimestamp() });
 }
 
 export async function deleteCategory(id: string) {
@@ -85,31 +71,22 @@ export async function deleteCategory(id: string) {
 // ---------------------------------------------------------------------------
 // LEAD SOURCES
 // ---------------------------------------------------------------------------
-export async function fetchLeadSources(orgId: string) {
-  const [{ collection, getDocs, orderBy, query, where }, db] = await Promise.all([
+export async function fetchLeadSources() {
+  const [{ collection, getDocs, orderBy, query }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  const q = query(
-    collection(db, "lead_sources"),
-    where("orgId", "==", orgId),
-    orderBy("createdAt", "asc")
-  );
+  const q = query(collection(db, "lead_sources"), orderBy("createdAt", "asc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-export async function addLeadSource(
-  orgId: string,
-  data: { name: string; description: string },
-  createdBy: string
-) {
+export async function addLeadSource(data: { name: string; description: string }, createdBy: string) {
   const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
   return addDoc(collection(db, "lead_sources"), {
-    orgId,
     name: data.name,
     description: data.description,
     isActive: true,
@@ -119,18 +96,12 @@ export async function addLeadSource(
   });
 }
 
-export async function updateLeadSource(
-  id: string,
-  data: { name?: string; description?: string; isActive?: boolean }
-) {
+export async function updateLeadSource(id: string, data: { name?: string; description?: string; isActive?: boolean }) {
   const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  return updateDoc(doc(db, "lead_sources", id), {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  return updateDoc(doc(db, "lead_sources", id), { ...data, updatedAt: serverTimestamp() });
 }
 
 export async function deleteLeadSource(id: string) {
@@ -141,211 +112,25 @@ export async function deleteLeadSource(id: string) {
   return deleteDoc(doc(db, "lead_sources", id));
 }
 
-const DEFAULT_LEAD_SOURCES = [
-  { name: "WhatsApp",  description: "Direct WhatsApp message" },
-  { name: "Instagram", description: "Via Instagram profile or reels" },
-  { name: "Facebook",  description: "Via Facebook page or ads" },
-  { name: "YouTube",   description: "Respondent found ministry through YouTube channel" },
-  { name: "Website",   description: "Via ministry website contact form" },
-  { name: "Referral",  description: "Referred by another respondent" },
-  { name: "Event",     description: "Via event or conference" },
-];
-
-export async function seedDefaultLeadSources(orgId: string, createdBy: string) {
-  const [{ collection, addDoc, getDocs, query, where, serverTimestamp }, db] = await Promise.all([
-    import("firebase/firestore"),
-    getDb(),
-  ]);
-
-  // Double-check: only seed if truly empty
-  const existing = await getDocs(
-    query(collection(db, "lead_sources"), where("orgId", "==", orgId))
-  );
-  if (!existing.empty) return;
-
-  const batch = DEFAULT_LEAD_SOURCES.map((ls) =>
-    addDoc(collection(db, "lead_sources"), {
-      orgId,
-      name: ls.name,
-      description: ls.description,
-      isActive: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      createdBy,
-    })
-  );
-  await Promise.all(batch);
-}
-
-// ---------------------------------------------------------------------------
-// PROGRAM SOURCES
-// ---------------------------------------------------------------------------
-export async function fetchProgramSources(orgId: string) {
-  const [{ collection, getDocs, orderBy, query, where }, db] = await Promise.all([
-    import("firebase/firestore"),
-    getDb(),
-  ]);
-  const q = query(
-    collection(db, "program_sources"),
-    where("orgId", "==", orgId),
-    orderBy("createdAt", "asc")
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
-
-export async function addProgramSource(
-  orgId: string,
-  data: { name: string; description: string },
-  createdBy: string
-) {
-  const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([
-    import("firebase/firestore"),
-    getDb(),
-  ]);
-  return addDoc(collection(db, "program_sources"), {
-    orgId,
-    name: data.name,
-    description: data.description,
-    isActive: true,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    createdBy,
-  });
-}
-
-export async function updateProgramSource(
-  id: string,
-  data: { name?: string; description?: string; isActive?: boolean }
-) {
-  const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
-    import("firebase/firestore"),
-    getDb(),
-  ]);
-  return updateDoc(doc(db, "program_sources", id), {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
-}
-
-export async function deleteProgramSource(id: string) {
-  const [{ doc, deleteDoc }, db] = await Promise.all([
-    import("firebase/firestore"),
-    getDb(),
-  ]);
-  return deleteDoc(doc(db, "program_sources", id));
-}
-
-const DEFAULT_PROGRAM_SOURCES_SEED = [
-  { name: "TV Program",      description: "Respondent from a TV program" },
-  { name: "Sunday Service",   description: "Respondent from Sunday service" },
-  { name: "Youth Service",    description: "Respondent from youth service" },
-  { name: "Women Service",    description: "Respondent from women's ministry" },
-  { name: "Men Service",      description: "Respondent from men's ministry" },
-  { name: "Online Event",     description: "Respondent from online event or webinar" },
-  { name: "Crusade / Rally",  description: "Respondent from evangelistic event" },
-  { name: "Other",            description: "Other source not listed" },
-];
-
-export async function seedDefaultProgramSources(orgId: string, createdBy: string) {
-  const [{ collection, addDoc, getDocs, query, where, serverTimestamp }, db] = await Promise.all([
-    import("firebase/firestore"),
-    getDb(),
-  ]);
-
-  // Only seed if truly empty
-  const existing = await getDocs(
-    query(collection(db, "program_sources"), where("orgId", "==", orgId))
-  );
-  if (!existing.empty) return;
-
-  const batch = DEFAULT_PROGRAM_SOURCES_SEED.map((ps) =>
-    addDoc(collection(db, "program_sources"), {
-      orgId,
-      name: ps.name,
-      description: ps.description,
-      isActive: true,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      createdBy,
-    })
-  );
-  await Promise.all(batch);
-}
-
-// ---------------------------------------------------------------------------
-// PROGRAM SOURCES
-// ---------------------------------------------------------------------------
-export async function fetchProgramSources(orgId: string) {
-  const [{ collection, getDocs, orderBy, query, where }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
-  const q = query(collection(db, "program_sources"), where("orgId", "==", orgId), orderBy("createdAt", "asc"));
-  const snap = await getDocs(q);
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-}
-
-export async function addProgramSource(orgId: string, data: { name: string; description: string }, createdBy: string) {
-  const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
-  return addDoc(collection(db, "program_sources"), { orgId, name: data.name, description: data.description, isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy });
-}
-
-export async function updateProgramSource(id: string, data: { name?: string; description?: string; isActive?: boolean }) {
-  const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
-  return updateDoc(doc(db, "program_sources", id), { ...data, updatedAt: serverTimestamp() });
-}
-
-export async function deleteProgramSource(id: string) {
-  const [{ doc, deleteDoc }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
-  return deleteDoc(doc(db, "program_sources", id));
-}
-
-const DEFAULT_PROGRAM_SOURCES_SEED = [
-  { name: "TV Program",      description: "Respondent from a TV program" },
-  { name: "Sunday Service",   description: "Respondent from Sunday service" },
-  { name: "Youth Service",    description: "Respondent from youth service" },
-  { name: "Women Service",    description: "Respondent from women's ministry" },
-  { name: "Men Service",      description: "Respondent from men's ministry" },
-  { name: "Online Event",     description: "Respondent from online event or webinar" },
-  { name: "Crusade / Rally",  description: "Respondent from evangelistic event" },
-  { name: "Other",            description: "Other source not listed" },
-];
-
-export async function seedDefaultProgramSources(orgId: string, createdBy: string) {
-  const [{ collection, addDoc, getDocs, query, where, serverTimestamp }, db] = await Promise.all([import("firebase/firestore"), getDb()]);
-  const existing = await getDocs(query(collection(db, "program_sources"), where("orgId", "==", orgId)));
-  if (!existing.empty) return;
-  await Promise.all(DEFAULT_PROGRAM_SOURCES_SEED.map((ps) =>
-    addDoc(collection(db, "program_sources"), { orgId, ...ps, isActive: true, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), createdBy })
-  ));
-}
-
 // ---------------------------------------------------------------------------
 // INTERACTION OUTCOMES
 // ---------------------------------------------------------------------------
-export async function fetchOutcomes(orgId: string) {
-  const [{ collection, getDocs, orderBy, query, where }, db] = await Promise.all([
+export async function fetchOutcomes() {
+  const [{ collection, getDocs, orderBy, query }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  const q = query(
-    collection(db, "interaction_outcomes"),
-    where("orgId", "==", orgId),
-    orderBy("createdAt", "asc")
-  );
+  const q = query(collection(db, "interaction_outcomes"), orderBy("createdAt", "asc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-export async function addOutcome(
-  orgId: string,
-  data: { name: string; description: string },
-  createdBy: string
-) {
+export async function addOutcome(data: { name: string; description: string }, createdBy: string) {
   const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
   return addDoc(collection(db, "interaction_outcomes"), {
-    orgId,
     name: data.name,
     description: data.description,
     isActive: true,
@@ -355,18 +140,12 @@ export async function addOutcome(
   });
 }
 
-export async function updateOutcome(
-  id: string,
-  data: { name?: string; description?: string; isActive?: boolean }
-) {
+export async function updateOutcome(id: string, data: { name?: string; description?: string; isActive?: boolean }) {
   const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  return updateDoc(doc(db, "interaction_outcomes", id), {
-    ...data,
-    updatedAt: serverTimestamp(),
-  });
+  return updateDoc(doc(db, "interaction_outcomes", id), { ...data, updatedAt: serverTimestamp() });
 }
 
 export async function deleteOutcome(id: string) {
@@ -380,16 +159,13 @@ export async function deleteOutcome(id: string) {
 // ---------------------------------------------------------------------------
 // RESPONDENTS
 // ---------------------------------------------------------------------------
-export async function fetchRespondents(orgId: string) {
-  const [{ collection, getDocs, query, orderBy, where }, db] = await Promise.all([
+export async function fetchRespondents() {
+  const [{ collection, getDocs, query, orderBy }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  const q = query(
-    collection(db, "respondents"),
-    where("orgId", "==", orgId),
-    orderBy("createdAt", "desc")
-  );
+  // Avoid compound index requirement by filtering isArchived client-side
+  const q = query(collection(db, "respondents"), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs
     .map((d) => ({ respondentId: d.id, ...d.data() }))
@@ -397,7 +173,6 @@ export async function fetchRespondents(orgId: string) {
 }
 
 export async function addRespondent(
-  orgId: string,
   data: {
     fullName: string;
     phone?: string;
@@ -414,14 +189,8 @@ export async function addRespondent(
     getDb(),
   ]);
   return addDoc(collection(db, "respondents"), {
-    orgId,
-    fullName: data.fullName,
-    phone: data.phone ?? null,
-    email: data.email ?? null,
-    leadSourceId: data.leadSourceId,
-    notes: data.notes ?? null,
+    ...data,
     channel: data.channel ?? "manual",
-    channelSenderId: data.channelSenderId ?? null,
     isArchived: false,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -429,16 +198,15 @@ export async function addRespondent(
   });
 }
 
-export async function updateRespondent(id: string, data: Record<string, any>) {
+export async function updateRespondent(
+  id: string,
+  data: Record<string, any>
+) {
   const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  const cleanData: Record<string, any> = { updatedAt: serverTimestamp() };
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined) cleanData[key] = value;
-  }
-  return updateDoc(doc(db, "respondents", id), cleanData);
+  return updateDoc(doc(db, "respondents", id), { ...data, updatedAt: serverTimestamp() });
 }
 
 export async function archiveRespondent(id: string) {
@@ -446,25 +214,18 @@ export async function archiveRespondent(id: string) {
     import("firebase/firestore"),
     getDb(),
   ]);
-  return updateDoc(doc(db, "respondents", id), {
-    isArchived: true,
-    updatedAt: serverTimestamp(),
-  });
+  return updateDoc(doc(db, "respondents", id), { isArchived: true, updatedAt: serverTimestamp() });
 }
 
 // ---------------------------------------------------------------------------
 // TICKETS
 // ---------------------------------------------------------------------------
-export async function fetchTickets(orgId: string) {
-  const [{ collection, getDocs, query, orderBy, where }, db] = await Promise.all([
+export async function fetchTickets() {
+  const [{ collection, getDocs, query, orderBy }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  const q = query(
-    collection(db, "tickets"),
-    where("orgId", "==", orgId),
-    orderBy("createdAt", "desc")
-  );
+  const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ ticketId: d.id, ...d.data() }));
 }
@@ -480,7 +241,6 @@ export async function fetchTicketById(id: string) {
 }
 
 export async function addTicket(
-  orgId: string,
   data: {
     respondentId: string;
     subject: string;
@@ -492,21 +252,15 @@ export async function addTicket(
   },
   createdBy: string
 ) {
-  const [{ collection, addDoc, serverTimestamp, getDocs, query, orderBy, where }, db] =
-    await Promise.all([import("firebase/firestore"), getDb()]);
-
-  // Generate ticket number from org-scoped count
-  const countSnap = await getDocs(
-    query(
-      collection(db, "tickets"),
-      where("orgId", "==", orgId),
-      orderBy("createdAt", "asc")
-    )
-  );
+  const [{ collection, addDoc, serverTimestamp, getDocs, query, orderBy }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  // Generate ticket number from count
+  const countSnap = await getDocs(query(collection(db, "tickets"), orderBy("createdAt", "asc")));
   const ticketNumber = generateTicketNumber(countSnap.size + 1);
 
   const ref = await addDoc(collection(db, "tickets"), {
-    orgId,
     ticketNumber,
     respondentId: data.respondentId,
     assignedAgentId: data.assignedAgentId ?? null,
@@ -523,9 +277,11 @@ export async function addTicket(
     createdBy,
   });
 
+  // Add initial note as system message if provided
   if (data.initialNote?.trim()) {
-    const [{ collection: col, addDoc: add, serverTimestamp: ts }] =
-      await Promise.all([import("firebase/firestore")]);
+    const [{ collection: col, addDoc: add, serverTimestamp: ts }] = await Promise.all([
+      import("firebase/firestore"),
+    ]);
     await add(col(db, "tickets", ref.id, "messages"), {
       ticketId: ref.id,
       senderId: createdBy,
@@ -552,70 +308,22 @@ export async function updateTicketStatus(
   const updates: Record<string, any> = {
     status,
     updatedAt: serverTimestamp(),
+    ...(extra ?? {}),
   };
-  if (extra) {
-    for (const [key, value] of Object.entries(extra)) {
-      if (value !== undefined) updates[key] = value;
-    }
-  }
   if (status === "resolved") updates.resolvedAt = serverTimestamp();
-  if (status === "closed") updates.closedAt = serverTimestamp();
+  if (status === "closed")   updates.closedAt   = serverTimestamp();
   return updateDoc(doc(db, "tickets", id), updates);
 }
 
 export async function updateTicketClassification(
   id: string,
-  data: {
-    categoryId?: string;
-    interactionOutcomeId?: string;
-    assignedAgentId?: string;
-  }
+  data: { categoryId?: string; interactionOutcomeId?: string; assignedAgentId?: string }
 ) {
   const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  const cleanData: Record<string, any> = { updatedAt: serverTimestamp() };
-  for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined) cleanData[key] = value;
-  }
-  return updateDoc(doc(db, "tickets", id), cleanData);
-}
-
-export async function updateTicketFollowUp(
-  id: string,
-  data: {
-    scheduledAt: string;
-    followUpChannel: string;
-    followUpNote?: string;
-    followUpCreatedBy: string;
-  }
-) {
-  const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
-    import("firebase/firestore"),
-    getDb(),
-  ]);
-  return updateDoc(doc(db, "tickets", id), {
-    scheduledAt: data.scheduledAt,
-    followUpChannel: data.followUpChannel,
-    followUpNote: data.followUpNote ?? "",
-    followUpCreatedBy: data.followUpCreatedBy,
-    updatedAt: serverTimestamp(),
-  });
-}
-
-export async function clearTicketFollowUp(id: string) {
-  const [{ doc, updateDoc, serverTimestamp, deleteField }, db] = await Promise.all([
-    import("firebase/firestore"),
-    getDb(),
-  ]);
-  return updateDoc(doc(db, "tickets", id), {
-    scheduledAt: deleteField(),
-    followUpChannel: deleteField(),
-    followUpNote: deleteField(),
-    followUpCreatedBy: deleteField(),
-    updatedAt: serverTimestamp(),
-  });
+  return updateDoc(doc(db, "tickets", id), { ...data, updatedAt: serverTimestamp() });
 }
 
 // ---------------------------------------------------------------------------
@@ -639,18 +347,19 @@ export async function sendMessage(
   data: { content: string; isInternal: boolean },
   sender: { uid: string; displayName: string; role: string }
 ) {
-  const [{ collection, addDoc, serverTimestamp, doc, updateDoc }, db] =
-    await Promise.all([import("firebase/firestore"), getDb()]);
+  const [{ collection, addDoc, serverTimestamp, doc, updateDoc }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
   await addDoc(collection(db, "tickets", ticketId, "messages"), {
     ticketId,
-    senderId: sender.uid,
+    senderId:   sender.uid,
     senderName: sender.displayName,
     senderRole: sender.role,
-    content: data.content,
+    content:    data.content,
     isInternal: data.isInternal,
-    createdAt: serverTimestamp(),
+    createdAt:  serverTimestamp(),
   });
-  await updateDoc(doc(db, "tickets", ticketId), {
-    updatedAt: serverTimestamp(),
-  });
+  // Update ticket updatedAt
+  await updateDoc(doc(db, "tickets", ticketId), { updatedAt: serverTimestamp() });
 }
