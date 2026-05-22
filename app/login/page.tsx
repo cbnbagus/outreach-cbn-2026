@@ -4,14 +4,15 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Eye, EyeOff, LogIn, AlertCircle, MessageSquare, Heart, Users, BarChart2, CheckCircle, Shield } from "lucide-react";
+import { Eye, EyeOff, LogIn, AlertCircle, MessageSquare, Users, BarChart2, CheckCircle, Shield, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const FEATURES = [
-  { icon: Heart,          label: "24/7 Prayer & Counseling", desc: "AI listens with empathy first, human counselors join when needed" },
-  { icon: MessageSquare,  label: "Omnichannel Inbox",        desc: "Receive prayer requests from WhatsApp, Instagram, Facebook — one place" },
-  { icon: BarChart2,      label: "Care Tracking",            desc: "Track every prayer request, counseling session, and follow-up" },
-  { icon: Shield,         label: "Confidential & Secure",    desc: "Every conversation is stored securely. Nothing falls through the cracks" },
+  { icon: Globe,          label: "Reach Every Soul",         desc: "Connect with respondents across WhatsApp, Instagram, Facebook — one unified inbox" },
+  { icon: MessageSquare,  label: "AI-Powered Conversations", desc: "24/7 AI first response with empathy, seamless handoff to human counselors" },
+  { icon: BarChart2,      label: "Track & Disciple",         desc: "Follow every respondent's journey from first contact to spiritual growth" },
+  { icon: Shield,         label: "Secure & Multi-Office",    desc: "Each CBN office gets isolated data with role-based access control" },
 ];
 
 export default function LoginPage() {
@@ -83,16 +84,16 @@ export default function LoginPage() {
 
   if (step === "welcome") {
     return (
-      <div className="min-h-screen bg-sidebar flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br from-[hsl(212,55%,10%)] via-[hsl(210,50%,15%)] to-[hsl(199,60%,20%)] flex items-center justify-center p-6">
         <div className="text-center">
-          <div className="w-16 h-16 rounded-2xl bg-sidebar-primary flex items-center justify-center mx-auto mb-5">
+          <div className="w-16 h-16 rounded-2xl bg-[hsl(199,78%,55%)] flex items-center justify-center mx-auto mb-5">
             <CheckCircle size={28} className="text-white" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Welcome back, {welName.split(" ")[0]}.</h2>
-          <p className="text-sm text-sidebar-foreground/50">Redirecting to your dashboard...</p>
+          <p className="text-sm text-white/50">Preparing your dashboard...</p>
           <div className="flex items-center justify-center gap-1.5 mt-6">
             {[0,1,2].map((i) => (
-              <div key={i} className={cn("h-1 rounded-full bg-sidebar-primary animate-pulse", i === 0 ? "w-6" : "w-2")}
+              <div key={i} className={cn("h-1 rounded-full bg-[hsl(199,78%,55%)] animate-pulse", i === 0 ? "w-6" : "w-2")}
                 style={{ animationDelay: `${i * 150}ms` }} />
             ))}
           </div>
@@ -102,55 +103,62 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-sidebar flex flex-col lg:flex-row">
+    <div className="min-h-screen flex flex-col lg:flex-row">
 
-      {/* Left branding panel — DESKTOP: full sidebar, MOBILE: compact header */}
-      <div className="flex flex-col lg:w-[460px] shrink-0 p-6 lg:p-10 lg:border-r border-sidebar-border relative overflow-hidden">
+      {/* Left branding panel — blue gradient */}
+      <div className="flex flex-col lg:w-[480px] shrink-0 p-6 lg:p-10 lg:border-r border-white/5 relative overflow-hidden bg-gradient-to-br from-[hsl(212,55%,10%)] via-[hsl(210,50%,15%)] to-[hsl(199,60%,22%)]">
+
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+          backgroundSize: '32px 32px',
+        }} />
 
         {/* Logo */}
-        <div className="flex items-center gap-3 lg:mb-auto">
-          <div className="w-9 h-9 rounded-xl bg-sidebar-primary flex items-center justify-center">
-            <Heart size={16} className="text-white" />
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white leading-tight">CBN Outreach</p>
-            <p className="text-[10px] text-sidebar-foreground/40 uppercase tracking-widest leading-tight">outreachcbn.com</p>
-          </div>
+        <div className="flex items-center gap-3 lg:mb-auto relative z-10">
+          <Image
+            src="/cbn-logo.png"
+            alt="CBN"
+            width={120}
+            height={48}
+            className="h-10 w-auto brightness-0 invert opacity-90"
+            priority
+          />
         </div>
 
         {/* Hero copy — mobile: compact, desktop: full */}
-        <div className="my-6 lg:my-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-sidebar-primary/20 border border-sidebar-primary/30 mb-4 lg:mb-6">
-            <div className="w-1.5 h-1.5 rounded-full bg-sidebar-primary" />
-            <span className="text-xs text-sidebar-primary font-medium">Prayer & Counseling Platform</span>
+        <div className="my-6 lg:my-12 relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[hsl(199,78%,55%)]/15 border border-[hsl(199,78%,55%)]/25 mb-4 lg:mb-6">
+            <div className="w-1.5 h-1.5 rounded-full bg-[hsl(199,78%,55%)]" />
+            <span className="text-xs text-[hsl(199,78%,70%)] font-medium">Outreach Management System</span>
           </div>
           <h1 className="text-2xl lg:text-4xl font-bold text-white leading-tight text-balance mb-3 lg:mb-4">
-            Cahaya Bagi Negeri.<br className="hidden lg:block" />
-            Outreach Management Platform.
+            Reach Every Soul.<br className="hidden lg:block" />
+            Disciple Every Nation.
           </h1>
-          <p className="text-xs lg:text-sm text-sidebar-foreground/50 leading-relaxed max-w-xs">
-            Built for churches and ministries who provide prayer support, counseling, and pastoral care across digital channels.
+          <p className="text-xs lg:text-sm text-white/45 leading-relaxed max-w-xs">
+            One platform to manage outreach conversations, prayer & counseling, and follow-up — across every digital channel. No soul left behind.
           </p>
         </div>
 
-        {/* Feature list — mobile: 2-col grid, desktop: vertical list */}
-        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-4">
+        {/* Feature list */}
+        <div className="grid grid-cols-2 lg:grid-cols-1 gap-3 lg:gap-4 relative z-10">
           {FEATURES.map(({ icon: Icon, label, desc }) => (
             <div key={label} className="flex items-start gap-2 lg:gap-3">
-              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-sidebar-accent/50 flex items-center justify-center shrink-0 mt-0.5">
-                <Icon size={13} className="text-sidebar-foreground/60" />
+              <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon size={13} className="text-white/50" />
               </div>
               <div>
                 <p className="text-[11px] lg:text-xs font-semibold text-white leading-tight">{label}</p>
-                <p className="text-[10px] lg:text-[11px] text-sidebar-foreground/40 leading-relaxed mt-0.5 hidden lg:block">{desc}</p>
+                <p className="text-[10px] lg:text-[11px] text-white/35 leading-relaxed mt-0.5 hidden lg:block">{desc}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Bottom tagline — desktop only */}
-        <p className="hidden lg:block mt-auto pt-8 text-[10px] text-sidebar-foreground/25 border-t border-sidebar-border">
-          CBN Outreach &copy; {new Date().getFullYear()} &middot; Cahaya Bagi Negeri
+        <p className="hidden lg:block mt-auto pt-8 text-[10px] text-white/20 border-t border-white/8 relative z-10">
+          CBN Outreach &copy; {new Date().getFullYear()} &middot; Cahaya Bagi Negeri &middot; Menjangkau &amp; Memuridkan
         </p>
       </div>
 
@@ -169,7 +177,7 @@ export default function LoginPage() {
             <div>
               <label className="block text-xs font-semibold text-foreground mb-1.5">Email address</label>
               <Input
-                type="email" placeholder="you@church.org"
+                type="email" placeholder="you@cbn.or.id"
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 required autoComplete="email" className="h-10 text-sm"
               />
@@ -206,7 +214,7 @@ export default function LoginPage() {
           <p className="text-[11px] text-muted-foreground text-center mt-6 leading-relaxed">
             Don&apos;t have an account?{" "}
             <a href="/register" className="text-primary font-medium hover:underline">
-              Sign up for free
+              Sign up
             </a>
           </p>
 

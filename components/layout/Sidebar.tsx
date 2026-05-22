@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Ticket, MessageSquare,
@@ -88,14 +89,18 @@ export function Sidebar({ role, userName, onLogout, mobileOpen, onMobileClose }:
       "fixed inset-y-0 left-0 z-50 transition-transform duration-200 lg:static lg:translate-x-0",
       mobileOpen ? "translate-x-0" : "-translate-x-full"
     )}>
-      {/* Logo */}
-      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-sidebar-border">
-        <div className="w-8 h-8 rounded-md bg-sidebar-primary flex items-center justify-center flex-shrink-0">
-          <MessageSquare size={16} className="text-white" />
-        </div>
-        <div className="flex-1">
-          <p className="text-xs font-bold text-white leading-tight">{activeOrg?.name ?? "CBN Outreach"}</p>
-          <p className="text-[10px] text-sidebar-foreground/50 leading-tight">Cahaya Bagi Negeri</p>
+      {/* Logo — CBN branding */}
+      <div className="flex items-center gap-2.5 px-5 py-4 border-b border-sidebar-border">
+        <Image
+          src="/cbn-logo.png"
+          alt="CBN"
+          width={80}
+          height={32}
+          className="h-7 w-auto brightness-0 invert opacity-80 flex-shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-semibold text-white/70 leading-tight truncate">{activeOrg?.name ?? "CBN Outreach"}</p>
+          <p className="text-[9px] text-sidebar-foreground/40 leading-tight">Outreach Management</p>
         </div>
         <button
           className="lg:hidden p-1 rounded text-sidebar-foreground/60 hover:text-white transition-colors"

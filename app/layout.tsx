@@ -3,15 +3,18 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: {
-    default: 'CBN Outreach — Cahaya Bagi Negeri',
+    default: 'CBN Outreach — Reach Every Soul, Disciple Every Nation',
     template: '%s | CBN Outreach',
   },
-  description: 'Outreach management platform for CBN Southeast Asia. Track respondents, manage conversations, and measure Kingdom impact.',
+  description: 'Outreach management platform for CBN Southeast Asia. Manage outreach conversations, prayer & counseling, and follow-up across every digital channel.',
   authors: [{ name: 'CBN Indonesia' }],
   creator: 'CBN Indonesia',
   robots: {
     index: false,
     follow: false,
+  },
+  icons: {
+    icon: '/cbn-logo.png',
   },
 }
 

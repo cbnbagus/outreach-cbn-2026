@@ -53,87 +53,88 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-/* ── Light theme (default) ──────────────────────────────────── */
+/* ── Light theme (default) — CBN Blue ────────────────────────── */
 :root {
   --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
+  --foreground: 213 40% 12%;
 
   --card: 0 0% 100%;
-  --card-foreground: 222.2 84% 4.9%;
+  --card-foreground: 213 40% 12%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 222.2 84% 4.9%;
+  --popover-foreground: 213 40% 12%;
 
-  --primary: 199 75% 48%;
+  /* CBN Sky Blue — #4BB8E8 → hsl(199 75% 60%) */
+  --primary: 199 78% 55%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222.2 47.4% 11.2%;
+  --secondary: 210 40% 96%;
+  --secondary-foreground: 213 40% 12%;
 
-  --muted: 210 40% 96.1%;
-  --muted-foreground: 215.4 16.3% 46.9%;
+  --muted: 210 33% 95%;
+  --muted-foreground: 215 16% 47%;
 
-  --accent: 210 40% 96.1%;
-  --accent-foreground: 222.2 47.4% 11.2%;
+  --accent: 210 40% 96%;
+  --accent-foreground: 213 40% 12%;
 
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 0 84% 60%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 214.3 31.8% 91.4%;
-  --input: 214.3 31.8% 91.4%;
-  --ring: 199 75% 48%;
+  --border: 214 32% 91%;
+  --input: 214 32% 91%;
+  --ring: 199 78% 55%;
 
-  /* Sidebar — dark blue/green matching Blackbox mockup */
-  --sidebar: 210 50% 8%;
+  /* Sidebar — Deep ocean blue gradient feel */
+  --sidebar: 212 55% 10%;
   --sidebar-foreground: 210 40% 98%;
-  --sidebar-primary: 199 75% 48%;
+  --sidebar-primary: 199 78% 55%;
   --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 210 40% 16%;
+  --sidebar-accent: 212 45% 18%;
   --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-border: 210 40% 16%;
-  --sidebar-ring: 199 75% 48%;
+  --sidebar-border: 212 40% 16%;
+  --sidebar-ring: 199 78% 55%;
 
-  /* Chart */
-  --chart-1: 199 75% 48%;
-  --chart-2: 173 58% 39%;
-  --chart-3: 210 50% 30%;
-  --chart-4: 43 74% 66%;
-  --chart-5: 160 60% 45%;
+  /* Chart — blue spectrum */
+  --chart-1: 199 78% 55%;
+  --chart-2: 210 65% 42%;
+  --chart-3: 190 60% 45%;
+  --chart-4: 45 80% 58%;
+  --chart-5: 160 55% 42%;
 
   --radius: 0.5rem;
 }
 
-/* ── Dark theme ─────────────────────────────────────────────── */
+/* ── Dark theme — CBN Blue ──────────────────────────────────── */
 .dark {
-  --background: 222.2 84% 4.9%;
+  --background: 213 45% 7%;
   --foreground: 210 40% 98%;
 
-  --card: 222.2 84% 4.9%;
+  --card: 213 45% 7%;
   --card-foreground: 210 40% 98%;
 
-  --popover: 222.2 84% 4.9%;
+  --popover: 213 45% 7%;
   --popover-foreground: 210 40% 98%;
 
-  --primary: 199 75% 52%;
-  --primary-foreground: 210 50% 8%;
+  --primary: 199 78% 58%;
+  --primary-foreground: 212 55% 10%;
 
-  --secondary: 217.2 32.6% 17.5%;
+  --secondary: 217 33% 17%;
   --secondary-foreground: 210 40% 98%;
 
-  --muted: 217.2 32.6% 17.5%;
-  --muted-foreground: 215 20.2% 65.1%;
+  --muted: 217 33% 17%;
+  --muted-foreground: 215 20% 65%;
 
-  --accent: 217.2 32.6% 17.5%;
+  --accent: 217 33% 17%;
   --accent-foreground: 210 40% 98%;
 
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 63% 31%;
   --destructive-foreground: 210 40% 98%;
 
-  --border: 217.2 32.6% 17.5%;
-  --input: 217.2 32.6% 17.5%;
-  --ring: 199 75% 48%;
+  --border: 217 33% 17%;
+  --input: 217 33% 17%;
+  --ring: 199 78% 55%;
 
-  --chart-1: 199 75% 52%;
+  --chart-1: 199 78% 58%;
   --chart-2: 160 60% 45%;
   --chart-3: 30 80% 55%;
   --chart-4: 280 65% 60%;
