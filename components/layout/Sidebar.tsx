@@ -96,7 +96,7 @@ export function Sidebar({ role, userName, onLogout, mobileOpen, onMobileClose }:
           alt="CBN"
           width={80}
           height={32}
-          className="h-7 w-auto brightness-0 invert opacity-80 flex-shrink-0"
+          className="h-7 w-auto flex-shrink-0"
         />
         <div className="flex-1 min-w-0">
           <p className="text-[10px] font-semibold text-white/70 leading-tight truncate">{activeOrg?.name ?? "CBN Outreach"}</p>

@@ -121,7 +121,7 @@ export default function LoginPage() {
             alt="CBN"
             width={120}
             height={48}
-            className="h-10 w-auto brightness-0 invert opacity-90"
+            className="h-10 w-auto"
             priority
           />
         </div>
