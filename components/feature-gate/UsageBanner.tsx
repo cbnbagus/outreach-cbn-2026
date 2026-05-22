@@ -3,14 +3,12 @@ import { useOrgStore } from "@/store/org-store";
 import { getPlanConfig, getUsagePercentage, GRACE_PERIOD_DAYS } from "@/lib/plans";
 import type { PlanTier } from "@/types";
 import { AlertTriangle, ArrowRight, TrendingUp } from "lucide-react";
-import Link from "next/link";
 
 /**
  * UsageBanner — shows in dashboard layout when usage is approaching or exceeding limits.
  * 
  * - 80%+ usage: yellow warning
  * - 100%+ usage: red warning with grace period countdown
- * - Grace period expired: hard block message
  */
 export function UsageBanner() {
   const activeOrg = useOrgStore((s) => s.activeOrg);
@@ -53,20 +51,20 @@ export function UsageBanner() {
           <span>
             <strong>Limit exceeded:</strong>{" "}
             {exceeded.map(m => `${m.label} (${m.current}/${m.max})`).join(", ")}.{" "}
-            You have {GRACE_PERIOD_DAYS} days to upgrade before features are restricted.
+            Contact admin to increase your limits.
           </span>
         ) : (
           <span>
             <strong>Approaching limit:</strong>{" "}
             {warnings.map(m => `${m.label} at ${Math.round((m.current / m.max) * 100)}%`).join(", ")}.{" "}
-            Consider upgrading for uninterrupted service.
+            Contact admin if you need higher limits.
           </span>
         )}
       </div>
 
-      <Link href="/dashboard/billing" className="shrink-0 flex items-center gap-1 font-semibold hover:underline">
-        Upgrade <ArrowRight size={12} />
-      </Link>
+      <a href="mailto:outreach@cbn.or.id" className="shrink-0 flex items-center gap-1 font-semibold hover:underline">
+        Contact Admin <ArrowRight size={12} />
+      </a>
     </div>
   );
 }

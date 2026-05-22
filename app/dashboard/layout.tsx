@@ -27,7 +27,6 @@ const pageTitles: Record<string, string> = {
   "/dashboard/admin/widget":       "Chat Widget",
   "/dashboard/admin/ai-settings":   "AI Integration Settings",
   "/dashboard/admin/call-settings": "Call Settings",
-  "/dashboard/billing":              "Plan & Billing",
   "/dashboard/platform":             "Platform Admin",
   "/dashboard/calls":                 "Call Log",
   "/dashboard/respondents/new":       "New Respondent",

@@ -6,7 +6,6 @@ import type { FeatureKey } from "@/lib/plans";
 import type { PlanTier } from "@/types";
 import { Lock, Sparkles, ArrowRight, Mail, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 interface FeatureGateProps {
   feature: FeatureKey;
@@ -28,18 +27,13 @@ export function FeatureGate({ feature, children, inline, message }: FeatureGateP
   const requiredConfig = getPlanConfig(requiredPlan);
   const featureLabel = FEATURE_LABELS[feature] ?? feature;
 
-  // Determine gate mode based on current plan
-  // Free: full lock with upgrade prompt
-  // Starter/Growth: "Request Setup" mode (they can upgrade or request help)
-  const isRequestMode = plan === "starter" || plan === "growth";
-
   if (inline) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-700">
         <Lock size={14} className="shrink-0" />
         <span className="text-xs">
-          {featureLabel} requires <strong>{requiredConfig.name}</strong> plan.{" "}
-          <Link href="/dashboard/billing" className="underline font-medium">Upgrade</Link>
+          {featureLabel} requires <strong>{requiredConfig.name}</strong> access.{" "}
+          <a href="mailto:outreach@cbn.or.id" className="underline font-medium">Contact Admin</a>
         </span>
       </div>
     );
@@ -57,27 +51,20 @@ export function FeatureGate({ feature, children, inline, message }: FeatureGateP
           </div>
           <h3 className="text-lg font-bold text-gray-900 mb-1">{featureLabel}</h3>
           <p className="text-sm text-gray-500 mb-4">
-            {message ?? `This feature is available on the ${requiredConfig.name} plan and above.`}
+            {message ?? `This feature requires ${requiredConfig.name} access. Contact your administrator to enable it.`}
           </p>
           <div className="flex items-center justify-center gap-1.5 mb-5">
             <Sparkles size={14} className="text-amber-500" />
             <span className="text-xs font-medium text-amber-600">
-              {requiredConfig.price > 0 ? `Starting at $${requiredConfig.price}/mo` : "Contact sales for pricing"}
+              Contact your administrator to enable this feature
             </span>
           </div>
           <div className="flex flex-col gap-2">
-            <Link href="/dashboard/billing">
+            <a href={`mailto:outreach@cbn.or.id?subject=Feature%20Request%20-%20${encodeURIComponent(featureLabel)}`}>
               <Button className="w-full gap-2">
-                Upgrade to {requiredConfig.name} <ArrowRight size={16} />
+                <Mail size={14} /> Request Access <ArrowRight size={16} />
               </Button>
-            </Link>
-            {isRequestMode && (
-              <a href="mailto:outreach@cbn.or.id?subject=Setup%20Request%20-%20${encodeURIComponent(featureLabel)}" target="_blank">
-                <Button variant="outline" className="w-full gap-2">
-                  <Wrench size={14} /> Request Setup Assistance
-                </Button>
-              </a>
-            )}
+            </a>
           </div>
         </div>
       </div>
@@ -87,11 +74,11 @@ export function FeatureGate({ feature, children, inline, message }: FeatureGateP
 
 /**
  * SetupRequestGate — for features that are available on the plan
- * but require setup assistance (Starter/Growth can see but need help to configure)
+ * but require setup assistance from the admin/tech team.
  */
 interface SetupRequestGateProps {
   plan: PlanTier;
-  selfServiceMinPlan: PlanTier; // minimum plan for self-service config
+  selfServiceMinPlan: PlanTier;
   featureLabel: string;
   setupFee?: string;
   description?: string;
@@ -120,22 +107,19 @@ export function SetupRequestGate({ plan, selfServiceMinPlan, featureLabel, setup
           </div>
           <h3 className="text-base font-bold text-gray-900 mb-1">Setup Required</h3>
           <p className="text-sm text-gray-500 mb-3">
-            {description ?? `${featureLabel} configuration is available on your plan, but requires setup assistance from our team.`}
+            {description ?? `${featureLabel} configuration requires setup assistance from the tech team.`}
           </p>
           {isChannelIntegration && (
             <div className="text-left mb-4 space-y-2">
               <div className="p-2.5 rounded-lg bg-green-50 border border-green-200">
-                <p className="text-[11px] font-semibold text-green-800">Option A: Fonnte (Quick Setup) — $29</p>
-                <p className="text-[10px] text-green-700">Connect via QR code, works in minutes. Unofficial WhatsApp API. No attachments, no blasting. Best for getting started fast.</p>
+                <p className="text-[11px] font-semibold text-green-800">Option A: Fonnte (Quick Setup)</p>
+                <p className="text-[10px] text-green-700">Connect via QR code, works in minutes. Unofficial WhatsApp API. Best for getting started fast.</p>
               </div>
               <div className="p-2.5 rounded-lg bg-blue-50 border border-blue-200">
-                <p className="text-[11px] font-semibold text-blue-800">Option B: Meta Cloud API (Official) — $49</p>
-                <p className="text-[10px] text-blue-700">Official WhatsApp Business API. Professional, no watermark, verified badge. Requires Meta Business verification (1-2 weeks for approval).</p>
+                <p className="text-[11px] font-semibold text-blue-800">Option B: Meta Cloud API (Official)</p>
+                <p className="text-[10px] text-blue-700">Official WhatsApp Business API. Professional, verified badge. Requires Meta Business verification (1-2 weeks).</p>
               </div>
             </div>
-          )}
-          {!isChannelIntegration && setupFee && (
-            <p className="text-xs text-blue-600 font-medium mb-4">One-time setup fee: {setupFee}</p>
           )}
           <div className="flex flex-col gap-2">
             <a href={`mailto:outreach@cbn.or.id?subject=Setup Request: ${encodeURIComponent(featureLabel)}&body=Hi, I would like to set up ${encodeURIComponent(featureLabel)} for my organization. Please let me know the next steps.`} target="_blank">
@@ -143,11 +127,6 @@ export function SetupRequestGate({ plan, selfServiceMinPlan, featureLabel, setup
                 <Mail size={14} /> Request Setup
               </Button>
             </a>
-            <Link href="/dashboard/billing">
-              <Button variant="ghost" className="w-full text-xs text-muted-foreground">
-                Upgrade to self-service →
-              </Button>
-            </Link>
           </div>
         </div>
       </div>

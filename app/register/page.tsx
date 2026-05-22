@@ -247,7 +247,7 @@ export default function RegisterPage() {
         </div>
 
         <p className="hidden lg:block mt-auto pt-8 text-[10px] text-sidebar-foreground/25 border-t border-sidebar-border">
-          ReachTheSoul &copy; {new Date().getFullYear()} &middot; Where every soul finds care
+          CBN Outreach &copy; {new Date().getFullYear()} &middot; Cahaya Bagi Negeri
         </p>
       </div>
 
