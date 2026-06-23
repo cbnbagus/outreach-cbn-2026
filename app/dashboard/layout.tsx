@@ -26,6 +26,7 @@ const pageTitles: Record<string, string> = {
   "/dashboard/admin/integrations": "Integrations",
   "/dashboard/admin/widget":       "Chat Widget",
   "/dashboard/admin/ai-settings":   "AI Integration Settings",
+  "/dashboard/admin/social-accounts": "Social Accounts",
   "/dashboard/admin/call-settings": "Call Settings",
   "/dashboard/platform":             "Platform Admin",
   "/dashboard/calls":                 "Call Log",

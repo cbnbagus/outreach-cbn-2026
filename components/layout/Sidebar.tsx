@@ -43,6 +43,7 @@ const navItems: NavItem[] = [
       { label: "Program Sources", href: "/dashboard/admin/program-sources", icon: Radio },
       { label: "Outcomes", href: "/dashboard/admin/outcomes", icon: CheckCircle2 },
       { label: "Integrations", href: "/dashboard/admin/integrations",    icon: Plug },
+      { label: "Social Accounts", href: "/dashboard/admin/social-accounts", icon: Globe },
       { label: "AI Settings",  href: "/dashboard/admin/ai-settings",    icon: Bot },
       { label: "Call Settings", href: "/dashboard/admin/call-settings", icon: PhoneCall },
     ],

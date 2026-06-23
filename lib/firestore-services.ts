@@ -609,3 +609,49 @@ export async function sendMessage(
     updatedAt: serverTimestamp(),
   });
 }
+// ---------------------------------------------------------------------------
+// SOCIAL ACCOUNTS (collection: social_accounts)
+// ---------------------------------------------------------------------------
+export async function fetchSocialAccounts() {
+  const [{ collection, getDocs, query, orderBy }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  const q = query(collection(db, "social_accounts"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
+
+export async function addSocialAccount(data: Record<string, any>, createdBy: string) {
+  const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  return addDoc(collection(db, "social_accounts"), {
+    ...data,
+    isActive: true,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    createdBy,
+  });
+}
+
+export async function updateSocialAccount(id: string, data: Record<string, any>) {
+  const [{ doc, updateDoc, serverTimestamp }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  const cleanData: Record<string, any> = { updatedAt: serverTimestamp() };
+  for (const [key, value] of Object.entries(data)) {
+    if (value !== undefined) cleanData[key] = value;
+  }
+  return updateDoc(doc(db, "social_accounts", id), cleanData);
+}
+
+export async function deleteSocialAccount(id: string) {
+  const [{ doc, deleteDoc }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+  return deleteDoc(doc(db, "social_accounts", id));
+}
