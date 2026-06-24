@@ -455,20 +455,41 @@ export default function TicketDetailPage() {
     }
   };
 
-  const handleTakeOver = () => {
+ const handleTakeOver = async () => {
     if (!ticket) return;
     setHandledBy("human");
-    const noteMsg: Message = {
-      messageId:  `takeover_${Date.now()}`,
-      ticketId:   ticket.ticketId,
-      senderId:   currentUser?.uid ?? "",
-      senderName: currentUser?.displayName ?? "Agent",
-      senderRole: "system",
-      content:    `Agent ${currentUser?.displayName ?? "Agent"} has taken over this conversation.`,
-      isInternal: true,
-      createdAt:  new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, noteMsg]);
+
+    try {
+      const [{ doc, updateDoc, serverTimestamp, collection, addDoc }, { db }] = await Promise.all([
+        import("firebase/firestore"), import("@/lib/firebase"),
+      ]);
+
+      await updateDoc(doc(db, "tickets", ticket.ticketId), {
+        handledBy: "human",
+        aiHandoffStatus: "human_picked_up",
+        assignedAgentId: currentUser?.uid ?? null,
+        assignedAgentName: currentUser?.displayName ?? null,
+        updatedAt: serverTimestamp(),
+      });
+
+      setTicket({
+        ...ticket,
+        handledBy: "human" as HandledBy,
+        assignedAgentId: currentUser?.uid ?? null,
+        assignedAgentName: currentUser?.displayName ?? null,
+      });
+
+      await addDoc(collection(db, "tickets", ticket.ticketId, "messages"), {
+        senderId: currentUser?.uid ?? "system",
+        senderName: "System",
+        senderRole: "system",
+        content: `${currentUser?.displayName ?? "Agent"} has taken over this conversation.`,
+        isInternal: true,
+        createdAt: serverTimestamp(),
+      });
+    } catch (err) {
+      console.error("Failed to persist take over:", err);
+    }
   };
 
   const applyTemplate = (text: string) => {
