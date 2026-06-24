@@ -627,84 +627,159 @@ export const onRespondentMessage = onDocumentCreated(
       }
 
       // ── Escalation triggers ──
+      // ── SEMANTIC CLASSIFIER — runs BEFORE AI reply ──
+      // Single LLM call to classify: NORMAL / HUMAN / CRISIS
       const messageContent = (message.content ?? "").toLowerCase();
-      const triggers = aiConfig.escalationTriggers ?? [];
-      let detectedTrigger: string | null = null;
+      let classification = "NORMAL";
 
+      try {
+        const classifyResponse = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              {
+                role: "system",
+                content: `You are a message classifier for a Christian counseling ministry. Classify the user's message into exactly one category. Respond with ONLY the category word, nothing else.
+
+CRISIS — User expresses suicidal thoughts, self-harm intent, desire to die, feeling like a burden, hopelessness about living, or any imminent danger to self or others. Also includes abuse situations where someone is in immediate danger. Examples: "saya ingin mengakhiri hidup", "sudah tidak kuat lagi", "lebih baik saya mati", "I want to end it all", "nobody would miss me".
+
+HUMAN — User explicitly or implicitly requests to speak with a real person, counselor, pastor, or human agent. Or expresses frustration with automated responses. Examples: "bisa bicara dengan konselor?", "saya mau ngobrol sama orang beneran", "bukan bot", "can I talk to someone", "I need real help not a chatbot".
+
+NORMAL — Everything else. General questions, prayer requests, sharing problems, asking for advice, greetings, etc.
+
+Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt between NORMAL and HUMAN, choose NORMAL.`
+              },
+              { role: "user", content: message.content ?? "" },
+            ],
+            max_tokens: 10,
+            temperature: 0,
+          }),
+        });
+        const classifyResult: any = await classifyResponse.json();
+        const raw = (classifyResult.choices?.[0]?.message?.content ?? "NORMAL").trim().toUpperCase();
+        if (raw.includes("CRISIS")) classification = "CRISIS";
+        else if (raw.includes("HUMAN")) classification = "HUMAN";
+        else classification = "NORMAL";
+        logger.info(`[onRespondentMessage] Semantic classification: ${classification}`);
+      } catch (classErr) {
+        logger.error("[onRespondentMessage] Classification failed, defaulting to NORMAL:", classErr);
+      }
+
+      // Also check keyword triggers (belt-and-suspenders — catches obvious keywords even if LLM fails)
+      const triggers = aiConfig.escalationTriggers ?? [];
+      let keywordTrigger: string | null = null;
       for (const trigger of triggers) {
         if (!trigger.enabled) continue;
         for (const kw of (trigger.keywords ?? []) as string[]) {
           if (messageContent.includes(kw.toLowerCase())) {
-            detectedTrigger = trigger.reason;
+            keywordTrigger = trigger.reason;
             break;
           }
         }
-        if (detectedTrigger) break;
+        if (keywordTrigger) break;
+      }
+      // Keyword escalation upgrades NORMAL to at least HUMAN
+      if (keywordTrigger && classification === "NORMAL") {
+        classification = "HUMAN";
+        logger.info(`[onRespondentMessage] Keyword trigger "${keywordTrigger}" upgraded classification to HUMAN`);
       }
 
-      if (detectedTrigger) {
-        logger.info(`[onRespondentMessage] Escalation detected: ${detectedTrigger}`);
+      // ── Handle CRISIS — urgent handover + emergency alert ──
+      if (classification === "CRISIS") {
+        logger.warn(`[onRespondentMessage] CRISIS DETECTED in ticket ${ticketId}`);
+
         await db.doc(`tickets/${ticketId}`).update({
           handledBy: "escalated",
-          escalation: detectedTrigger,
-          priority: "high",
+          aiHandoffStatus: "awaiting_human",
+          escalation: keywordTrigger ?? "Crisis detected — possible self-harm or danger",
+          priority: "urgent",
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        await db.collection(`tickets/${ticketId}/messages`).add({
-          senderId: "system", senderName: "System", senderRole: "system",
-          content: `⚠️ Escalated to human agent (trigger: ${detectedTrigger})`,
-          isInternal: true, createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        });
-        const escalationReply = aiConfig.escalationReplyMessage
-          ?? "Thank you for reaching out. I'm connecting you with a team member who can assist you personally. They'll be with you shortly! 🙏";
+
+        // Send empathetic response to user
+        const crisisReply = aiConfig.crisisReplyMessage
+          ?? "Terima kasih sudah mau berbagi. Kami sangat peduli dengan keadaanmu. Seorang konselor kami akan segera menghubungimu secara pribadi. Kamu tidak sendirian. 🙏";
         await db.collection(`tickets/${ticketId}/messages`).add({
           senderId: "ai_assistant", senderName: "AI Assistant", senderRole: "ai",
-          content: escalationReply, isInternal: false, aiGenerated: true,
+          content: crisisReply, isInternal: false, aiGenerated: true,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-        try {
-          await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": escalationReply });
-        } catch (e) { /* non-critical */ }
 
-        // Emergency notification
+        // Internal system note
+        await db.collection(`tickets/${ticketId}/messages`).add({
+          senderId: "system", senderName: "System", senderRole: "system",
+          content: `🚨 CRISIS DETECTED — Semantic analysis flagged possible self-harm or danger. Message: "${messageContent.substring(0, 300)}". IMMEDIATE human attention required.`,
+          isInternal: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        try { await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": crisisReply }); } catch (e) { /* */ }
+
+        // Emergency notification to contacts
         try {
           const orgData = orgDoc.data();
           const emergencyContacts = orgData?.emergencyContacts ?? [];
-          const channelConfig = orgData?.channelConfig ?? {};
-          const fonnteToken = channelConfig.fonnte_token ?? "";
-
-          const respondentDoc = await db.doc(`respondents/${ticket.respondentId}`).get();
-          const respondentName = respondentDoc.exists ? (respondentDoc.data()?.displayName ?? "Unknown") : "Unknown";
-          const ticketNumber = ticket.ticketNumber ?? ticketId;
-
+          const fonnteToken = orgData?.channelConfig?.fonnte_token ?? "";
           if (fonnteToken && emergencyContacts.length > 0) {
-            const alertMessage = `🚨 *URGENT ESCALATION*\n\nRespondent: *${respondentName}*\nTicket: *${ticketNumber}*\nTrigger: *${detectedTrigger}*\nMessage: "${messageContent.substring(0, 200)}"\n\n⚡ Please check the dashboard immediately.\n🔗 https://outreachcbn.com/dashboard/tickets/${ticketId}`;
+            const respondentDoc = await db.doc(`respondents/${ticket.respondentId}`).get();
+            const respondentName = respondentDoc.exists ? (respondentDoc.data()?.displayName ?? respondentDoc.data()?.fullName ?? "Unknown") : "Unknown";
+            const alertMsg = `🚨 *CRISIS ALERT*\n\nRespondent: *${respondentName}*\nTicket: *${ticket.ticketNumber ?? ticketId}*\nMessage: "${messageContent.substring(0, 200)}"\n\n⚡ IMMEDIATE ACTION REQUIRED — possible self-harm.\n🔗 https://outreachcbn.com/dashboard/tickets/${ticketId}`;
             for (const contact of emergencyContacts) {
-              const contactPhone = String(contact.phone ?? "").replace(/\D/g, "");
-              if (!contactPhone) continue;
+              const ph = String(contact.phone ?? "").replace(/\D/g, "");
+              if (!ph) continue;
               try {
                 await fetch("https://api.fonnte.com/send", {
                   method: "POST",
                   headers: { "Authorization": fonnteToken, "Content-Type": "application/json" },
-                  body: JSON.stringify({ target: contactPhone, message: alertMessage }),
+                  body: JSON.stringify({ target: ph, message: alertMsg }),
                 });
-                logger.info(`[onRespondentMessage] Emergency alert sent to ${contact.name}`);
-              } catch (sendErr) { logger.error(`[onRespondentMessage] Alert failed:`, sendErr); }
+                logger.info(`[onRespondentMessage] Crisis alert sent to ${contact.name}`);
+              } catch (e) { /* best effort */ }
             }
           }
-        } catch (alertErr) { logger.error("[onRespondentMessage] Emergency alert error:", alertErr); }
+        } catch (e) { logger.error("[onRespondentMessage] Crisis alert error:", e); }
 
         return;
       }
 
-      // ── Call AI API ──
+      // ── Handle HUMAN — handover to human agent ──
+      if (classification === "HUMAN") {
+        logger.info(`[onRespondentMessage] Human handover requested for ticket ${ticketId}`);
+
+        await db.doc(`tickets/${ticketId}`).update({
+          handledBy: "escalated",
+          aiHandoffStatus: "awaiting_human",
+          escalation: keywordTrigger ?? "User requested human agent",
+          priority: "high",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        const handoverReply = aiConfig.escalationReplyMessage
+          ?? "Tentu, saya akan menghubungkan kamu dengan konselor kami. Seseorang akan segera menghubungimu. Terima kasih atas kesabarannya! 🙏";
+        await db.collection(`tickets/${ticketId}/messages`).add({
+          senderId: "ai_assistant", senderName: "AI Assistant", senderRole: "ai",
+          content: handoverReply, isInternal: false, aiGenerated: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        await db.collection(`tickets/${ticketId}/messages`).add({
+          senderId: "system", senderName: "System", senderRole: "system",
+          content: `🤖→👤 Auto-handover: ${classification === "HUMAN" ? "User requested human agent" : keywordTrigger ?? "Escalation triggered"}. AI stopped replying.`,
+          isInternal: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        try { await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": handoverReply }); } catch (e) { /* */ }
+        return;
+      }
+
+      // ── NORMAL — proceed with AI reply ──
       const provider = aiConfig.provider ?? "openai";
-      const apiKey = aiConfig.apiKey ?? "";
       const model = aiConfig.model ?? "gpt-4o-mini";
       const systemPrompt = aiConfig.systemPrompt ?? "You are a helpful assistant.";
 
-      if (!apiKey) { logger.warn("[onRespondentMessage] No API key configured"); return; }
-
+      // Fetch last 10 messages for context
       const messagesSnap = await db.collection(`tickets/${ticketId}/messages`)
         .orderBy("createdAt", "desc").limit(10).get();
       const history = messagesSnap.docs.reverse()
@@ -738,6 +813,34 @@ export const onRespondentMessage = onDocumentCreated(
 
       if (!aiReply.trim()) { logger.warn("[onRespondentMessage] AI returned empty reply"); return; }
 
+      // ── Trigger 3: AI self-flag handoff via [HANDOFF: reason] tag ──
+      const handoffMatch = aiReply.match(/\[HANDOFF:\s*(.+?)\]/i);
+      if (handoffMatch) {
+        const handoffReason = handoffMatch[1].trim();
+        aiReply = aiReply.replace(/\[HANDOFF:\s*.+?\]/gi, "").trim();
+        logger.info(`[onRespondentMessage] AI self-flagged handoff: ${handoffReason}`);
+
+        await db.collection(`tickets/${ticketId}/messages`).add({
+          senderId: "ai_assistant", senderName: "AI Assistant", senderRole: "ai",
+          content: aiReply, isInternal: false, aiGenerated: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        await db.doc(`tickets/${ticketId}`).update({
+          handledBy: "escalated",
+          aiHandoffStatus: "awaiting_human",
+          escalation: `AI handoff: ${handoffReason}`,
+          priority: "high",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        await db.collection(`tickets/${ticketId}/messages`).add({
+          senderId: "system", senderName: "System", senderRole: "system",
+          content: `🤖→👤 AI requested human handoff: ${handoffReason}`,
+          isInternal: true,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+        try { await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": aiReply }); } catch (e) { /* */ }
+        return;
+      }
       await db.collection(`tickets/${ticketId}/messages`).add({
         senderId: "ai_assistant", senderName: "AI Assistant", senderRole: "ai",
         content: aiReply.trim(), isInternal: false, aiGenerated: true,
