@@ -13,10 +13,8 @@ import {
 import type { SocialAccountDoc } from "./social-accounts";
 import * as admin from "firebase-admin";
 
-// Set region to asia-southeast1 (Singapore) — closest to Indonesia
 setGlobalOptions({ region: "asia-southeast1" });
 
-// Lazy init Firebase Admin
 function getApp(): admin.app.App {
   if (admin.apps.length) return admin.apps[0]!;
   return admin.initializeApp();
@@ -26,10 +24,6 @@ function getDb() {
   return getApp().firestore();
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Helper: get channel config from organization document (LEGACY FALLBACK)
-// Used when social_accounts lookup returns null (no account configured yet)
-// ────────────────────────────────────────────────────────────────────────────
 async function getChannelConfig(orgId: string): Promise<Record<string, any>> {
   try {
     const doc = await getDb().collection("organizations").doc(orgId).get();
@@ -41,9 +35,6 @@ async function getChannelConfig(orgId: string): Promise<Record<string, any>> {
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Helper: fetch real user name from Meta Graph API (FB Messenger / Instagram)
-// ────────────────────────────────────────────────────────────────────────────
 async function fetchMetaUserProfile(
   psid: string,
   pageAccessToken: string,
@@ -51,7 +42,6 @@ async function fetchMetaUserProfile(
 ): Promise<string> {
   const fallback = `${platform} User ${psid.slice(-4)}`;
   if (!pageAccessToken || !psid) return fallback;
-
   try {
     const response = await fetch(
       `https://graph.facebook.com/v18.0/${psid}?fields=name&access_token=${pageAccessToken}`
@@ -73,19 +63,14 @@ async function fetchMetaUserProfile(
   }
 }
 
-// ────────────────────────────────────────────────────────────────────────────
-// Helper: get credentials for outbound — social_accounts first, fallback org
-// ────────────────────────────────────────────────────────────────────────────
 async function getOutboundCredentials(
   ticket: Record<string, any>,
   orgId: string
 ): Promise<{ account: SocialAccountDoc | null; config: Record<string, any> }> {
-  // Try social_accounts first (via ticket.socialAccountId)
   if (ticket.socialAccountId) {
     const account = await getSocialAccountById(ticket.socialAccountId);
     if (account) return { account, config: {} };
   }
-  // Fallback to organization channelConfig
   if (!orgId) {
     logger.warn("[getOutboundCredentials] No socialAccountId and no orgId — cannot get credentials");
     return { account: null, config: {} };
@@ -96,9 +81,6 @@ async function getOutboundCredentials(
 
 // ────────────────────────────────────────────────────────────────────────────
 // OUTBOUND REPLY TRIGGER
-// When an agent/AI sends a message, auto-send it to the respondent
-// via the original channel.
-// NEW: Tries social_accounts credentials first, falls back to org.channelConfig
 // ────────────────────────────────────────────────────────────────────────────
 export const onMessageCreated = onDocumentCreated(
   "tickets/{ticketId}/messages/{messageId}",
@@ -129,15 +111,12 @@ export const onMessageCreated = onDocumentCreated(
         return;
       }
 
-      // Get credentials — social_accounts first, fallback to org config
       const { account, config } = await getOutboundCredentials(ticket, orgId);
 
-      // ── Send via Fonnte (WhatsApp) ──
       if (channel === "whatsapp_fonnte" || channel === "manual" ||
           config.active_whatsapp_provider === "fonnte") {
         const token = account?.credentials?.token ?? config.fonnte_token ?? "";
         if (!token) { logger.warn("[onMessageCreated] Fonnte token not configured"); return; }
-
         const cleanPhone = phone.replace(/^\+/, "");
         const response = await fetch("https://api.fonnte.com/send", {
           method: "POST",
@@ -148,12 +127,10 @@ export const onMessageCreated = onDocumentCreated(
         logger.info(`[onMessageCreated] Fonnte → ${cleanPhone}:`, JSON.stringify(result));
       }
 
-      // ── Send via Meta WhatsApp Cloud API ──
       else if (channel === "whatsapp_meta" || config.active_whatsapp_provider === "meta") {
         const waToken = account?.credentials?.accessToken ?? config.whatsapp_access_token ?? "";
         const waPhoneId = account?.credentials?.phoneNumberId ?? config.whatsapp_phone_number_id ?? "";
         if (!waToken || !waPhoneId) { logger.warn("[onMessageCreated] Meta WA credentials not configured"); return; }
-
         const cleanPhone = phone.replace(/^\+/, "");
         const response = await fetch(`https://graph.facebook.com/v18.0/${waPhoneId}/messages`, {
           method: "POST",
@@ -164,14 +141,11 @@ export const onMessageCreated = onDocumentCreated(
         logger.info(`[onMessageCreated] Meta WA → ${cleanPhone}:`, JSON.stringify(result));
       }
 
-      // ── Facebook Messenger ──
       else if (channel === "facebook") {
         const fbToken = account?.credentials?.pageAccessToken ?? config.facebook_page_access_token ?? "";
         if (!fbToken) { logger.warn("[onMessageCreated] Facebook page token not configured"); return; }
-
         const recipientId = respondent.channelSenderId ?? "";
         if (!recipientId) { logger.warn("[onMessageCreated] No channelSenderId for Facebook"); return; }
-
         const response = await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${fbToken}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -181,14 +155,11 @@ export const onMessageCreated = onDocumentCreated(
         logger.info(`[onMessageCreated] FB Messenger → ${recipientId}:`, JSON.stringify(result));
       }
 
-      // ── Instagram DM ──
       else if (channel === "instagram") {
         const igToken = account?.credentials?.pageAccessToken ?? config.instagram_access_token ?? config.facebook_page_access_token ?? "";
         if (!igToken) { logger.warn("[onMessageCreated] Instagram token not configured"); return; }
-
         const recipientId = respondent.channelSenderId ?? "";
         if (!recipientId) { logger.warn("[onMessageCreated] No channelSenderId for Instagram"); return; }
-
         const response = await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${igToken}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -201,7 +172,6 @@ export const onMessageCreated = onDocumentCreated(
       else {
         logger.info(`[onMessageCreated] Channel "${channel}" — no outbound configured`);
       }
-
     } catch (err) {
       logger.error("[onMessageCreated] Error:", err);
     }
@@ -210,11 +180,9 @@ export const onMessageCreated = onDocumentCreated(
 
 // ────────────────────────────────────────────────────────────────────────────
 // 1. WhatsApp Business Cloud API (Meta)
-//    Lookup: entry[].changes[].value.metadata.phone_number_id → social_accounts
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
   const WA_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? "rts_wa_token";
-
   if (req.method === "GET") {
     const mode = req.query["hub.mode"];
     const token = req.query["hub.verify_token"];
@@ -223,7 +191,6 @@ export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
     else { res.status(403).json({ error: "Forbidden" }); }
     return;
   }
-
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
 
   const orgId = req.query.org as string;
@@ -232,47 +199,34 @@ export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
   try {
     const body = req.body;
     const value = body?.entry?.[0]?.changes?.[0]?.value;
-
     if (value?.messages?.length) {
-      // Extract phone_number_id for social_accounts lookup
       const phoneNumberId = value?.metadata?.phone_number_id ?? "";
       let account: SocialAccountDoc | null = null;
       if (phoneNumberId) {
         account = await getSocialAccountByWhatsappPhoneId(phoneNumberId);
         if (account) logger.info(`[webhookWhatsapp] Matched social_account: ${account.displayName} (${account.id})`);
       }
-
       for (const msg of value.messages as any[]) {
         if (msg.type !== "text") continue;
         const contact = (value.contacts as any[])?.find((c: any) => c.wa_id === msg.from);
         const phone = `+${msg.from}`;
         await processIncomingMessage({
-          orgId,
-          channel: "whatsapp_meta",
-          senderId: msg.from,
-          senderName: contact?.profile?.name ?? phone,
-          senderPhone: phone,
-          message: msg.text?.body ?? "(pesan kosong)",
-          rawPayload: body,
-          socialAccountId: account?.id,
-          programName: account?.programName,
+          orgId, channel: "whatsapp_meta", senderId: msg.from,
+          senderName: contact?.profile?.name ?? phone, senderPhone: phone,
+          message: msg.text?.body ?? "(pesan kosong)", rawPayload: body,
+          socialAccountId: account?.id, programName: account?.programName,
         });
       }
     }
     res.status(200).json({ status: "ok" });
-  } catch (err) {
-    console.error("[webhookWhatsapp]", err);
-    res.status(500).json({ error: "Internal error" });
-  }
+  } catch (err) { console.error("[webhookWhatsapp]", err); res.status(500).json({ error: "Internal error" }); }
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// 2. WhatsApp via Fonnte / Wablas (POST only)
-//    Lookup: body.device (device phone number) → social_accounts
+// 2. WhatsApp via Fonnte
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
-
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
 
@@ -286,87 +240,55 @@ export const webhookFonnte = onRequest({ cors: true }, async (req, res) => {
 
     logger.info(`[webhookFonnte] Incoming — sender: ${sender}, device: ${device}, fromMe: ${body.fromMe}, message: "${message.substring(0, 50)}..."`);
 
-    // ── Echo detection ──
     const isEcho = body.fromMe === true || body.from_me === true ||
                    body.isFromMe === true || body.is_from_me === true ||
-                   message.includes("_Sent via fonnte.com_") ||
-                   message.includes("Sent via fonnte") ||
+                   message.includes("_Sent via fonnte.com_") || message.includes("Sent via fonnte") ||
                    body.status === "sent" || body.status === "delivered" || body.status === "read" ||
-                   (device && sender === device) ||
-                   !message.trim();
-
+                   (device && sender === device) || !message.trim();
     if (isEcho) { res.status(200).json({ status: "ok", skipped: "echo" }); return; }
 
-    // ── Social accounts lookup by device number ──
     let account: SocialAccountDoc | null = null;
     if (device) {
       account = await getSocialAccountByFonnteDevice(device);
       if (account) logger.info(`[webhookFonnte] Matched social_account: ${account.displayName} (${account.id})`);
     }
 
-    // ── Self-loop / echo prevention via org config (fallback) ──
     const db = getDb();
     const orgDoc = await db.doc(`organizations/${orgId}`).get();
-
-    // Check own number
     const ownNumber = account?.credentials?.deviceNumber
       ?? String(orgDoc.exists ? (orgDoc.data()?.channelConfig?.fonnte_device_number ?? "") : "").replace(/\D/g, "");
-    if (ownNumber && sender === ownNumber) {
-      res.status(200).json({ status: "ok", skipped: "self-message" });
-      return;
-    }
+    if (ownNumber && sender === ownNumber) { res.status(200).json({ status: "ok", skipped: "self-message" }); return; }
 
-    // Anti-echo: check last AI reply
     if (message.trim() && orgDoc.exists) {
       const lastAIReply = orgDoc.data()?.channelConfig?.last_ai_reply ?? "";
       if (lastAIReply && message.trim() === lastAIReply.trim()) {
         logger.info(`[webhookFonnte] Skipping echo — message matches last AI reply`);
-        res.status(200).json({ status: "ok", skipped: "echo-duplicate" });
-        return;
+        res.status(200).json({ status: "ok", skipped: "echo-duplicate" }); return;
       }
     }
 
-    // Parse attachments
     const attachments = await parseFonnteAttachments(body);
-
     await processIncomingMessage({
-      orgId,
-      channel: "whatsapp_fonnte",
-      senderId: String(body.sender ?? ""),
-      senderName: name,
-      senderPhone: phone,
-      message: message || "",
-      attachments: attachments.length > 0 ? attachments : undefined,
-      rawPayload: body,
-      socialAccountId: account?.id,
-      programName: account?.programName,
+      orgId, channel: "whatsapp_fonnte", senderId: String(body.sender ?? ""),
+      senderName: name, senderPhone: phone, message: message || "",
+      attachments: attachments.length > 0 ? attachments : undefined, rawPayload: body,
+      socialAccountId: account?.id, programName: account?.programName,
     });
     res.status(200).json({ status: "ok" });
-  } catch (err) {
-    console.error("[webhookFonnte]", err);
-    res.status(500).json({ error: "Internal error" });
-  }
+  } catch (err) { console.error("[webhookFonnte]", err); res.status(500).json({ error: "Internal error" }); }
 });
 
-// Parse Fonnte attachments
 async function parseFonnteAttachments(body: any): Promise<any[]> {
   const attachments: any[] = [];
   const mediaUrl = body.url ?? body.media ?? body.file;
   const mediaType = (body.type ?? "").toLowerCase();
-
   if (mediaUrl && mediaType && mediaType !== "text") {
-    const tempTicketId = "incoming";
-    const tempMessageId = `fonnte_${Date.now()}`;
-    const uploaded = await downloadAndUploadMedia(mediaUrl, tempTicketId, tempMessageId);
+    const uploaded = await downloadAndUploadMedia(mediaUrl, "incoming", `fonnte_${Date.now()}`);
     if (uploaded) {
       attachments.push({
-        type: categorizeMimeType(uploaded.mimeType) || mediaType,
-        url: uploaded.url,
-        originalUrl: mediaUrl,
-        mimeType: uploaded.mimeType,
-        filename: body.filename ?? uploaded.filename,
-        size: uploaded.size,
-        caption: body.message ?? "",
+        type: categorizeMimeType(uploaded.mimeType) || mediaType, url: uploaded.url,
+        originalUrl: mediaUrl, mimeType: uploaded.mimeType,
+        filename: body.filename ?? uploaded.filename, size: uploaded.size, caption: body.message ?? "",
       });
     }
   }
@@ -375,22 +297,16 @@ async function parseFonnteAttachments(body: any): Promise<any[]> {
 
 // ────────────────────────────────────────────────────────────────────────────
 // 3. Instagram Direct Message (Meta)
-//    Lookup: entry[].id (IG Business Account ID) → social_accounts
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
   const IG_VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN ?? "rts_ig_token";
-
   if (req.method === "GET") {
-    const mode = req.query["hub.mode"];
-    const token = req.query["hub.verify_token"];
-    const challenge = req.query["hub.challenge"];
+    const mode = req.query["hub.mode"]; const token = req.query["hub.verify_token"]; const challenge = req.query["hub.challenge"];
     if (mode === "subscribe" && token === IG_VERIFY_TOKEN) { res.status(200).send(challenge); }
     else { res.status(403).json({ error: "Forbidden" }); }
     return;
   }
-
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
-
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
 
@@ -398,64 +314,41 @@ export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
     const body = req.body;
     const messaging = body?.entry?.[0]?.messaging ?? [];
     const igAccountId = String(body?.entry?.[0]?.id ?? "");
-
-    // ── Social accounts lookup by IG Account ID ──
     let account: SocialAccountDoc | null = null;
     if (igAccountId) {
       account = await getSocialAccountByInstagramUserId(igAccountId);
       if (account) logger.info(`[webhookInstagram] Matched social_account: ${account.displayName} (${account.id})`);
     }
-
-    // Get token: social_accounts first, fallback to org config
     const igToken = account?.credentials?.pageAccessToken
       ?? (await getChannelConfig(orgId)).instagram_access_token
-      ?? (await getChannelConfig(orgId)).facebook_page_access_token
-      ?? "";
+      ?? (await getChannelConfig(orgId)).facebook_page_access_token ?? "";
 
     for (const event of messaging as any[]) {
       if (!event.message?.text) continue;
       const senderId = String(event.sender?.id ?? "");
-
-      const senderName = igToken
-        ? await fetchMetaUserProfile(senderId, igToken, "Instagram")
-        : `Instagram User ${senderId.slice(-4)}`;
-
+      const senderName = igToken ? await fetchMetaUserProfile(senderId, igToken, "Instagram") : `Instagram User ${senderId.slice(-4)}`;
       await processIncomingMessage({
-        orgId,
-        channel: "instagram",
-        senderId,
-        senderName,
-        message: event.message.text,
-        rawPayload: body,
-        socialAccountId: account?.id,
-        programName: account?.programName,
+        orgId, channel: "instagram", senderId, senderName,
+        message: event.message.text, rawPayload: body,
+        socialAccountId: account?.id, programName: account?.programName,
       });
     }
     res.status(200).json({ status: "ok" });
-  } catch (err) {
-    console.error("[webhookInstagram]", err);
-    res.status(500).json({ error: "Internal error" });
-  }
+  } catch (err) { console.error("[webhookInstagram]", err); res.status(500).json({ error: "Internal error" }); }
 });
 
 // ────────────────────────────────────────────────────────────────────────────
 // 4. Facebook Messenger (Meta)
-//    Lookup: entry[].id (Page ID) → social_accounts
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookFacebook = onRequest({ cors: true }, async (req, res) => {
   const FB_VERIFY_TOKEN = process.env.FACEBOOK_VERIFY_TOKEN ?? "rts_fb_token";
-
   if (req.method === "GET") {
-    const mode = req.query["hub.mode"];
-    const token = req.query["hub.verify_token"];
-    const challenge = req.query["hub.challenge"];
+    const mode = req.query["hub.mode"]; const token = req.query["hub.verify_token"]; const challenge = req.query["hub.challenge"];
     if (mode === "subscribe" && token === FB_VERIFY_TOKEN) { res.status(200).send(challenge); }
     else { res.status(403).json({ error: "Forbidden" }); }
     return;
   }
-
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
-
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
 
@@ -463,101 +356,62 @@ export const webhookFacebook = onRequest({ cors: true }, async (req, res) => {
     const body = req.body;
     const messaging = body?.entry?.[0]?.messaging ?? [];
     const pageId = String(body?.entry?.[0]?.id ?? "");
-
-    // ── Social accounts lookup by Page ID ──
     let account: SocialAccountDoc | null = null;
     if (pageId) {
       account = await getSocialAccountByFacebookPageId(pageId);
       if (account) logger.info(`[webhookFacebook] Matched social_account: ${account.displayName} (${account.id})`);
     }
-
-    // Get token: social_accounts first, fallback to org config
     const pageToken = account?.credentials?.pageAccessToken
-      ?? (await getChannelConfig(orgId)).facebook_page_access_token
-      ?? "";
+      ?? (await getChannelConfig(orgId)).facebook_page_access_token ?? "";
 
     for (const event of messaging as any[]) {
       if (!event.message?.text) continue;
       const senderId = String(event.sender?.id ?? "");
-
-      const senderName = pageToken
-        ? await fetchMetaUserProfile(senderId, pageToken, "Facebook")
-        : `Facebook User ${senderId.slice(-4)}`;
-
+      const senderName = pageToken ? await fetchMetaUserProfile(senderId, pageToken, "Facebook") : `Facebook User ${senderId.slice(-4)}`;
       await processIncomingMessage({
-        orgId,
-        channel: "facebook",
-        senderId,
-        senderName,
-        message: event.message.text,
-        rawPayload: body,
-        socialAccountId: account?.id,
-        programName: account?.programName,
+        orgId, channel: "facebook", senderId, senderName,
+        message: event.message.text, rawPayload: body,
+        socialAccountId: account?.id, programName: account?.programName,
       });
     }
     res.status(200).json({ status: "ok" });
-  } catch (err) {
-    console.error("[webhookFacebook]", err);
-    res.status(500).json({ error: "Internal error" });
-  }
+  } catch (err) { console.error("[webhookFacebook]", err); res.status(500).json({ error: "Internal error" }); }
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// 5. Inbound Call log (VOIP / PBX / manual)
-//    No social_accounts lookup — uses orgId only
+// 5. Inbound Call
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookCall = onRequest({ cors: true }, async (req, res) => {
   const CALL_TOKEN = process.env.CALL_WEBHOOK_TOKEN ?? "";
-
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
-
   const authHeader = req.headers["authorization"] ?? "";
-  if (CALL_TOKEN && authHeader.replace("Bearer ", "") !== CALL_TOKEN) {
-    res.status(401).json({ error: "Unauthorized" });
-    return;
-  }
+  if (CALL_TOKEN && authHeader.replace("Bearer ", "") !== CALL_TOKEN) { res.status(401).json({ error: "Unauthorized" }); return; }
 
   try {
     const body = req.body;
     const phone = String(body.phone ?? "").trim();
     if (!phone) { res.status(400).json({ error: "phone is required" }); return; }
-
     const orgId = req.query.org as string;
     if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
-
     const name = String(body.name ?? phone);
     const message = String(body.subject ?? body.notes ?? "Inbound call");
-
     await processIncomingMessage({
-      orgId,
-      channel: "call",
-      senderId: phone,
-      senderName: name,
-      senderPhone: phone,
-      message,
-      rawPayload: body,
+      orgId, channel: "call", senderId: phone, senderName: name,
+      senderPhone: phone, message, rawPayload: body,
     });
     res.status(200).json({ status: "ok" });
-  } catch (err) {
-    console.error("[webhookCall]", err);
-    res.status(500).json({ error: "Internal error" });
-  }
+  } catch (err) { console.error("[webhookCall]", err); res.status(500).json({ error: "Internal error" }); }
 });
 
 // ────────────────────────────────────────────────────────────────────────────
 // AI AUTO-REPLY TRIGGER
-// Config read from organizations/{orgId}.aiConfig
-// (Future: override per social_account via aiSettings)
+// Flow: message → semantic classifier → CRISIS/HUMAN/NORMAL
 // ────────────────────────────────────────────────────────────────────────────
 export const onRespondentMessage = onDocumentCreated(
-  {
-    document: "tickets/{ticketId}/messages/{messageId}",
-    timeoutSeconds: 60,
-  },
+  { document: "tickets/{ticketId}/messages/{messageId}", timeoutSeconds: 60 },
   async (event) => {
     const message = event.data?.data();
     if (!message) return;
-
     if (message.senderRole !== "respondent" || message.isInternal) return;
 
     const ticketId = event.params.ticketId;
@@ -585,10 +439,13 @@ export const onRespondentMessage = onDocumentCreated(
         return;
       }
 
+      // ── API key — needed for classifier AND AI reply ──
+      const apiKey = aiConfig.apiKey ?? "";
+      if (!apiKey) { logger.warn("[onRespondentMessage] No API key configured"); return; }
+
       // Idempotency checks
       const messageId = event.params.messageId;
       const messageCreatedAt = message.createdAt?.toMillis?.() ?? Date.now();
-
       const recentMessages = await db.collection(`tickets/${ticketId}/messages`)
         .orderBy("createdAt", "desc").limit(5).get();
       const now = Date.now();
@@ -597,10 +454,7 @@ export const onRespondentMessage = onDocumentCreated(
         if (data.senderRole !== "ai") return false;
         return (now - (data.createdAt?.toMillis?.() ?? 0)) < 5000;
       });
-      if (hasRecentAI) {
-        logger.info(`[onRespondentMessage] AI replied within last 5s, skipping`);
-        return;
-      }
+      if (hasRecentAI) { logger.info(`[onRespondentMessage] AI replied within last 5s, skipping`); return; }
 
       const laterMessages = await db.collection(`tickets/${ticketId}/messages`)
         .where("createdAt", ">", new Date(messageCreatedAt)).limit(5).get();
@@ -608,10 +462,7 @@ export const onRespondentMessage = onDocumentCreated(
         const data = d.data();
         return data.senderRole === "ai" && data.aiGenerated === true;
       });
-      if (alreadyReplied) {
-        logger.info(`[onRespondentMessage] Already replied to ${messageId}, skipping`);
-        return;
-      }
+      if (alreadyReplied) { logger.info(`[onRespondentMessage] Already replied to ${messageId}, skipping`); return; }
 
       // Channel toggle check
       const channel = ticket.channel ?? "";
@@ -626,9 +477,7 @@ export const onRespondentMessage = onDocumentCreated(
         return;
       }
 
-      // ── Escalation triggers ──
       // ── SEMANTIC CLASSIFIER — runs BEFORE AI reply ──
-      // Single LLM call to classify: NORMAL / HUMAN / CRISIS
       const messageContent = (message.content ?? "").toLowerCase();
       let classification = "NORMAL";
 
@@ -667,38 +516,29 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
         logger.error("[onRespondentMessage] Classification failed, defaulting to NORMAL:", classErr);
       }
 
-      // Also check keyword triggers (belt-and-suspenders — catches obvious keywords even if LLM fails)
+      // Belt-and-suspenders: keyword triggers as fallback
       const triggers = aiConfig.escalationTriggers ?? [];
       let keywordTrigger: string | null = null;
       for (const trigger of triggers) {
         if (!trigger.enabled) continue;
         for (const kw of (trigger.keywords ?? []) as string[]) {
-          if (messageContent.includes(kw.toLowerCase())) {
-            keywordTrigger = trigger.reason;
-            break;
-          }
+          if (messageContent.includes(kw.toLowerCase())) { keywordTrigger = trigger.reason; break; }
         }
         if (keywordTrigger) break;
       }
-      // Keyword escalation upgrades NORMAL to at least HUMAN
       if (keywordTrigger && classification === "NORMAL") {
         classification = "HUMAN";
         logger.info(`[onRespondentMessage] Keyword trigger "${keywordTrigger}" upgraded classification to HUMAN`);
       }
 
-      // ── Handle CRISIS — urgent handover + emergency alert ──
+      // ── CRISIS — urgent handover + emergency alert ──
       if (classification === "CRISIS") {
         logger.warn(`[onRespondentMessage] CRISIS DETECTED in ticket ${ticketId}`);
-
         await db.doc(`tickets/${ticketId}`).update({
-          handledBy: "escalated",
-          aiHandoffStatus: "awaiting_human",
+          handledBy: "escalated", aiHandoffStatus: "awaiting_human",
           escalation: keywordTrigger ?? "Crisis detected — possible self-harm or danger",
-          priority: "urgent",
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          priority: "urgent", updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-
-        // Send empathetic response to user
         const crisisReply = aiConfig.crisisReplyMessage
           ?? "Terima kasih sudah mau berbagi. Kami sangat peduli dengan keadaanmu. Seorang konselor kami akan segera menghubungimu secara pribadi. Kamu tidak sendirian. 🙏";
         await db.collection(`tickets/${ticketId}/messages`).add({
@@ -706,18 +546,13 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
           content: crisisReply, isInternal: false, aiGenerated: true,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-
-        // Internal system note
         await db.collection(`tickets/${ticketId}/messages`).add({
           senderId: "system", senderName: "System", senderRole: "system",
           content: `🚨 CRISIS DETECTED — Semantic analysis flagged possible self-harm or danger. Message: "${messageContent.substring(0, 300)}". IMMEDIATE human attention required.`,
-          isInternal: true,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          isInternal: true, createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-
         try { await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": crisisReply }); } catch (e) { /* */ }
-
-        // Emergency notification to contacts
+        // Emergency notification
         try {
           const orgData = orgDoc.data();
           const emergencyContacts = orgData?.emergencyContacts ?? [];
@@ -731,8 +566,7 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
               if (!ph) continue;
               try {
                 await fetch("https://api.fonnte.com/send", {
-                  method: "POST",
-                  headers: { "Authorization": fonnteToken, "Content-Type": "application/json" },
+                  method: "POST", headers: { "Authorization": fonnteToken, "Content-Type": "application/json" },
                   body: JSON.stringify({ target: ph, message: alertMsg }),
                 });
                 logger.info(`[onRespondentMessage] Crisis alert sent to ${contact.name}`);
@@ -740,22 +574,17 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
             }
           }
         } catch (e) { logger.error("[onRespondentMessage] Crisis alert error:", e); }
-
         return;
       }
 
-      // ── Handle HUMAN — handover to human agent ──
+      // ── HUMAN — handover to human agent ──
       if (classification === "HUMAN") {
         logger.info(`[onRespondentMessage] Human handover requested for ticket ${ticketId}`);
-
         await db.doc(`tickets/${ticketId}`).update({
-          handledBy: "escalated",
-          aiHandoffStatus: "awaiting_human",
+          handledBy: "escalated", aiHandoffStatus: "awaiting_human",
           escalation: keywordTrigger ?? "User requested human agent",
-          priority: "high",
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          priority: "high", updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-
         const handoverReply = aiConfig.escalationReplyMessage
           ?? "Tentu, saya akan menghubungkan kamu dengan konselor kami. Seseorang akan segera menghubungimu. Terima kasih atas kesabarannya! 🙏";
         await db.collection(`tickets/${ticketId}/messages`).add({
@@ -765,11 +594,9 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
         });
         await db.collection(`tickets/${ticketId}/messages`).add({
           senderId: "system", senderName: "System", senderRole: "system",
-          content: `🤖→👤 Auto-handover: ${classification === "HUMAN" ? "User requested human agent" : keywordTrigger ?? "Escalation triggered"}. AI stopped replying.`,
-          isInternal: true,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          content: `🤖→👤 Auto-handover: User requested human agent. AI stopped replying.`,
+          isInternal: true, createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-
         try { await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": handoverReply }); } catch (e) { /* */ }
         return;
       }
@@ -779,7 +606,6 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
       const model = aiConfig.model ?? "gpt-4o-mini";
       const systemPrompt = aiConfig.systemPrompt ?? "You are a helpful assistant.";
 
-      // Fetch last 10 messages for context
       const messagesSnap = await db.collection(`tickets/${ticketId}/messages`)
         .orderBy("createdAt", "desc").limit(10).get();
       const history = messagesSnap.docs.reverse()
@@ -813,49 +639,41 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
 
       if (!aiReply.trim()) { logger.warn("[onRespondentMessage] AI returned empty reply"); return; }
 
-      // ── Trigger 3: AI self-flag handoff via [HANDOFF: reason] tag ──
+      // ── AI self-flag handoff via [HANDOFF: reason] tag ──
       const handoffMatch = aiReply.match(/\[HANDOFF:\s*(.+?)\]/i);
       if (handoffMatch) {
         const handoffReason = handoffMatch[1].trim();
         aiReply = aiReply.replace(/\[HANDOFF:\s*.+?\]/gi, "").trim();
         logger.info(`[onRespondentMessage] AI self-flagged handoff: ${handoffReason}`);
-
         await db.collection(`tickets/${ticketId}/messages`).add({
           senderId: "ai_assistant", senderName: "AI Assistant", senderRole: "ai",
           content: aiReply, isInternal: false, aiGenerated: true,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         await db.doc(`tickets/${ticketId}`).update({
-          handledBy: "escalated",
-          aiHandoffStatus: "awaiting_human",
-          escalation: `AI handoff: ${handoffReason}`,
-          priority: "high",
+          handledBy: "escalated", aiHandoffStatus: "awaiting_human",
+          escalation: `AI handoff: ${handoffReason}`, priority: "high",
           updatedAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         await db.collection(`tickets/${ticketId}/messages`).add({
           senderId: "system", senderName: "System", senderRole: "system",
           content: `🤖→👤 AI requested human handoff: ${handoffReason}`,
-          isInternal: true,
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+          isInternal: true, createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
         try { await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": aiReply }); } catch (e) { /* */ }
         return;
       }
+
+      // Save normal AI reply
       await db.collection(`tickets/${ticketId}/messages`).add({
         senderId: "ai_assistant", senderName: "AI Assistant", senderRole: "ai",
         content: aiReply.trim(), isInternal: false, aiGenerated: true,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-
       await db.doc(`tickets/${ticketId}`).update({
-        handledBy: "ai",
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        handledBy: "ai", updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
-
-      try {
-        await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": aiReply.trim() });
-      } catch (e) { /* non-critical */ }
-
+      try { await db.doc(`organizations/${orgId}`).update({ "channelConfig.last_ai_reply": aiReply.trim() }); } catch (e) { /* */ }
       logger.info(`[onRespondentMessage] AI replied to ticket ${ticketId}`);
 
       // Data extraction
@@ -864,9 +682,8 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
         if (respondentMessagesCount >= 2 && respondentMessagesCount % 2 === 0) {
           await extractRespondentData(ticketId, ticket.respondentId, history, apiKey, model);
         }
-      } catch (extractErr) {
-        logger.error("[onRespondentMessage] Data extraction failed:", extractErr);
-      }
+      } catch (extractErr) { logger.error("[onRespondentMessage] Data extraction failed:", extractErr); }
+
     } catch (err) {
       logger.error("[onRespondentMessage] Error:", err);
     }
@@ -877,32 +694,24 @@ Important: When in doubt between NORMAL and CRISIS, choose CRISIS. When in doubt
 // Extract respondent data from conversation using AI
 // ────────────────────────────────────────────────────────────────────────────
 async function extractRespondentData(
-  ticketId: string,
-  respondentId: string,
+  ticketId: string, respondentId: string,
   history: Array<{ role: string; content: string }>,
-  apiKey: string,
-  model: string
+  apiKey: string, model: string
 ): Promise<void> {
   const db = getDb();
-
   const respondentDoc = await db.doc(`respondents/${respondentId}`).get();
   if (!respondentDoc.exists) return;
   const respondent = respondentDoc.data()!;
 
   const needsExtraction = {
     fullName: !respondent.fullName || respondent.fullName.startsWith("+") || respondent.fullName.startsWith("Facebook User") || respondent.fullName.startsWith("WhatsApp User"),
-    city: !respondent.city,
-    age: !respondent.age,
-    programSource: !respondent.programSource,
+    city: !respondent.city, age: !respondent.age, programSource: !respondent.programSource,
     problemCategories: !respondent.problemCategories || respondent.problemCategories.length === 0,
   };
-
   if (!Object.values(needsExtraction).some((v) => v)) return;
 
   const conversationText = history.map((m) => `${m.role === "user" ? "User" : "Counselor"}: ${m.content}`).join("\n");
-
   const extractionPrompt = `Analyze this conversation and extract information about the user. Return ONLY a valid JSON object with these fields (use null if not mentioned):
-
 {
   "fullName": "user's full name or null",
   "city": "city of residence or null",
@@ -910,13 +719,7 @@ async function extractRespondentData(
   "programSource": "how user found CBN (TV, YouTube, Instagram, Facebook, friend, website, etc.) or null",
   "problemCategories": ["array of problem keywords like: illness, family, financial, marriage, grief, anxiety, depression, addiction, spiritual_question, salvation, counseling, prayer_request"]
 }
-
-IMPORTANT:
-- Return ONLY the JSON object, no markdown, no explanation
-- Use null for fields that are not clearly mentioned
-- For names, only extract if user clearly states their name
-- For age, extract numbers only
-- For problemCategories, identify key issues the user is facing
+IMPORTANT: Return ONLY the JSON object, no markdown, no explanation. Use null for fields not clearly mentioned. For names, only extract if user clearly states their name. For age, extract numbers only.
 
 Conversation:
 ${conversationText}`;
@@ -926,16 +729,12 @@ ${conversationText}`;
       method: "POST",
       headers: { "Authorization": `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model,
-        messages: [
+        model, messages: [
           { role: "system", content: "You are a data extraction assistant. Return only valid JSON." },
           { role: "user", content: extractionPrompt },
-        ],
-        max_tokens: 300, temperature: 0.1,
-        response_format: { type: "json_object" },
+        ], max_tokens: 300, temperature: 0.1, response_format: { type: "json_object" },
       }),
     });
-
     const result: any = await response.json();
     if (result.error) { logger.error("[extractRespondentData] OpenAI error:", result.error); return; }
 
@@ -946,19 +745,10 @@ ${conversationText}`;
 
     const updates: Record<string, any> = {};
     const updatedFields: string[] = [];
-
-    if (needsExtraction.fullName && extracted.fullName && typeof extracted.fullName === "string" && extracted.fullName.trim().length > 0) {
-      updates.fullName = extracted.fullName.trim(); updatedFields.push("name");
-    }
-    if (needsExtraction.city && extracted.city && typeof extracted.city === "string" && extracted.city.trim().length > 0) {
-      updates.city = extracted.city.trim(); updatedFields.push("city");
-    }
-    if (needsExtraction.age && extracted.age && typeof extracted.age === "number" && extracted.age > 0 && extracted.age < 120) {
-      updates.age = extracted.age; updatedFields.push("age");
-    }
-    if (needsExtraction.programSource && extracted.programSource && typeof extracted.programSource === "string" && extracted.programSource.trim().length > 0) {
-      updates.programSource = extracted.programSource.trim(); updatedFields.push("source");
-    }
+    if (needsExtraction.fullName && extracted.fullName && typeof extracted.fullName === "string" && extracted.fullName.trim().length > 0) { updates.fullName = extracted.fullName.trim(); updatedFields.push("name"); }
+    if (needsExtraction.city && extracted.city && typeof extracted.city === "string" && extracted.city.trim().length > 0) { updates.city = extracted.city.trim(); updatedFields.push("city"); }
+    if (needsExtraction.age && extracted.age && typeof extracted.age === "number" && extracted.age > 0 && extracted.age < 120) { updates.age = extracted.age; updatedFields.push("age"); }
+    if (needsExtraction.programSource && extracted.programSource && typeof extracted.programSource === "string" && extracted.programSource.trim().length > 0) { updates.programSource = extracted.programSource.trim(); updatedFields.push("source"); }
     if (needsExtraction.problemCategories && Array.isArray(extracted.problemCategories) && extracted.problemCategories.length > 0) {
       const valid = extracted.problemCategories.filter((c: any) => typeof c === "string" && c.trim().length > 0);
       if (valid.length > 0) { updates.problemCategories = valid; updatedFields.push("categories"); }
@@ -974,7 +764,5 @@ ${conversationText}`;
       });
       logger.info(`[extractRespondentData] Updated ${respondentId}: ${updatedFields.join(", ")}`);
     }
-  } catch (err) {
-    logger.error("[extractRespondentData] Extraction failed:", err);
-  }
+  } catch (err) { logger.error("[extractRespondentData] Extraction failed:", err); }
 }
