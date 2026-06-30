@@ -25,14 +25,20 @@ import type { Respondent, RespondentProgress } from "@/types";
 import { DEFAULT_PROGRESS_STEPS } from "@/types";
 
 // Progress step config
-const PROGRESS_CONFIG: Record<RespondentProgress, { color: string; bg: string; border: string; desc: string }> = {
-  Data:       { color: "text-slate-600",   bg: "bg-slate-100",   border: "border-slate-300",  desc: "Identity recorded" },
-  Prayer:    { color: "text-blue-600",    bg: "bg-blue-50",     border: "border-blue-200",   desc: "Prayed for" },
-  Counseling: { color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200",  desc: "In counseling" },
-  Recommitment: { color: "text-purple-600",  bg: "bg-purple-50",   border: "border-purple-200", desc: "Recommitment made" },
-  Salvation:  { color: "text-emerald-600", bg: "bg-emerald-50",  border: "border-emerald-200",desc: "Accepted salvation" },
-  POP:        { color: "text-orange-600",  bg: "bg-orange-50",   border: "border-orange-200", desc: "Part of the Parish" },
+const PROGRESS_CONFIG: Record<string, { color: string; bg: string; border: string; desc: string }> = {
+  Data:        { color: "text-slate-600",   bg: "bg-slate-100",   border: "border-slate-300",  desc: "Identitas tercatat" },
+  Doa:         { color: "text-blue-600",    bg: "bg-blue-50",     border: "border-blue-200",   desc: "Sudah didoakan" },
+  Konseling:   { color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200",  desc: "Dalam konseling" },
+  Rekomitmen:  { color: "text-purple-600",  bg: "bg-purple-50",   border: "border-purple-200", desc: "Komitmen ulang" },
+  Salvation:   { color: "text-emerald-600", bg: "bg-emerald-50",  border: "border-emerald-200",desc: "Menerima keselamatan" },
+  POP:         { color: "text-orange-600",  bg: "bg-orange-50",   border: "border-orange-200", desc: "Part of the Parish" },
 };
+
+// Safe fallback so an unknown progress value never crashes the page
+const FALLBACK_PROGRESS_CFG = { color: "text-slate-500", bg: "bg-slate-50", border: "border-slate-200", desc: "" };
+function progressCfg(key: string | undefined) {
+  return (key && PROGRESS_CONFIG[key]) ? PROGRESS_CONFIG[key] : FALLBACK_PROGRESS_CFG;
+}
 
 // Small helper to fetch messages for a ticket inline
 function TicketMessages({ ticketId }: { ticketId: string }) {
@@ -275,9 +281,9 @@ export default function RespondentProfilePage() {
                   {respondent.progress && (
                     <span className={cn(
                       "absolute -bottom-1 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full border",
-                      PROGRESS_CONFIG[respondent.progress].bg,
-                      PROGRESS_CONFIG[respondent.progress].border,
-                      PROGRESS_CONFIG[respondent.progress].color,
+                      progressCfg(respondent.progress).bg,
+                      progressCfg(respondent.progress).border,
+                      progressCfg(respondent.progress).color,
                     )}>
                       {respondent.progress}
                     </span>
@@ -376,8 +382,8 @@ export default function RespondentProfilePage() {
                       <SelectContent>
                         {DEFAULT_PROGRESS_STEPS.map((s) => (
                           <SelectItem key={s} value={s}>
-                            <span className={cn("font-medium", PROGRESS_CONFIG[s].color)}>{s}</span>
-                            <span className="ml-2 text-muted-foreground text-[10px]">— {PROGRESS_CONFIG[s].desc}</span>
+                            <span className={cn("font-medium", progressCfg(s).color)}>{s}</span>
+                            <span className="ml-2 text-muted-foreground text-[10px]">— {progressCfg(s).desc}</span>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -595,7 +601,7 @@ export default function RespondentProfilePage() {
                   {DEFAULT_PROGRESS_STEPS.map((step, idx) => {
                     const isActive  = respondent.progress === step;
                     const isDone    = currentProgressIdx > idx;
-                    const cfg       = PROGRESS_CONFIG[step];
+                    const cfg       = progressCfg(step);
                     return (
                       <div key={step} className="flex items-center gap-2.5">
                         {/* Step circle */}
