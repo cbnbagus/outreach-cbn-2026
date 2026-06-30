@@ -15,10 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TicketStatusBadge, TicketPriorityBadge } from "@/components/tickets/TicketStatusBadge";
-import { useCategories, useOutcomes, useUsers } from "@/hooks/use-firestore-config";
+import { useCategories, useOutcomes, useUsers, useProgramSources } from "@/hooks/use-firestore-config";
 import { useMessages } from "@/hooks/use-firestore-tickets";
 import { useRespondent } from "@/hooks/use-firestore-respondents";
-import { fetchTicketById, updateTicketStatus, updateTicketClassification, sendMessage, updateTicketFollowUp, clearTicketFollowUp } from "@/lib/firestore-services";
+import { fetchTicketById, updateTicketStatus, updateTicketClassification, sendMessage, updateTicketFollowUp, clearTicketFollowUp, addProgramSourceTouch } from "@/lib/firestore-services";
 import { useAuthStore } from "@/store/auth-store";
 import { usePresenceStore } from "@/store/presence-store";
 import { generateAIReply, sleep, detectEscalation, ESCALATION_COLORS, ESCALATION_LABELS } from "@/lib/ai-engine";
@@ -71,6 +71,7 @@ export default function TicketDetailPage() {
   const [ticketLoading, setTicketLoading] = useState(true);
   const { items: categories } = useCategories();
   const { items: outcomes } = useOutcomes();
+  const { items: programSourceItems } = useProgramSources();
   const { messages: firestoreMessages, loading: msgsLoading } = useMessages(id);
   const { respondent } = useRespondent(ticket?.respondentId ?? null);
 
@@ -187,6 +188,25 @@ export default function TicketDetailPage() {
   // Problem categories on this ticket (editable, separate from respondent profile)
   const [problemCategories, setProblemCategories] = useState<string[]>(respondent?.problemCategories ?? []);
   const [newCategoryInput, setNewCategoryInput]   = useState("");
+
+  // Program source selector (per-ticket, appends to respondent's history)
+  const [programSourceInput, setProgramSourceInput] = useState("");
+  const [programSourceSaving, setProgramSourceSaving] = useState(false);
+  const [programSourceSaved, setProgramSourceSaved]   = useState(false);
+
+  const saveProgramSource = async () => {
+    if (!programSourceInput || !ticket || !respondent) return;
+    setProgramSourceSaving(true);
+    try {
+      await addProgramSourceTouch(respondent.respondentId, programSourceInput, ticket.ticketId);
+      setProgramSourceSaved(true);
+      setTimeout(() => setProgramSourceSaved(false), 3000);
+      setProgramSourceInput("");
+    } catch (err) {
+      console.error("Failed to save program source:", err);
+    }
+    setProgramSourceSaving(false);
+  };
 
   const addProblemCategory = () => {
     const val = newCategoryInput.trim();
@@ -1353,6 +1373,52 @@ export default function TicketDetailPage() {
                       <Mail size={10} className="flex-shrink-0 text-muted-foreground/50" />{respondent.email}
                     </div>
                   )}
+                  {/* Program Source — set per this conversation, appends to history */}
+                  <div className="pt-2 mt-1 border-t border-border flex flex-col gap-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">Program Source</span>
+                      {respondent.programSource && (
+                        <span className="text-[10px] font-medium text-foreground">{respondent.programSource}</span>
+                      )}
+                    </div>
+                    <p className="text-[9px] text-muted-foreground/70 leading-snug">
+                      Dari program apa responden tahu CBN di percakapan ini?
+                    </p>
+                    <div className="flex gap-1.5">
+                      <Select value={programSourceInput} onValueChange={setProgramSourceInput}>
+                        <SelectTrigger className="h-7 text-xs flex-1"><SelectValue placeholder="Pilih program..." /></SelectTrigger>
+                        <SelectContent>
+                          {programSourceItems.filter((ps: any) => ps.isActive !== false).map((ps: any) => (
+                            <SelectItem key={ps.name} value={ps.name}>{ps.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <button
+                        onClick={saveProgramSource}
+                        disabled={!programSourceInput || programSourceSaving}
+                        className="h-7 px-2.5 flex items-center justify-center rounded-md bg-primary/10 text-primary text-[10px] font-semibold hover:bg-primary/20 disabled:opacity-40 transition-colors whitespace-nowrap"
+                      >
+                        {programSourceSaving ? "..." : "Simpan"}
+                      </button>
+                    </div>
+                    {programSourceSaved && (
+                      <div className="flex items-center gap-1 text-[10px] text-emerald-700">
+                        <CheckCircle2 size={10} />Tersimpan ke riwayat
+                      </div>
+                    )}
+                    {Array.isArray((respondent as any).programSourceHistory) && (respondent as any).programSourceHistory.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-0.5">
+                        {[...(respondent as any).programSourceHistory]
+                          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                          .slice(0, 4)
+                          .map((h: any, i: number) => (
+                            <span key={i} className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+                              {h.source}
+                            </span>
+                          ))}
+                      </div>
+                    )}
+                  </div>
                   {respondent.notes && (
                     <p className="text-[10px] text-muted-foreground bg-muted/50 rounded-md p-2 leading-relaxed">
                       {respondent.notes}
