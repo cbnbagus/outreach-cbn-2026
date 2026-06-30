@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Phone, Mail, ChevronRight, ShieldOff, CalendarDays, ArrowUpDown } from "lucide-react";
+import { Search, Phone, Mail, ChevronRight, ShieldOff, CalendarDays, ArrowUpDown, Activity } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useRespondents } from "@/hooks/use-firestore-respondents";
@@ -10,8 +10,8 @@ import { useTickets } from "@/hooks/use-firestore-tickets";
 import { cn } from "@/lib/utils";
 import type { Respondent } from "@/types";
 
-// ── Period helpers (based on firstContactDate) ──────────────────────────────
-type SortMode   = "new" | "all";
+// ── Sort & period types ─────────────────────────────────────────────────────
+type SortMode   = "active" | "new" | "all";
 type PeriodKey  = "today" | "this_week" | "this_month" | "custom";
 
 function startOf(unit: "day" | "week" | "month"): Date {
@@ -23,6 +23,11 @@ function startOf(unit: "day" | "week" | "month"): Date {
 
 function contactDate(r: Respondent): Date {
   return new Date(r.firstContactDate ?? r.createdAt);
+}
+
+// Last activity = updatedAt (refreshed on every new message), fallback to first contact
+function activityDate(r: Respondent): Date {
+  return new Date((r as any).updatedAt ?? r.firstContactDate ?? r.createdAt);
 }
 
 function inPeriod(r: Respondent, period: PeriodKey, customFrom: string, customTo: string): boolean {
@@ -47,9 +52,24 @@ const PERIOD_LABELS: Record<PeriodKey, string> = {
   custom:     "Custom",
 };
 
+// Relative time helper for "last activity" column
+function timeAgo(date: Date): string {
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1)    return "baru saja";
+  if (mins < 60)   return `${mins} menit lalu`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24)  return `${hours} jam lalu`;
+  const days = Math.floor(hours / 24);
+  if (days < 7)    return `${days} hari lalu`;
+  const weeks = Math.floor(days / 7);
+  if (days < 30)   return `${weeks} minggu lalu`;
+  return date.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+}
+
 // ── Component ────────────────────────────────────────────────────────────────
 export default function RespondentsPage() {
-  const { respondents: allRespondents, loading: respLoading } = useRespondents(true); // include archived to count blocked
+  const { respondents: allRespondents, loading: respLoading } = useRespondents(true);
   const { items: leadSources, loading: lsLoading } = useLeadSources();
   const { tickets, loading: ticketsLoading } = useTickets();
 
@@ -57,8 +77,8 @@ export default function RespondentsPage() {
   const [leadSourceFilter, setLeadSourceFilter] = useState("all");
   const [showBlocked,      setShowBlocked]       = useState(false);
 
-  // Sort & period
-  const [sortMode,    setSortMode]    = useState<SortMode>("all");
+  // Sort & period — DEFAULT to "active" so recently-contacted respondents surface first
+  const [sortMode,    setSortMode]    = useState<SortMode>("active");
   const [period,      setPeriod]      = useState<PeriodKey>("this_month");
   const [showPeriod,  setShowPeriod]  = useState(false);
   const [customFrom,  setCustomFrom]  = useState("");
@@ -78,7 +98,6 @@ export default function RespondentsPage() {
     );
   }
 
-  // Build ticket count per respondent
   const ticketCountMap = tickets.reduce((acc: Record<string, number>, t) => {
     if (t.respondentId) acc[t.respondentId] = (acc[t.respondentId] ?? 0) + 1;
     return acc;
@@ -101,14 +120,16 @@ export default function RespondentsPage() {
     return matchSearch && matchSource && !r.isArchived && matchBlocked && matchPeriod;
   });
 
-  // Sort: "new" = descending by firstContactDate; "all" = no extra sort (keeps insertion order)
-  if (sortMode === "new") {
-    filtered = [...filtered].sort(
-      (a, b) => contactDate(b).getTime() - contactDate(a).getTime()
-    );
+  // ── Sort ──────────────────────────────────────────────────────────────────
+  // "active" = most recent activity first (last message / update)
+  // "new"    = most recent first contact first
+  // "all"    = insertion order (createdAt desc from hook)
+  if (sortMode === "active") {
+    filtered = [...filtered].sort((a, b) => activityDate(b).getTime() - activityDate(a).getTime());
+  } else if (sortMode === "new") {
+    filtered = [...filtered].sort((a, b) => contactDate(b).getTime() - contactDate(a).getTime());
   }
 
-  // ── Count per lead source for tabs ───────────────────────────────────────
   const sourceCounts = allRespondents
     .filter((r) => !r.isArchived)
     .reduce((acc: Record<string, number>, r) => {
@@ -125,6 +146,12 @@ export default function RespondentsPage() {
 
   const periodLabel = PERIOD_LABELS[period];
 
+  const SORT_LABELS: Record<SortMode, React.ReactNode> = {
+    active: <span className="flex items-center gap-1"><Activity size={10} />Active</span>,
+    new:    <span className="flex items-center gap-1"><ArrowUpDown size={10} />New</span>,
+    all:    "All",
+  };
+
   return (
     <div className="flex flex-col gap-5">
 
@@ -134,6 +161,7 @@ export default function RespondentsPage() {
           <h1 className="text-base font-semibold text-foreground">Respondents</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
             {filtered.length} respondent{filtered.length !== 1 ? "s" : ""}
+            {sortMode === "active" && <span className="ml-1 text-primary font-medium">· sorted by last activity</span>}
             {showPeriod && <span className="ml-1 text-primary font-medium">· {periodLabel}{period === "custom" && customFrom ? ` ${customFrom}${customTo ? " – " + customTo : ""}` : ""}</span>}
           </p>
         </div>
@@ -141,18 +169,18 @@ export default function RespondentsPage() {
         <div className="flex items-center gap-2 flex-wrap">
           {/* Sort toggle */}
           <div className="flex items-center border border-border rounded-md overflow-hidden text-xs font-medium">
-            {(["all", "new"] as SortMode[]).map((mode) => (
+            {(["active", "new", "all"] as SortMode[]).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setSortMode(mode)}
                 className={cn(
-                  "px-3 py-1.5 transition-colors capitalize",
+                  "px-3 py-1.5 transition-colors",
                   sortMode === mode
                     ? "bg-foreground text-background"
                     : "bg-background text-muted-foreground hover:bg-muted"
                 )}
               >
-                {mode === "new" ? <span className="flex items-center gap-1"><ArrowUpDown size={10} />New</span> : "All"}
+                {SORT_LABELS[mode]}
               </button>
             ))}
           </div>
@@ -189,7 +217,7 @@ export default function RespondentsPage() {
         </div>
       </div>
 
-      {/* ── Period picker (inline, shows when toggled) ── */}
+      {/* ── Period picker ── */}
       {showPeriod && (
         <div className="flex flex-col gap-3 p-3.5 rounded-xl border border-border bg-muted/30">
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -209,7 +237,6 @@ export default function RespondentsPage() {
             ))}
           </div>
 
-          {/* Custom date range */}
           {period === "custom" && (
             <div className="flex items-center gap-2 flex-wrap">
               <div className="flex flex-col gap-0.5">
@@ -292,8 +319,16 @@ export default function RespondentsPage() {
                 <th className="text-left text-[11px] font-medium text-muted-foreground px-3 py-2.5">Lead Source</th>
                 <th className="text-left text-[11px] font-medium text-muted-foreground px-3 py-2.5">Tickets</th>
                 <th className="text-left text-[11px] font-medium text-muted-foreground px-3 py-2.5">
-                  First Contact
-                  {sortMode === "new" && <ArrowUpDown size={9} className="inline ml-1 text-primary" />}
+                  <span className="flex items-center gap-1">
+                    Last Activity
+                    {sortMode === "active" && <Activity size={9} className="text-primary" />}
+                  </span>
+                </th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground px-3 py-2.5">
+                  <span className="flex items-center gap-1">
+                    First Contact
+                    {sortMode === "new" && <ArrowUpDown size={9} className="text-primary" />}
+                  </span>
                 </th>
                 <th className="px-3 py-2.5" />
               </tr>
@@ -301,6 +336,8 @@ export default function RespondentsPage() {
             <tbody>
               {filtered.map((r) => {
                 const fcd = contactDate(r);
+                const lad = activityDate(r);
+                const isRecent = (Date.now() - lad.getTime()) < 24 * 60 * 60 * 1000; // within 24h
                 return (
                   <tr
                     key={r.respondentId}
@@ -319,10 +356,13 @@ export default function RespondentsPage() {
                         </div>
                         <div className="flex flex-col">
                           <span className={cn(
-                            "text-xs font-medium transition-colors",
+                            "text-xs font-medium transition-colors flex items-center gap-1.5",
                             r.isBlocked ? "text-red-600 line-through" : "text-foreground group-hover:text-primary"
                           )}>
                             {r.fullName}
+                            {isRecent && !r.isBlocked && (
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Aktif dalam 24 jam terakhir" />
+                            )}
                           </span>
                           {r.isBlocked && (
                             <span className="text-[10px] text-red-500 font-medium">
@@ -351,6 +391,11 @@ export default function RespondentsPage() {
                     </td>
                     <td className="px-3 py-3 text-xs font-semibold text-foreground">
                       {ticketCountMap[r.respondentId] ?? 0}
+                    </td>
+                    <td className="px-3 py-3 text-xs whitespace-nowrap">
+                      <span className={cn(isRecent ? "text-emerald-600 font-medium" : "text-muted-foreground")}>
+                        {timeAgo(lad)}
+                      </span>
                     </td>
                     <td className="px-3 py-3 text-xs text-muted-foreground whitespace-nowrap">
                       {fcd.toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })}
