@@ -655,3 +655,49 @@ export async function deleteSocialAccount(id: string) {
   ]);
   return deleteDoc(doc(db, "social_accounts", id));
 }
+// ---------------------------------------------------------------------------
+// PROGRAM SOURCE HISTORY (multi-touch attribution)
+// Appends a source to programSourceHistory[] and updates programSource (latest).
+// Skips if the same source was already recorded today (dedup).
+// ---------------------------------------------------------------------------
+export async function addProgramSourceTouch(
+  respondentId: string,
+  source: string,
+  ticketId?: string
+) {
+  const [{ doc, getDoc, updateDoc, arrayUnion, serverTimestamp }, db] = await Promise.all([
+    import("firebase/firestore"),
+    getDb(),
+  ]);
+
+  const trimmed = (source ?? "").trim();
+  if (!trimmed) return;
+
+  const ref = doc(db, "respondents", respondentId);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return;
+
+  const data = snap.data();
+  const history: any[] = Array.isArray(data.programSourceHistory) ? data.programSourceHistory : [];
+
+  // Dedup: skip if same source already recorded today
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  const alreadyToday = history.some(
+    (h) => h.source === trimmed && (h.date ?? "").slice(0, 10) === today
+  );
+
+  const updates: Record<string, any> = {
+    programSource: trimmed, // latest (for quick display + backward compat)
+    updatedAt: serverTimestamp(),
+  };
+
+  if (!alreadyToday) {
+    updates.programSourceHistory = arrayUnion({
+      source: trimmed,
+      date: new Date().toISOString(),
+      ticketId: ticketId ?? null,
+    });
+  }
+
+  await updateDoc(ref, updates);
+}

@@ -705,7 +705,7 @@ async function extractRespondentData(
 
   const needsExtraction = {
     fullName: !respondent.fullName || respondent.fullName.startsWith("+") || respondent.fullName.startsWith("Facebook User") || respondent.fullName.startsWith("WhatsApp User"),
-    city: !respondent.city, age: !respondent.age, programSource: !respondent.programSource,
+    city: !respondent.city, age: !respondent.age, programSource: true,
     problemCategories: !respondent.problemCategories || respondent.problemCategories.length === 0,
   };
   if (!Object.values(needsExtraction).some((v) => v)) return;
@@ -748,7 +748,24 @@ ${conversationText}`;
     if (needsExtraction.fullName && extracted.fullName && typeof extracted.fullName === "string" && extracted.fullName.trim().length > 0) { updates.fullName = extracted.fullName.trim(); updatedFields.push("name"); }
     if (needsExtraction.city && extracted.city && typeof extracted.city === "string" && extracted.city.trim().length > 0) { updates.city = extracted.city.trim(); updatedFields.push("city"); }
     if (needsExtraction.age && extracted.age && typeof extracted.age === "number" && extracted.age > 0 && extracted.age < 120) { updates.age = extracted.age; updatedFields.push("age"); }
-    if (needsExtraction.programSource && extracted.programSource && typeof extracted.programSource === "string" && extracted.programSource.trim().length > 0) { updates.programSource = extracted.programSource.trim(); updatedFields.push("source"); }
+    if (needsExtraction.programSource && extracted.programSource && typeof extracted.programSource === "string" && extracted.programSource.trim().length > 0) {
+      const src = extracted.programSource.trim();
+      // Only act if it's a NEW source (different from current latest)
+      if (src !== respondent.programSource) {
+        updates.programSource = src;
+        const existingHistory = Array.isArray(respondent.programSourceHistory) ? respondent.programSourceHistory : [];
+        const today = new Date().toISOString().slice(0, 10);
+        const alreadyToday = existingHistory.some((h: any) => h.source === src && (h.date ?? "").slice(0, 10) === today);
+        if (!alreadyToday) {
+          updates.programSourceHistory = admin.firestore.FieldValue.arrayUnion({
+            source: src,
+            date: new Date().toISOString(),
+            ticketId: ticketId ?? null,
+          });
+        }
+        updatedFields.push("source");
+      }
+    }
     if (needsExtraction.problemCategories && Array.isArray(extracted.problemCategories) && extracted.problemCategories.length > 0) {
       const valid = extracted.problemCategories.filter((c: any) => typeof c === "string" && c.trim().length > 0);
       if (valid.length > 0) { updates.problemCategories = valid; updatedFields.push("categories"); }

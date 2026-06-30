@@ -17,7 +17,7 @@ import { TicketStatusBadge, TicketPriorityBadge } from "@/components/tickets/Tic
 import { useRespondent } from "@/hooks/use-firestore-respondents";
 import { useTicketsByRespondent, useMessages } from "@/hooks/use-firestore-tickets";
 import { useLeadSources, useProgramSources } from "@/hooks/use-firestore-config";
-import { updateRespondent } from "@/lib/firestore-services";
+import { updateRespondent, addProgramSourceTouch } from "@/lib/firestore-services";
 import { useAuthStore } from "@/store/auth-store";
 import { useOrgStore } from "@/store/org-store";
 import { cn } from "@/lib/utils";
@@ -193,11 +193,19 @@ export default function RespondentProfilePage() {
       city:              editCity || undefined,
       progress:          (editProgress as RespondentProgress) || undefined,
       problemCategories: editCategories.length > 0 ? editCategories : [],
-      programSource:     editProgramSource || undefined,
     };
     try {
       await updateRespondent(id, updates);
-      setRespondent((prev) => prev ? { ...prev, ...updates, leadSourceName: getLeadSourceName(editLeadSource) } : prev);
+      // Program source — append to history (multi-touch attribution)
+      if (editProgramSource && editProgramSource !== respondent?.programSource) {
+        await addProgramSourceTouch(id, editProgramSource);
+      }
+      setRespondent((prev) => prev ? {
+        ...prev,
+        ...updates,
+        programSource: editProgramSource || prev.programSource,
+        leadSourceName: getLeadSourceName(editLeadSource),
+      } : prev);
       setEditing(false);
     } catch (err) {
       console.error("Failed to update respondent:", err);
@@ -636,11 +644,32 @@ export default function RespondentProfilePage() {
               </CardHeader>
               <CardContent className="px-4 pb-4">
                 {respondent.programSource ? (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-semibold text-foreground">{respondent.programSource}</span>
-                    <Button variant="ghost" size="sm" className="h-6 text-[10px] text-muted-foreground px-2" onClick={startEdit}>
-                      <Pencil size={9} className="mr-1" />Edit
-                    </Button>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-semibold text-foreground">{respondent.programSource}</span>
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wide bg-muted px-1.5 py-0.5 rounded">terbaru</span>
+                      </div>
+                      <Button variant="ghost" size="sm" className="h-6 text-[10px] text-muted-foreground px-2" onClick={startEdit}>
+                        <Pencil size={9} className="mr-1" />Edit
+                      </Button>
+                    </div>
+                    {Array.isArray((respondent as any).programSourceHistory) && (respondent as any).programSourceHistory.length > 1 && (
+                      <div className="flex flex-col gap-1 pl-2 border-l-2 border-border mt-1">
+                        <span className="text-[9px] text-muted-foreground uppercase tracking-wide font-semibold">Riwayat Sumber</span>
+                        {[...(respondent as any).programSourceHistory]
+                          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                          .map((h: any, i: number) => (
+                            <div key={i} className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                              <span className="w-1 h-1 rounded-full bg-primary/40 flex-shrink-0" />
+                              <span className="font-medium text-foreground">{h.source}</span>
+                              <span className="text-muted-foreground/60">
+                                {new Date(h.date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                              </span>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <button
