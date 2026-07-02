@@ -122,11 +122,21 @@ async function testConnection(platform: Platform, credentials: Record<string, an
     if (platform === "instagram") {
       const token = credentials.pageAccessToken ?? "";
       if (!token) return { ok: false, message: "Token kosong" };
-      const res = await fetch(`https://graph.facebook.com/v18.0/me?fields=name,instagram_business_account&access_token=${token}`);
-      const data = await res.json();
-      if (data.error) return { ok: false, message: data.error.message };
-      const igId = data.instagram_business_account?.id;
-      return { ok: true, message: `Page: "${data.name}"${igId ? `, IG ID: ${igId}` : " (IG belum terhubung ke Page)"}` };
+      // Instagram Login tokens (IGAA...) use graph.instagram.com;
+      // legacy Page-linked tokens (EAA...) use graph.facebook.com
+      const isIgLoginToken = token.startsWith("IG");
+      if (isIgLoginToken) {
+        const res = await fetch(`https://graph.instagram.com/v21.0/me?fields=user_id,username&access_token=${token}`);
+        const data = await res.json();
+        if (data.error) return { ok: false, message: data.error.message };
+        return { ok: true, message: `Terhubung ke @${data.username ?? "?"} (ID: ${data.user_id ?? data.id})` };
+      } else {
+        const res = await fetch(`https://graph.facebook.com/v18.0/me?fields=name,instagram_business_account&access_token=${token}`);
+        const data = await res.json();
+        if (data.error) return { ok: false, message: data.error.message };
+        const igId = data.instagram_business_account?.id;
+        return { ok: true, message: `Page: "${data.name}"${igId ? `, IG ID: ${igId}` : " (IG belum terhubung ke Page)"}` };
+      }
     }
 
     if (platform === "whatsapp_meta") {

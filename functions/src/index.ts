@@ -43,15 +43,18 @@ async function fetchMetaUserProfile(
   const fallback = `${platform} User ${psid.slice(-4)}`;
   if (!pageAccessToken || !psid) return fallback;
   try {
-    const response = await fetch(
-      `https://graph.facebook.com/v18.0/${psid}?fields=name&access_token=${pageAccessToken}`
-    );
+    // Instagram Login tokens (IGAA...) resolve profile via graph.instagram.com;
+    // Facebook / Page-linked tokens (EAA...) via graph.facebook.com
+    const profileUrl = (platform === "Instagram" && pageAccessToken.startsWith("IG"))
+      ? `https://graph.instagram.com/v21.0/${psid}?fields=name,username&access_token=${pageAccessToken}`
+      : `https://graph.facebook.com/v18.0/${psid}?fields=name&access_token=${pageAccessToken}`;
+    const response = await fetch(profileUrl);
     if (!response.ok) {
       logger.warn(`[fetchMetaUserProfile] Graph API ${response.status} for ${platform} PSID ${psid}`);
       return fallback;
     }
     const data: any = await response.json();
-    const name = data?.name ?? "";
+    const name = (data?.name ?? data?.username ?? "").toString();
     if (name.trim().length > 0) {
       logger.info(`[fetchMetaUserProfile] ${platform} PSID ${psid} → "${name}"`);
       return name.trim();
@@ -160,7 +163,12 @@ export const onMessageCreated = onDocumentCreated(
         if (!igToken) { logger.warn("[onMessageCreated] Instagram token not configured"); return; }
         const recipientId = respondent.channelSenderId ?? "";
         if (!recipientId) { logger.warn("[onMessageCreated] No channelSenderId for Instagram"); return; }
-        const response = await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${igToken}`, {
+        // Instagram Login tokens (IGAA...) send via graph.instagram.com;
+        // legacy Page-linked tokens (EAA...) send via graph.facebook.com
+        const igApiBase = igToken.startsWith("IG")
+          ? "https://graph.instagram.com/v21.0/me/messages"
+          : "https://graph.facebook.com/v18.0/me/messages";
+        const response = await fetch(`${igApiBase}?access_token=${igToken}`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipient: { id: recipientId }, message: { text: message.content } }),
@@ -705,7 +713,7 @@ async function extractRespondentData(
 
   const needsExtraction = {
     fullName: !respondent.fullName || respondent.fullName.startsWith("+") || respondent.fullName.startsWith("Facebook User") || respondent.fullName.startsWith("WhatsApp User"),
-    city: !respondent.city, age: !respondent.age, programSource: true,
+    city: !respondent.city, age: !respondent.age, programSource: !respondent.programSource,
     problemCategories: !respondent.problemCategories || respondent.problemCategories.length === 0,
   };
   if (!Object.values(needsExtraction).some((v) => v)) return;
@@ -748,24 +756,7 @@ ${conversationText}`;
     if (needsExtraction.fullName && extracted.fullName && typeof extracted.fullName === "string" && extracted.fullName.trim().length > 0) { updates.fullName = extracted.fullName.trim(); updatedFields.push("name"); }
     if (needsExtraction.city && extracted.city && typeof extracted.city === "string" && extracted.city.trim().length > 0) { updates.city = extracted.city.trim(); updatedFields.push("city"); }
     if (needsExtraction.age && extracted.age && typeof extracted.age === "number" && extracted.age > 0 && extracted.age < 120) { updates.age = extracted.age; updatedFields.push("age"); }
-    if (needsExtraction.programSource && extracted.programSource && typeof extracted.programSource === "string" && extracted.programSource.trim().length > 0) {
-      const src = extracted.programSource.trim();
-      // Only act if it's a NEW source (different from current latest)
-      if (src !== respondent.programSource) {
-        updates.programSource = src;
-        const existingHistory = Array.isArray(respondent.programSourceHistory) ? respondent.programSourceHistory : [];
-        const today = new Date().toISOString().slice(0, 10);
-        const alreadyToday = existingHistory.some((h: any) => h.source === src && (h.date ?? "").slice(0, 10) === today);
-        if (!alreadyToday) {
-          updates.programSourceHistory = admin.firestore.FieldValue.arrayUnion({
-            source: src,
-            date: new Date().toISOString(),
-            ticketId: ticketId ?? null,
-          });
-        }
-        updatedFields.push("source");
-      }
-    }
+    if (needsExtraction.programSource && extracted.programSource && typeof extracted.programSource === "string" && extracted.programSource.trim().length > 0) { updates.programSource = extracted.programSource.trim(); updatedFields.push("source"); }
     if (needsExtraction.problemCategories && Array.isArray(extracted.problemCategories) && extracted.problemCategories.length > 0) {
       const valid = extracted.problemCategories.filter((c: any) => typeof c === "string" && c.trim().length > 0);
       if (valid.length > 0) { updates.problemCategories = valid; updatedFields.push("categories"); }
