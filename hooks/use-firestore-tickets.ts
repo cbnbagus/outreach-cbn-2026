@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import type { Ticket, Message } from "@/types";
+import { useOrgStore } from "@/store/org-store";
 
 /**
  * Real-time ticket list — updates automatically when tickets are created/modified.
@@ -8,18 +9,21 @@ import type { Ticket, Message } from "@/types";
 export function useTickets() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const activeOrg = useOrgStore((s) => s.activeOrg);
+  const orgId = activeOrg?.orgId;
 
   useEffect(() => {
+    if (!orgId) { setLoading(false); return; }
     let cancelled = false;
     let unsubscribe: (() => void) | undefined;
 
     async function subscribe() {
-      const [{ collection, query, orderBy, onSnapshot }, { db }] = await Promise.all([
+      const [{ collection, query, where, orderBy, onSnapshot }, { db }] = await Promise.all([
         import("firebase/firestore"),
         import("@/lib/firebase"),
       ]);
 
-      const q = query(collection(db, "tickets"), orderBy("createdAt", "desc"));
+      const q = query(collection(db, "tickets"), where("orgId", "==", orgId), orderBy("createdAt", "desc"));
 
       unsubscribe = onSnapshot(q, (snap) => {
         if (cancelled) return;
@@ -45,7 +49,7 @@ export function useTickets() {
 
     subscribe();
     return () => { cancelled = true; unsubscribe?.(); };
-  }, []);
+  }, [orgId]);
 
   return { tickets, loading };
 }
@@ -56,9 +60,11 @@ export function useTickets() {
 export function useTicketsByRespondent(respondentId: string | null) {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const activeOrg = useOrgStore((s) => s.activeOrg);
+  const orgId = activeOrg?.orgId;
 
   useEffect(() => {
-    if (!respondentId) { setLoading(false); return; }
+    if (!respondentId || !orgId) { setLoading(false); return; }
     let cancelled = false;
     let unsubscribe: (() => void) | undefined;
 
@@ -70,6 +76,7 @@ export function useTicketsByRespondent(respondentId: string | null) {
 
       const q = query(
         collection(db, "tickets"),
+        where("orgId", "==", orgId),
         where("respondentId", "==", respondentId),
         orderBy("createdAt", "desc")
       );
@@ -92,7 +99,7 @@ export function useTicketsByRespondent(respondentId: string | null) {
 
     subscribe();
     return () => { cancelled = true; unsubscribe?.(); };
-  }, [respondentId]);
+  }, [respondentId, orgId]);
 
   return { tickets, loading };
 }

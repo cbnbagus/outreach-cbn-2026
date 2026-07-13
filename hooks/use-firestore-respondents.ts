@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import type { Respondent } from "@/types";
+import { useOrgStore } from "@/store/org-store";
 
 /**
  * Real-time respondent list — excludes archived by default.
@@ -8,18 +9,21 @@ import type { Respondent } from "@/types";
 export function useRespondents(includeArchived: boolean = false) {
   const [respondents, setRespondents] = useState<Respondent[]>([]);
   const [loading, setLoading] = useState(true);
+  const activeOrg = useOrgStore((s) => s.activeOrg);
+  const orgId = activeOrg?.orgId;
 
   useEffect(() => {
+    if (!orgId) { setLoading(false); return; }
     let cancelled = false;
     let unsubscribe: (() => void) | undefined;
 
     async function subscribe() {
-      const [{ collection, query, orderBy, onSnapshot }, { db }] = await Promise.all([
+      const [{ collection, query, where, orderBy, onSnapshot }, { db }] = await Promise.all([
         import("firebase/firestore"),
         import("@/lib/firebase"),
       ]);
 
-      const q = query(collection(db, "respondents"), orderBy("createdAt", "desc"));
+      const q = query(collection(db, "respondents"), where("orgId", "==", orgId), orderBy("createdAt", "desc"));
 
       unsubscribe = onSnapshot(q, (snap) => {
         if (cancelled) return;
@@ -43,7 +47,7 @@ export function useRespondents(includeArchived: boolean = false) {
 
     subscribe();
     return () => { cancelled = true; unsubscribe?.(); };
-  }, [includeArchived]);
+  }, [includeArchived, orgId]);
 
   return { respondents, loading };
 }
