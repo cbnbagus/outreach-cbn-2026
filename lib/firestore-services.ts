@@ -612,23 +612,24 @@ export async function sendMessage(
 // ---------------------------------------------------------------------------
 // SOCIAL ACCOUNTS (collection: social_accounts)
 // ---------------------------------------------------------------------------
-export async function fetchSocialAccounts() {
-  const [{ collection, getDocs, query, orderBy }, db] = await Promise.all([
+export async function fetchSocialAccounts(orgId: string) {
+  const [{ collection, getDocs, query, where, orderBy }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
-  const q = query(collection(db, "social_accounts"), orderBy("createdAt", "desc"));
+  const q = query(collection(db, "social_accounts"), where("orgId", "==", orgId), orderBy("createdAt", "desc"));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-export async function addSocialAccount(data: Record<string, any>, createdBy: string) {
+export async function addSocialAccount(data: Record<string, any>, createdBy: string, orgId: string) {
   const [{ collection, addDoc, serverTimestamp }, db] = await Promise.all([
     import("firebase/firestore"),
     getDb(),
   ]);
   return addDoc(collection(db, "social_accounts"), {
     ...data,
+    orgId,
     isActive: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),

@@ -14,6 +14,7 @@ import {
   updateSocialAccount,
   deleteSocialAccount,
 } from "@/lib/firestore-services";
+import { useOrgStore } from "@/store/org-store";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Platform = "facebook" | "instagram" | "whatsapp_fonnte" | "whatsapp_meta" | "email" | "call";
@@ -502,27 +503,31 @@ export default function SocialAccountsPage() {
   const [deleteAccount, setDeleteAccount] = useState<SocialAccount | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const activeOrg = useOrgStore((s) => s.activeOrg);
+  const orgId = activeOrg?.orgId;
 
   const loadAccounts = useCallback(async () => {
+    if (!orgId) { setLoading(false); return; }
     try {
-      const data = await fetchSocialAccounts();
+      const data = await fetchSocialAccounts(orgId);
       setAccounts(data as SocialAccount[]);
     } catch (err) {
       console.error("Failed to load social accounts:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [orgId]);
 
   useEffect(() => { loadAccounts(); }, [loadAccounts]);
 
   const handleSave = async (data: Record<string, any>) => {
+    if (!orgId) return;
     setSaving(true);
     try {
       if (editAccount) {
         await updateSocialAccount(editAccount.id, data);
       } else {
-        await addSocialAccount(data, "admin");
+        await addSocialAccount(data, "admin", orgId);
       }
       setShowModal(false);
       setEditAccount(null);
