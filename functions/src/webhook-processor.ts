@@ -150,9 +150,17 @@ export async function processIncomingMessage(data: IncomingMessage) {
 
   if (!existing.empty) {
     respondentId = existing.docs[0].id;
-    respondentName = existing.docs[0].data().fullName ?? data.senderName;
+    const existingName: string | undefined = existing.docs[0].data().fullName;
+    // A "fallback name" looks like "Facebook User 0837" — generated when
+    // profile fetch fails. Never overwrite a real name with a fallback.
+    const isFallback = (n?: string) => !n || /^(Facebook|Instagram|WhatsApp) User \d+$/i.test(n);
+    const shouldUpdateName = !isFallback(data.senderName) || isFallback(existingName);
+    respondentName = shouldUpdateName && !isFallback(data.senderName)
+      ? data.senderName
+      : (existingName ?? data.senderName);
     const updatePayload: Record<string, any> = {
-      fullName:  data.senderName,
+      ...(shouldUpdateName ? { fullName: data.senderName } : {}),
+      ...(data.orgId ? { orgId: data.orgId } : {}),
       ...(data.senderPhone ? { phone: data.senderPhone } : {}),
       updatedAt: FieldValue.serverTimestamp(),
     };
@@ -168,6 +176,7 @@ export async function processIncomingMessage(data: IncomingMessage) {
     respondentId = newRef.id;
     await newRef.set({
       respondentId:    newRef.id,
+      orgId:           data.orgId ?? null,
       fullName:        data.senderName,
       phone:           data.senderPhone ?? null,
       channel:         data.channel,

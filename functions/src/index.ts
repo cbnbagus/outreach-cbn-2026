@@ -11,6 +11,7 @@ import {
   getSocialAccountByFonnteDevice,
 } from "./social-accounts";
 import type { SocialAccountDoc } from "./social-accounts";
+//import { verifyMetaSignature } from "./verify-signature";
 import * as admin from "firebase-admin";
 
 setGlobalOptions({ region: "asia-southeast1" });
@@ -201,6 +202,8 @@ export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
   }
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
 
+  //if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
+
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
 
@@ -315,6 +318,9 @@ export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
     return;
   }
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
+
+  //if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
+
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
 
@@ -357,6 +363,9 @@ export const webhookFacebook = onRequest({ cors: true }, async (req, res) => {
     return;
   }
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
+
+  //if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
+
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
 

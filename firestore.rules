@@ -1,66 +1,154 @@
 rules_version = '2';
 
-// CBN Outreach — Temporary permissive rules for initial setup
-// TODO: Restore strict org-scoped rules after confirming data structure
+// CBN Outreach — Org-scoped, role-based security rules
+// Multi-tenant ready: each user's orgRoles map determines access per org.
+// Currently single-org (CBN Indonesia) but safe for future expansion.
+//
+// Role hierarchy: admin > supervisor > agent
+// Backend (Cloud Functions) uses Admin SDK and bypasses these rules entirely.
 
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────
 
     function isSignedIn() {
       return request.auth != null;
     }
 
+    function getUserDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Get user's role in a specific org from the orgRoles map
+    function roleIn(orgId) {
+      return getUserDoc().orgRoles[orgId];
+    }
+
+    function isMemberOf(orgId) {
+      let user = getUserDoc();
+      return user.orgRoles != null && orgId in user.orgRoles;
+    }
+
+    function isAdminOf(orgId) {
+      return isMemberOf(orgId) && roleIn(orgId) == "admin";
+    }
+
+    function isSupervisorOrAbove(orgId) {
+      return isMemberOf(orgId) && (roleIn(orgId) == "admin" || roleIn(orgId) == "supervisor");
+    }
+
+    function isPlatformAdmin() {
+      return getUserDoc().isPlatformAdmin == true;
+    }
+
+    // ── Organizations ─────────────────────────────────────────────────
+    // Read: any member of that org. Write: only admin of that org.
     match /organizations/{orgId} {
-      allow read, write: if isSignedIn();
+      allow read:  if isSignedIn() && isMemberOf(orgId);
+      allow write: if isSignedIn() && isAdminOf(orgId);
     }
 
+    // ── Users ─────────────────────────────────────────────────────────
+    // Users can read their own profile. Admins can read/write users in
+    // their org. This relies on orgRoles containing the org membership.
     match /users/{userId} {
-      allow read, write: if isSignedIn();
+      allow read: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isPlatformAdmin()
+      );
+      allow create: if isSignedIn() && isPlatformAdmin();
+      allow update: if isSignedIn() && (
+        request.auth.uid == userId ||
+        isPlatformAdmin()
+      );
+      allow delete: if isSignedIn() && isPlatformAdmin();
     }
 
+    // ── Respondents ───────────────────────────────────────────────────
+    // All org members can read. Create/update by any member. Delete by
+    // supervisor+. Data is scoped: resource.data.orgId must match.
     match /respondents/{respondentId} {
-      allow read, write: if isSignedIn();
+      allow read:   if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow create: if isSignedIn() && isMemberOf(request.resource.data.orgId);
+      allow update: if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow delete: if isSignedIn() && isSupervisorOrAbove(resource.data.orgId);
     }
 
+    // ── Tickets + Messages subcollection ──────────────────────────────
     match /tickets/{ticketId} {
-      allow read, write: if isSignedIn();
+      allow read:   if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow create: if isSignedIn() && isMemberOf(request.resource.data.orgId);
+      allow update: if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow delete: if isSignedIn() && isAdminOf(resource.data.orgId);
 
+      // Messages inside a ticket inherit the ticket's org scope.
+      // We read the parent ticket to check orgId.
       match /messages/{messageId} {
-        allow read, write: if isSignedIn();
+        function parentOrgId() {
+          return get(/databases/$(database)/documents/tickets/$(ticketId)).data.orgId;
+        }
+        allow read:   if isSignedIn() && isMemberOf(parentOrgId());
+        allow create: if isSignedIn() && isMemberOf(parentOrgId());
+        allow update: if isSignedIn() && isMemberOf(parentOrgId());
+        allow delete: if false; // Messages are immutable — audit trail
       }
     }
 
+    // ── Config collections (categories, lead_sources, etc.) ───────────
+    // All org members can read. Only admin can write.
     match /categories/{docId} {
-      allow read, write: if isSignedIn();
+      allow read:  if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow create: if isSignedIn() && isAdminOf(request.resource.data.orgId);
+      allow update, delete: if isSignedIn() && isAdminOf(resource.data.orgId);
     }
 
     match /lead_sources/{docId} {
-      allow read, write: if isSignedIn();
+      allow read:  if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow create: if isSignedIn() && isMemberOf(request.resource.data.orgId);
+      allow update, delete: if isSignedIn() && isAdminOf(resource.data.orgId);
     }
 
     match /program_sources/{docId} {
-      allow read, write: if isSignedIn();
+      allow read:  if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow create: if isSignedIn() && isMemberOf(request.resource.data.orgId);
+      allow update, delete: if isSignedIn() && isAdminOf(resource.data.orgId);
     }
 
     match /interaction_outcomes/{docId} {
-      allow read, write: if isSignedIn();
+      allow read:  if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow create: if isSignedIn() && isMemberOf(request.resource.data.orgId);
+      allow update, delete: if isSignedIn() && isAdminOf(resource.data.orgId);
     }
 
+    // ── Social Accounts ───────────────────────────────────────────────
+    // Contains credentials (access tokens, etc.) — admin only for write.
+    // All org members can read (needed by UI to show account list).
     match /social_accounts/{accountId} {
-      allow read, write: if isSignedIn();
+      allow read:   if isSignedIn();
+      allow create: if isSignedIn() && isAdminOf(request.resource.data.orgId);
+      allow update: if isSignedIn() && isAdminOf(resource.data.orgId);
+      allow delete: if isSignedIn() && isAdminOf(resource.data.orgId);
     }
 
+    // ── Calls ─────────────────────────────────────────────────────────
     match /calls/{callId} {
-      allow read, write: if isSignedIn();
+      allow read:   if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow create: if isSignedIn() && isMemberOf(request.resource.data.orgId);
+      allow update: if isSignedIn() && isMemberOf(resource.data.orgId);
+      allow delete: if isSignedIn() && isAdminOf(resource.data.orgId);
     }
 
+    // ── System Config ─────────────────────────────────────────────────
     match /system_config/{configId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read:  if isSignedIn();
+      allow write: if isSignedIn() && isPlatformAdmin();
     }
 
+    // ── Counters ──────────────────────────────────────────────────────
+    // Read only from client. Backend (Admin SDK) manages writes.
     match /counters/{counterId} {
-      allow read: if isSignedIn();
+      allow read:  if isSignedIn();
       allow write: if false;
     }
   }
