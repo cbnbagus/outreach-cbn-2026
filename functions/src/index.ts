@@ -11,8 +11,11 @@ import {
   getSocialAccountByFonnteDevice,
 } from "./social-accounts";
 import type { SocialAccountDoc } from "./social-accounts";
-//import { verifyMetaSignature } from "./verify-signature";
+import { verifyMetaSignature } from "./verify-signature";
 import * as admin from "firebase-admin";
+
+// Facebook / Instagram OAuth "Connect" flow (fbConnectStart, fbConnectCallback)
+export { fbConnectStart, fbConnectCallback } from "./facebook-oauth";
 
 setGlobalOptions({ region: "asia-southeast1" });
 
@@ -190,7 +193,7 @@ export const onMessageCreated = onDocumentCreated(
 // ────────────────────────────────────────────────────────────────────────────
 // 1. WhatsApp Business Cloud API (Meta)
 // ────────────────────────────────────────────────────────────────────────────
-export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
+export const webhookWhatsapp = onRequest({ cors: true, secrets: ["META_APP_SECRET"] }, async (req, res) => {
   const WA_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN ?? "rts_wa_token";
   if (req.method === "GET") {
     const mode = req.query["hub.mode"];
@@ -202,7 +205,7 @@ export const webhookWhatsapp = onRequest({ cors: true }, async (req, res) => {
   }
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
 
-  //if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
+  if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
 
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
@@ -309,7 +312,7 @@ async function parseFonnteAttachments(body: any): Promise<any[]> {
 // ────────────────────────────────────────────────────────────────────────────
 // 3. Instagram Direct Message (Meta)
 // ────────────────────────────────────────────────────────────────────────────
-export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
+export const webhookInstagram = onRequest({ cors: true, secrets: ["META_APP_SECRET"] }, async (req, res) => {
   const IG_VERIFY_TOKEN = process.env.INSTAGRAM_VERIFY_TOKEN ?? "rts_ig_token";
   if (req.method === "GET") {
     const mode = req.query["hub.mode"]; const token = req.query["hub.verify_token"]; const challenge = req.query["hub.challenge"];
@@ -319,7 +322,7 @@ export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
   }
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
 
-  //if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
+  if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
 
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
@@ -354,7 +357,7 @@ export const webhookInstagram = onRequest({ cors: true }, async (req, res) => {
 // ────────────────────────────────────────────────────────────────────────────
 // 4. Facebook Messenger (Meta)
 // ────────────────────────────────────────────────────────────────────────────
-export const webhookFacebook = onRequest({ cors: true }, async (req, res) => {
+export const webhookFacebook = onRequest({ cors: true, secrets: ["META_APP_SECRET"] }, async (req, res) => {
   const FB_VERIFY_TOKEN = process.env.FACEBOOK_VERIFY_TOKEN ?? "rts_fb_token";
   if (req.method === "GET") {
     const mode = req.query["hub.mode"]; const token = req.query["hub.verify_token"]; const challenge = req.query["hub.challenge"];
@@ -364,7 +367,7 @@ export const webhookFacebook = onRequest({ cors: true }, async (req, res) => {
   }
   if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
 
-  //if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
+  if (!verifyMetaSignature(req)) { res.status(401).json({ error: "Invalid signature" }); return; }
 
   const orgId = req.query.org as string;
   if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }

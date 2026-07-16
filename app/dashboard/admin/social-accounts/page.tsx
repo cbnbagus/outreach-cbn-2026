@@ -15,6 +15,7 @@ import {
   deleteSocialAccount,
 } from "@/lib/firestore-services";
 import { useOrgStore } from "@/store/org-store";
+import { ConnectMetaButton, MetaConnectResult } from "@/components/admin/ConnectMetaButton";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Platform = "facebook" | "instagram" | "whatsapp_fonnte" | "whatsapp_meta" | "email" | "call";
@@ -581,14 +582,20 @@ export default function SocialAccountsPage() {
             Kelola akun sosial media yang terhubung ke OMS. Setiap program bisa punya akun sendiri per platform.
           </p>
         </div>
-        <button
-          onClick={() => { setEditAccount(null); setShowModal(true); }}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-        >
-          <Plus size={13} />
-          Tambah Akun
-        </button>
+        <div className="flex items-center gap-2">
+          <ConnectMetaButton />
+          <button
+            onClick={() => { setEditAccount(null); setShowModal(true); }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            <Plus size={13} />
+            Tambah Manual
+          </button>
+        </div>
       </div>
+
+      {/* OAuth return status */}
+      <MetaConnectResult onSuccess={loadAccounts} />
 
       {/* Stats */}
       {!loading && accounts.length > 0 && (
