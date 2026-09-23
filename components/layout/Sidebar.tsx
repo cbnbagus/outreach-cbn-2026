@@ -46,6 +46,7 @@ const navItems: NavItem[] = [
       { label: "Social Accounts", href: "/dashboard/admin/social-accounts", icon: Globe },
       { label: "AI Settings",  href: "/dashboard/admin/ai-settings",    icon: Bot },
       { label: "Call Settings", href: "/dashboard/admin/call-settings", icon: PhoneCall },
+      { label: "Chat Widget", href: "/dashboard/admin/widget", icon: MessageSquare },
     ],
   },
 ];

@@ -310,6 +310,41 @@ async function parseFonnteAttachments(body: any): Promise<any[]> {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// 2b. Website Chat Widget  (public/widget.js posts here)
+// ────────────────────────────────────────────────────────────────────────────
+export const webhookWidget = onRequest({ cors: true }, async (req, res) => {
+  if (req.method !== "POST") { res.status(405).send("Method Not Allowed"); return; }
+  const orgId = req.query.org as string;
+  if (!orgId) { res.status(400).json({ error: "Missing org parameter" }); return; }
+
+  try {
+    const body = req.body ?? {};
+    const visitorId = String(body.sender ?? "").trim();
+    const name = String(body.name ?? "Website Visitor").trim() || "Website Visitor";
+    const message = String(body.message ?? "").trim();
+
+    if (!visitorId) { res.status(400).json({ error: "Missing sender (visitor id)" }); return; }
+    if (!message) { res.status(200).json({ status: "ok", skipped: "empty" }); return; }
+
+    logger.info(`[webhookWidget] org=${orgId} visitor=${visitorId} msg="${message.substring(0, 50)}..."`);
+
+    await processIncomingMessage({
+      orgId,
+      channel: "website",
+      senderId: visitorId,
+      senderName: name,
+      message,
+      rawPayload: body,
+    });
+
+    res.status(200).json({ status: "ok" });
+  } catch (err) {
+    console.error("[webhookWidget]", err);
+    res.status(500).json({ error: "Internal error" });
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────────────
 // 3. Instagram Direct Message (Meta)
 // ────────────────────────────────────────────────────────────────────────────
 export const webhookInstagram = onRequest({ cors: true, secrets: ["META_APP_SECRET"] }, async (req, res) => {

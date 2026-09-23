@@ -1,9 +1,9 @@
 /*
- * ReachTheSoul Chat Widget
- * Embed this on your website to receive messages directly into your ReachTheSoul dashboard.
+ * CBN Outreach Chat Widget
+ * Embed this on your website to receive messages directly into your CBN Outreach dashboard.
  *
  * Usage:
- *   <script src="https://reachthesoul.org/widget.js" data-org="YOUR_ORG_ID"></script>
+ *   <script src="https://outreachcbn.com/widget.js" data-org="YOUR_ORG_ID"></script>
  *
  * Options (data attributes):
  *   data-org       (required) Your organization ID
@@ -20,13 +20,13 @@
   if (!script) return;
 
   var ORG_ID = script.getAttribute("data-org");
-  if (!ORG_ID) { console.warn("[ReachTheSoul] data-org is required"); return; }
+  if (!ORG_ID) { console.warn("[CBNOutreach] data-org is required"); return; }
 
   var PRIMARY = script.getAttribute("data-color") || "#2563EB";
   var TITLE = script.getAttribute("data-title") || "Chat with us";
   var SUBTITLE = script.getAttribute("data-subtitle") || "We usually reply within minutes";
   var POSITION = script.getAttribute("data-position") || "right";
-  var API_URL = "https://asia-southeast1-reachthesoul-prod.cloudfunctions.net/webhookFonnte";
+  var API_URL = "https://asia-southeast1-outreach-cbn-2026.cloudfunctions.net/webhookWidget";
 
   // Generate visitor ID (persist in localStorage)
   var VISITOR_KEY = "rts_visitor_" + ORG_ID;
@@ -90,7 +90,7 @@
       <input id="rts-widget-input" type="text" placeholder="Type a message..." />\
       <button id="rts-widget-send">Send</button>\
     </div>\
-    <div class="rts-powered">Powered by <a href="https://reachthesoul.org" target="_blank">ReachTheSoul</a></div>\
+    <div class="rts-powered">Powered by <a href="https://outreachcbn.com" target="_blank">CBN Outreach</a></div>\
   ';
   document.body.appendChild(box);
 
