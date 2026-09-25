@@ -98,22 +98,42 @@ export default function UsersPage() {
     setSaveError("");
 
     try {
-      // Create user in Firebase Auth + Firestore via direct Auth API
-      const [{ createUserWithEmailAndPassword }, { doc, setDoc, serverTimestamp }, { auth, db }] = await Promise.all([
+      // Create user WITHOUT disturbing the current admin session.
+      // Trick: create the new user on a SECONDARY Firebase app instance,
+      // so the primary app's auth (the logged-in admin) is never touched.
+      const [{ initializeApp, deleteApp }, { getAuth, createUserWithEmailAndPassword }, { doc, setDoc, serverTimestamp }, { db }] = await Promise.all([
+        import("firebase/app"),
         import("firebase/auth"),
         import("firebase/firestore"),
         import("@/lib/firebase"),
       ]);
 
-      // Note: createUserWithEmailAndPassword on client will sign in as the new user.
-      // We need to save the current admin session first and restore it after.
-      const adminUser = auth.currentUser;
+      const primaryConfig = {
+        apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY            || "",
+        authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN        || "outreach-cbn-2026.firebaseapp.com",
+        projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID         || "outreach-cbn-2026",
+        storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET     || "outreach-cbn-2026.firebasestorage.app",
+        messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+        appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID             || "",
+        measurementId:     process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID     || "",
+      };
 
-      // Create the new user
-      const credential = await createUserWithEmailAndPassword(auth, newEmail.trim(), newPassword);
-      const newUid = credential.user.uid;
+      // Spin up an isolated secondary app just for user creation.
+      const secondaryApp = initializeApp(primaryConfig, `user-creator-${Date.now()}`);
+      const secondaryAuth = getAuth(secondaryApp);
 
-      // Create Firestore profile with org membership
+      let newUid = "";
+      try {
+        const credential = await createUserWithEmailAndPassword(secondaryAuth, newEmail.trim(), newPassword);
+        newUid = credential.user.uid;
+      } finally {
+        // Always sign out & tear down the secondary app so nothing lingers.
+        await secondaryAuth.signOut().catch(() => {});
+        await deleteApp(secondaryApp).catch(() => {});
+      }
+
+      // Create Firestore profile with org membership (using the PRIMARY db,
+      // which is still authenticated as the admin — Firestore rules pass).
       await setDoc(doc(db, "users", newUid), {
         uid: newUid,
         displayName: newName.trim(),
@@ -135,22 +155,9 @@ export default function UsersPage() {
         createdBy: currentUser?.uid ?? "admin",
       });
 
-      // Sign back in as admin
-      // The new user is now signed in, so we need to sign back as admin.
-      // Unfortunately client SDK doesn't support creating users without signing in.
-      // For now, the page will reload and admin needs to re-login.
-      // In production, use Cloud Function createUser instead.
-
-      // Reset form
+      // Admin session was never touched — just reset the form. No re-login needed.
       setNewName(""); setNewEmail(""); setNewPassword(""); setNewRole("agent"); setShowAdd(false);
       setSaving(false);
-
-      // Notify admin they need to re-login since Auth context switched
-      alert("User created successfully! You will need to re-login because Firebase Auth switched to the new user. This will be fixed with Cloud Functions in production.");
-      
-      // Sign out (new user) and redirect to login
-      await auth.signOut();
-      window.location.href = "/login";
     } catch (err: any) {
       console.error("Failed to create user:", err);
       const code = err?.code ?? "";

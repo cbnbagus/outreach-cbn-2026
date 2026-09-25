@@ -47,18 +47,21 @@ async function fetchMetaUserProfile(
   const fallback = `${platform} User ${psid.slice(-4)}`;
   if (!pageAccessToken || !psid) return fallback;
   try {
-    // Instagram Login tokens (IGAA...) resolve profile via graph.instagram.com;
-    // Facebook / Page-linked tokens (EAA...) via graph.facebook.com
+    // Instagram Login tokens (IGAA...) resolve profile via graph.instagram.com (name,username).
+    // Facebook Messenger PSIDs: the User Profile API exposes first_name,last_name,profile_pic
+    // (NOT "name"), and profiles of non-tester users require Advanced Access to pages_messaging.
     const profileUrl = (platform === "Instagram" && pageAccessToken.startsWith("IG"))
       ? `https://graph.instagram.com/v21.0/${psid}?fields=name,username&access_token=${pageAccessToken}`
-      : `https://graph.facebook.com/v18.0/${psid}?fields=name&access_token=${pageAccessToken}`;
+      : `https://graph.facebook.com/v21.0/${psid}?fields=first_name,last_name,name&access_token=${pageAccessToken}`;
     const response = await fetch(profileUrl);
     if (!response.ok) {
-      logger.warn(`[fetchMetaUserProfile] Graph API ${response.status} for ${platform} PSID ${psid}`);
+      const errBody = await response.text().catch(() => "");
+      logger.warn(`[fetchMetaUserProfile] Graph API ${response.status} for ${platform} PSID ${psid}: ${errBody}`);
       return fallback;
     }
     const data: any = await response.json();
-    const name = (data?.name ?? data?.username ?? "").toString();
+    const composed = [data?.first_name, data?.last_name].filter(Boolean).join(" ").trim();
+    const name = (composed || data?.name || data?.username || "").toString();
     if (name.trim().length > 0) {
       logger.info(`[fetchMetaUserProfile] ${platform} PSID ${psid} → "${name}"`);
       return name.trim();
