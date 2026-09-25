@@ -141,6 +141,7 @@ export default function UsersPage() {
         role: newRole,
         isActive: true,
         avatarInitials: newName.trim().split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2),
+        orgId,               // top-level orgId so the users list query (where orgId == ...) finds this user
         primaryOrgId: orgId,
         orgMemberships: [{
           orgId,
